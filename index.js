@@ -6,8 +6,10 @@ const { spawn } = require('child_process');
 const prompts = require('prompts');
 const logger = require('./logger');
 
-const startFresh = (folder) => {
-    const files = ['GITHUB_PR.md', 'LOG.md', 'PROMPT.md', 'TODO.md', 'LOG.md'];
+let folder;
+
+const startFresh = () => {
+    const files = ['GITHUB_PR.md', 'LOG.md', 'PROMPT.md', 'TODO.md'];
 
     logger.task('Cleaning up previous files...');
     logger.indent();
@@ -21,7 +23,7 @@ const startFresh = (folder) => {
     logger.outdent();
 }
 
-const executeClaude = (folder, text) => {
+const executeClaude = (text) => {
     return new Promise((resolve, reject) => {
         const args = ['--project', folder, text];
 
@@ -64,7 +66,7 @@ const executeClaude = (folder, text) => {
     });
 }
 
-const step1 = async (folder) => {
+const step1 = async () => {
     logger.newline();
     const response = await prompts({
         type: 'text',
@@ -81,7 +83,7 @@ const step1 = async (folder) => {
     logger.newline();
     logger.startSpinner('Initializing task...');
 
-    await executeClaude(folder, `
+    await executeClaude(`
         Step 1: Create a git branch for this task
         Step 2: Improve this prompt and create PROMPT.md
         Task:
@@ -112,11 +114,11 @@ const step1 = async (folder) => {
 }
 
 const step2 = () => {
-    return executeClaude(folder, `Now read the PROMPT.md, perform a complete and extensive research, and then execute the PROMPT.md (generating the TODO.md). use context7`);
+    return executeClaude(`Now read the PROMPT.md, perform a complete and extensive research, and then update the TODO.md based on your findings. Use context7`);
 }
 
 const step3 = () => {
-    return executeClaude(folder, `
+    return executeClaude(`
         - Always update a file named LOG.md where you must explain what you are doing in real time.  
         - Keep working till Implement everything from the TODO.md.  
         - ULTRA IMPORTANT: Tests must use mocked data and never have a real connection to the database.  
@@ -128,7 +130,7 @@ const step3 = () => {
 }
 
 const step4 = () => {
-    return executeClaude(folder, `
+    return executeClaude(`
         - Step 1: Run all tests (in every folder with package.json) - Example: "cd frontend && npm test" and "cd backend && bun test"  
         - Step 2: If any test fails – fix it.  
         - ULTRA IMPORTANT: Tests must use mocked data and never have a real connection to the database.  
@@ -140,14 +142,14 @@ const step4 = () => {
 }
 
 const step5 = async () => {
-    await executeClaude(folder, `Commit the code and run git push (If it fails, fix whatever is necessary to make the commit work)`);
+    await executeClaude(`Commit the code and run git push (If it fails, fix whatever is necessary to make the commit work)`);
     process.exit(0);
 }
 
-const isFullyImplemented = (folder) => {
-    const todo = fs.readFileSync(path.join(folder, 'TODO.md'), 'utf-8').toLocaleLowerCase();
+const isFullyImplemented = () => {
+    const todo = fs.readFileSync(path.join(folder, 'TODO.md'), 'utf-8').toLowerCase();
 
-    if(todo.indexOf('fully implemented: yes')){
+    if(todo.indexOf('fully implemented: yes') !== -1){
         return true;
     }
 
@@ -158,8 +160,8 @@ const chooseAction = async () => {
     // Pega o argumento da linha de comando ou usa o diretório atual
     const folderArg = process.argv[2] || process.cwd();
 
-    // Resolve o caminho absoluto
-    const folder = path.resolve(folderArg);
+    // Resolve o caminho absoluto e define a variável global
+    folder = path.resolve(folderArg);
 
     if (!fs.existsSync(folder)) {
         logger.error(`Folder does not exist: ${folder}`);
@@ -172,33 +174,33 @@ const chooseAction = async () => {
     const shouldStartFresh = false;
 
     if(shouldStartFresh){
-        startFresh(folder);
+        startFresh();
     }
 
     if(fs.existsSync(path.join(folder, 'GITHUB_PR.md'))){
         logger.step(5, 'Creating pull request and committing');
-        return step5(folder);
+        return step5();
     }
 
 
     if(fs.existsSync(path.join(folder, 'TODO.md'))){
-        if(isFullyImplemented(folder)){
+        if(isFullyImplemented()){
             logger.step(4, 'Running tests and creating PR');
-            return step4(folder);
+            return step4();
         }else{
             logger.step(3, 'Implementing tasks');
-            return step3(folder);
+            return step3();
         }
     }
 
 
     if(fs.existsSync(path.join(folder, 'PROMPT.md'))){
         logger.step(2, 'Research and planning');
-        return step2(folder);
+        return step2();
     }
 
     logger.step(1, 'Initialization');
-    return step1(folder);
+    return step1();
 }
 
 const init = async () => {
