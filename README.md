@@ -1,5 +1,7 @@
 # Claudiomiro
 
+![Claudiomiro](http://www.samuelfaj.com/files/posts/claudiomiro.png)
+
 **100% Autonomous AI Development Agent**
 
 Transform days of complex development work into minutes while maintaining production-ready code quality.
