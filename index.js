@@ -25,16 +25,16 @@ const startFresh = () => {
 
 const executeClaude = (text) => {
     return new Promise((resolve, reject) => {
-        const args = ['--dangerously-skip-permissions', '-p', text];
+        const args = ['--dangerously-skip-permissions'];
 
         logger.stopSpinner();
-        logger.command(`claude --dangerously-skip-permissions -p (in ${folder})`);
+        logger.command(`claude --dangerously-skip-permissions (in ${folder})`);
         logger.separator();
         logger.newline();
 
         const claude = spawn('claude', args, {
             cwd: folder,
-            stdio: ['ignore', 'pipe', 'pipe']
+            stdio: ['pipe', 'pipe', 'pipe']
         });
 
         const logFilePath = path.join(folder, 'claudiomiro_log.txt');
@@ -45,6 +45,10 @@ const executeClaude = (text) => {
         logStream.write(`\n\n${'='.repeat(80)}\n`);
         logStream.write(`[${timestamp}] Claude execution started\n`);
         logStream.write(`${'='.repeat(80)}\n\n`);
+
+        // Send prompt to stdin and close it
+        claude.stdin.write(text + '\n');
+        claude.stdin.end();
 
         // Captura stdout
         claude.stdout.on('data', (data) => {
