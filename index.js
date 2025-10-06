@@ -259,8 +259,10 @@ const step5 = async (shouldPush = true) => {
         - Step 1: git commit (If it fails, fix whatever is necessary to make the commit work)
         ${pushStep}
 
-        ULTRA IMPORTANT: NEVER MENTION “Claude” or “Claude Code” or anything related to AI in the commit.
-        ULTRA IMPORTANT: Commit using the user’s default Git user.
+        - IMPORTANT: NEVER MENTION “Claude” or “Claude Code” or anything related to Claude or AI in the commit.
+        - IMPORTANT: NEVER use Co-Authored or any link to Claude or anything related.
+        - ULTRA IMPORTANT: Commit using the user’s default Git user.
+        - ULTRA IMPORTANT: All credit and authorship must be given to the user, not to Claude or any AI.
     `);
     process.exit(0);
 }
