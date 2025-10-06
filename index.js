@@ -267,19 +267,28 @@ const step3 = () => {
             2) Lint/build pass,
             3) All related tests pass.
         - If an item is blocked or ambiguous, DO NOT guess. Add a sub-bullet under the item:
-        - "BLOCKED: <short reason>"
+            - "BLOCKED: <short reason>"
         - Never mark partially done items. If you must split work, add temporary sub-bullets under the same item without altering the original text.
         - Idempotent runs: keep all existing [X] checks intact.
+
+        BLOCKED POLICY (UPDATED)
+        - If an item has a sub-bullet exactly starting with "BLOCKED:" under it, treat it as non-actionable for this run:
+        - Immediately flip that item's checkbox from "- [ ]" to "- [X]" without changing its text.
+        - Do NOT attempt implementation, lint/build, or tests for that item.
+        - In the Progress Log, set result to "blocked-skip" and record a brief reason copied verbatim from the BLOCKED line.
+        - Never reword the original item or its BLOCKED sub-bullet.
+        - This exception applies ONLY to items explicitly marked with a "BLOCKED:" sub-bullet.
 
         OPERATING LOOP
         1) Read TODO.md.
         2) Set "Fully implemented: <YES/NO>" based on whether any "- [ ]" remain (YES only when none remain).
         3) Pick the first unchecked item whose prerequisites are satisfied.
+        3a) If that item contains a "BLOCKED:" sub-bullet, apply the BLOCKED POLICY and skip directly to step 6.
         4) Implement the change.
         5) Run verification:
         - Lint/build
         - Unit/integration tests (with mocks)
-        6) If verification passes:
+        6) If verification passes (or BLOCKED POLICY was applied):
         - Update TODO.md: flip "- [ ]" to "- [X]" for that exact line.
         - Append to the bottom of TODO.md (append-only):
 
@@ -287,7 +296,7 @@ const step3 = () => {
             - <timestamp ISO8601>  CHECKED: "<exact item text>"
             files: <comma-separated paths>
             cmds: <commands run>
-            result: pass
+            result: <pass | blocked-skip>
 
         If verification fails:
         - DO NOT check the item.
@@ -301,7 +310,7 @@ const step3 = () => {
         - Keep markdown checkboxes exactly as "- [ ]" and "- [X]" (uppercase X).
 
         STOPPING CONDITIONS
-        - Continue until all items are "- [X]" or the process is blocked.
+        - Continue until all items are "- [X]" or the process is blocked on items without a "BLOCKED:" sub-bullet.
         - When all items are checked, set first line to "Fully implemented: YES".
 
         CONTEXT
