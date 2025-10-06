@@ -47,10 +47,6 @@ const executeClaude = (text) => {
         logStream.write(`${'='.repeat(80)}\n\n`);
 
         let buffer = '';
-        let responseSpinner = null;
-        let currentText = '';
-        const chalk = require('chalk');
-        const ora = require('ora');
 
         // Captura stdout e processa JSON streaming
         claude.stdout.on('data', (data) => {
@@ -71,94 +67,27 @@ const executeClaude = (text) => {
 
                     for(const msg of json.message.content){
                         if(msg.text){
-                            // Texto inicial da mensagem
-                            currentText = msg.text;
-                            if (responseSpinner) {
-                                responseSpinner.text = chalk.cyan('Claude: ') + chalk.white(currentText.slice(-100));
-                            }
+                            logger.info('💬 Claude:');
+                            console.log(msg.text);
                         }
                         else if(msg.content){
-                            // Texto inicial da mensagem
-                            currentText = msg.content;
-                            if (responseSpinner) {
-                                responseSpinner.content = chalk.cyan('Claude: ') + chalk.white(currentText.slice(-100));
-                            }
-                        }
-                        // Display based on event type
-                        else if (msg.type === 'content_block_delta' && msg.delta?.text) {
-                            // Atualiza o texto em tempo real
-                            currentText += msg.delta.text;
-
-                            if (responseSpinner) {
-                                // Mostra apenas os últimos 100 caracteres para não ficar muito longo
-                                const displayText = currentText.length > 100
-                                    ? '...' + currentText.slice(-100)
-                                    : currentText;
-                                responseSpinner.text = chalk.cyan('Claude: ') + chalk.white(displayText);
-                            }
-                        }
-                        else if (msg.type === 'tool_use_start' && msg.tool_use?.name) {
-                            // Para o spinner atual e mostra a ferramenta
-                            if (responseSpinner) {
-                                responseSpinner.stopAndPersist({
-                                    symbol: '💬',
-                                    text: chalk.cyan('Claude: ') + chalk.white(currentText.length > 100 ? '...' + currentText.slice(-100) : currentText)
-                                });
-                                responseSpinner = null;
-                            }
-
-                            // Mostra a ferramenta sendo usada
-                            console.log(chalk.gray('  ├─ ') + chalk.yellow('🔧 Using tool: ') + chalk.magenta(msg.tool_use.name));
-
-                            // Reinicia o spinner
-                            currentText = '';
-                            responseSpinner = ora({
-                                text: chalk.cyan('Processing...'),
-                                color: 'cyan',
-                                spinner: 'dots',
-                                indent: 2
-                            }).start();
-                        }
-                        else if (msg.type === 'message_start') {
-                            // Inicia o spinner quando Claude começa a responder
-                            if (!responseSpinner) {
-                                responseSpinner = ora({
-                                    text: chalk.cyan('Claude is thinking...'),
-                                    color: 'cyan',
-                                    spinner: 'dots'
-                                }).start();
-                            }
-                        }
-                        else if (msg.type === 'message_stop') {
-                            // Para o spinner e mostra a mensagem final
-                            if (responseSpinner) {
-                                if (currentText) {
-                                    responseSpinner.stopAndPersist({
-                                        symbol: '💬',
-                                        text: chalk.cyan('Claude: ') + chalk.white(currentText.length > 100 ? '...' + currentText.slice(-100) : currentText)
-                                    });
-                                } else {
-                                    responseSpinner.stop();
-                                }
-                                responseSpinner = null;
-                            }
-                            currentText = '';
-                            console.log(); // Nova linha no final
+                            logger.info('💬 Claude:');
+                            console.log(msg.content);
                         }
                         else if (msg.type === 'error') {
-                            // Para o spinner e mostra o erro
-                            if (responseSpinner) {
-                                responseSpinner.fail(chalk.red(`Error: ${msg.error?.message || 'Unknown error'}`));
-                                responseSpinner = null;
-                            } else {
-                                logger.error(`${msg.error?.message || 'Unknown error'}`);
-                            }
+                            // Error
+                            logger.error(`❌ Claude: ${msg.error?.message || 'Unknown error'}`);
+                        } else {
+                            logger.info('💬 Claude: '  + msg.type + '...');
                         }
                     }
                 } catch (e) {
-                    // Se não conseguir parsear como JSON, ignora (provavelmente não é uma mensagem válida)
+                    logger.error(line);
                 }
             }
+
+            // Sempre mostra no terminal em tempo real
+            // process.stdout.write(output);
 
             // Log to file
             logStream.write(output);
@@ -213,16 +142,14 @@ const getMultilineInput = () => {
         let isFirstLine = true;
 
         console.log();
-        console.log(chalk.bold.cyan('╭─────────────────────────────────────────────────────────────────╮'));
-        console.log(chalk.bold.cyan('│') + '                    ' + chalk.bold.white('📝 Task Description') + '                      ' + chalk.bold.cyan('│'));
-        console.log(chalk.bold.cyan('├─────────────────────────────────────────────────────────────────┤'));
-        console.log(chalk.bold.cyan('│') + '  ' + chalk.white('Describe what you need help with:') + '                       ' + chalk.bold.cyan('│'));
-        console.log(chalk.bold.cyan('│') + '                                                                 ' + chalk.bold.cyan('│'));
-        console.log(chalk.bold.cyan('│') + '  ' + chalk.gray('✓ Write or paste your task description') + '                  ' + chalk.bold.cyan('│'));
-        console.log(chalk.bold.cyan('│') + '  ' + chalk.gray('✓ Paste code, URLs, or drag & drop file paths') + '          ' + chalk.bold.cyan('│'));
-        console.log(chalk.bold.cyan('│') + '  ' + chalk.gray('✓ Press ENTER twice to submit') + '                           ' + chalk.bold.cyan('│'));
-        console.log(chalk.bold.cyan('│') + '  ' + chalk.gray('✓ Press Ctrl+C to cancel') + '                               ' + chalk.bold.cyan('│'));
-        console.log(chalk.bold.cyan('╰─────────────────────────────────────────────────────────────────╯'));
+        console.log(chalk.bold.cyan('─────────────────────────────────────────────'));
+        console.log(chalk.white('Describe what you need help with:'));
+        console.log(chalk.bold.cyan('─────────────────────────────────────────────'));
+        console.log(chalk.gray('✓ Write or paste your task description'));
+        console.log(chalk.gray('✓ Paste code, URLs, or drag & drop file paths') );
+        console.log(chalk.gray('✓ Press ENTER twice to submit') );
+        console.log(chalk.gray('✓ Press Ctrl+C to cancel'));
+        console.log(chalk.bold.cyan('─────────────────────────────────────────────'));
         console.log();
         process.stdout.write(chalk.cyan('🤖 > '));
 
