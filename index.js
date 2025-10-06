@@ -32,16 +32,9 @@ const executeClaude = (text) => {
         logger.separator();
         logger.newline();
 
-        const claude = spawn('claude', args, { cwd: folder });
-
-        // Mostra stdout em tempo real
-        claude.stdout.on('data', (data) => {
-            process.stdout.write(data);
-        });
-
-        // Mostra stderr em tempo real
-        claude.stderr.on('data', (data) => {
-            process.stderr.write(data);
+        const claude = spawn('claude', args, {
+            cwd: folder,
+            stdio: 'inherit'
         });
 
         // Quando o processo terminar
