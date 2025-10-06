@@ -47,6 +47,10 @@ const executeClaude = (text) => {
         logStream.write(`${'='.repeat(80)}\n\n`);
 
         let buffer = '';
+        let responseSpinner = null;
+        let currentText = '';
+        const chalk = require('chalk');
+        const ora = require('ora');
 
         // Captura stdout e processa JSON streaming
         claude.stdout.on('data', (data) => {
@@ -67,39 +71,94 @@ const executeClaude = (text) => {
 
                     for(const msg of json.message.content){
                         if(msg.text){
-                            process.stdout.write(msg.text);
+                            // Texto inicial da mensagem
+                            currentText = msg.text;
+                            if (responseSpinner) {
+                                responseSpinner.text = chalk.cyan('Claude: ') + chalk.white(currentText.slice(-100));
+                            }
+                        }
+                        else if(msg.content){
+                            // Texto inicial da mensagem
+                            currentText = msg.content;
+                            if (responseSpinner) {
+                                responseSpinner.content = chalk.cyan('Claude: ') + chalk.white(currentText.slice(-100));
+                            }
                         }
                         // Display based on event type
                         else if (msg.type === 'content_block_delta' && msg.delta?.text) {
-                            // Show AI response text in real-time
-                            process.stdout.write(msg.delta.text);
+                            // Atualiza o texto em tempo real
+                            currentText += msg.delta.text;
+
+                            if (responseSpinner) {
+                                // Mostra apenas os últimos 100 caracteres para não ficar muito longo
+                                const displayText = currentText.length > 100
+                                    ? '...' + currentText.slice(-100)
+                                    : currentText;
+                                responseSpinner.text = chalk.cyan('Claude: ') + chalk.white(displayText);
+                            }
                         }
                         else if (msg.type === 'tool_use_start' && msg.tool_use?.name) {
-                            // Tool usage
-                            logger.info(`🔧 Using tool: ${msg.tool_use.name}`);
+                            // Para o spinner atual e mostra a ferramenta
+                            if (responseSpinner) {
+                                responseSpinner.stopAndPersist({
+                                    symbol: '💬',
+                                    text: chalk.cyan('Claude: ') + chalk.white(currentText.length > 100 ? '...' + currentText.slice(-100) : currentText)
+                                });
+                                responseSpinner = null;
+                            }
+
+                            // Mostra a ferramenta sendo usada
+                            console.log(chalk.gray('  ├─ ') + chalk.yellow('🔧 Using tool: ') + chalk.magenta(msg.tool_use.name));
+
+                            // Reinicia o spinner
+                            currentText = '';
+                            responseSpinner = ora({
+                                text: chalk.cyan('Processing...'),
+                                color: 'cyan',
+                                spinner: 'dots',
+                                indent: 2
+                            }).start();
                         }
                         else if (msg.type === 'message_start') {
-                            // Message started
-                            logger.info('💭 Claude is thinking...');
+                            // Inicia o spinner quando Claude começa a responder
+                            if (!responseSpinner) {
+                                responseSpinner = ora({
+                                    text: chalk.cyan('Claude is thinking...'),
+                                    color: 'cyan',
+                                    spinner: 'dots'
+                                }).start();
+                            }
                         }
                         else if (msg.type === 'message_stop') {
-                            // Message completed
-                            process.stdout.write('\n');
+                            // Para o spinner e mostra a mensagem final
+                            if (responseSpinner) {
+                                if (currentText) {
+                                    responseSpinner.stopAndPersist({
+                                        symbol: '💬',
+                                        text: chalk.cyan('Claude: ') + chalk.white(currentText.length > 100 ? '...' + currentText.slice(-100) : currentText)
+                                    });
+                                } else {
+                                    responseSpinner.stop();
+                                }
+                                responseSpinner = null;
+                            }
+                            currentText = '';
+                            console.log(); // Nova linha no final
                         }
                         else if (msg.type === 'error') {
-                            // Error
-                            logger.error(`❌ ${msg.error?.message || 'Unknown error'}`);
-                        }else{
-                            process.stdout.write(JSON.stringify(msg));
+                            // Para o spinner e mostra o erro
+                            if (responseSpinner) {
+                                responseSpinner.fail(chalk.red(`Error: ${msg.error?.message || 'Unknown error'}`));
+                                responseSpinner = null;
+                            } else {
+                                logger.error(`${msg.error?.message || 'Unknown error'}`);
+                            }
                         }
                     }
                 } catch (e) {
-                    process.stdout.write(line);
+                    // Se não conseguir parsear como JSON, ignora (provavelmente não é uma mensagem válida)
                 }
             }
-
-            // Sempre mostra no terminal em tempo real
-            // process.stdout.write(output);
 
             // Log to file
             logStream.write(output);
@@ -139,29 +198,80 @@ const executeClaude = (text) => {
     });
 }
 
-const step1 = async () => {
-    logger.newline();
-    const response = await prompts({
-        type: 'text',
-        name: 'task',
-        message: '🤖 What would you like me to help you with?',
-        validate: value => value.length < 10 ? 'Please provide more details (at least 10 characters)' : true
-    });
+const getMultilineInput = () => {
+    const readline = require('readline');
+    const chalk = require('chalk');
 
-    if (!response.task) {
-        logger.error('Operation cancelled');
+    return new Promise((resolve) => {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+            terminal: true
+        });
+
+        let lines = [];
+        let isFirstLine = true;
+
+        console.log();
+        console.log(chalk.bold.cyan('╭─────────────────────────────────────────────────────────────────╮'));
+        console.log(chalk.bold.cyan('│') + '                    ' + chalk.bold.white('📝 Task Description') + '                      ' + chalk.bold.cyan('│'));
+        console.log(chalk.bold.cyan('├─────────────────────────────────────────────────────────────────┤'));
+        console.log(chalk.bold.cyan('│') + '  ' + chalk.white('Describe what you need help with:') + '                       ' + chalk.bold.cyan('│'));
+        console.log(chalk.bold.cyan('│') + '                                                                 ' + chalk.bold.cyan('│'));
+        console.log(chalk.bold.cyan('│') + '  ' + chalk.gray('✓ Write or paste your task description') + '                  ' + chalk.bold.cyan('│'));
+        console.log(chalk.bold.cyan('│') + '  ' + chalk.gray('✓ Paste code, URLs, or drag & drop file paths') + '          ' + chalk.bold.cyan('│'));
+        console.log(chalk.bold.cyan('│') + '  ' + chalk.gray('✓ Press ENTER twice to submit') + '                           ' + chalk.bold.cyan('│'));
+        console.log(chalk.bold.cyan('│') + '  ' + chalk.gray('✓ Press Ctrl+C to cancel') + '                               ' + chalk.bold.cyan('│'));
+        console.log(chalk.bold.cyan('╰─────────────────────────────────────────────────────────────────╯'));
+        console.log();
+        process.stdout.write(chalk.cyan('🤖 > '));
+
+        rl.on('line', (line) => {
+            if (line.trim() === '' && lines.length > 0 && lines[lines.length - 1].trim() === '') {
+                // Segunda linha vazia consecutiva - finaliza
+                rl.close();
+                const result = lines.slice(0, -1).join('\n').trim();
+                resolve(result);
+            } else {
+                lines.push(line);
+                if (!isFirstLine) {
+                    process.stdout.write(chalk.cyan('    '));
+                }
+                isFirstLine = false;
+            }
+        });
+
+        rl.on('SIGINT', () => {
+            rl.close();
+            console.log();
+            logger.error('Operation cancelled');
+            process.exit(0);
+        });
+    });
+};
+
+const step1 = async (sameBranch = false) => {
+    const task = await getMultilineInput();
+
+    if (!task || task.trim().length < 10) {
+        logger.error('Please provide more details (at least 10 characters)');
         process.exit(0);
     }
 
     logger.newline();
     logger.startSpinner('Initializing task...');
 
-    await executeClaude(`  
-        - Step 1: Create a git branch for this task
-        - Step 2: Improve this prompt and create PROMPT.md
+    const branchStep = sameBranch
+        ? ''
+        : '- Step 1: Create a git branch for this task\n        ';
+
+    const stepNumber = sameBranch ? 1 : 2;
+
+    await executeClaude(`
+        ${branchStep}- Step ${stepNumber}: Improve this prompt and create PROMPT.md
         Task:
         \`\`\`
-            ${response.task}
+            ${task}
         \`\`\`
 
         Rules:
@@ -250,8 +360,11 @@ const chooseAction = async () => {
     // Verifica se --push=false foi passado
     const shouldPush = !process.argv.some(arg => arg === '--push=false');
 
-    // Filtra os argumentos para pegar apenas o diretório (remove --fresh e --push=false)
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push'));
+    // Verifica se --same-branch foi passado
+    const sameBranch = process.argv.includes('--same-branch');
+
+    // Filtra os argumentos para pegar apenas o diretório (remove --fresh, --push=false e --same-branch)
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch');
     const folderArg = args[0] || process.cwd();
 
     // Resolve o caminho absoluto e define a variável global
@@ -292,7 +405,7 @@ const chooseAction = async () => {
     }
 
     logger.step(1, 'Initialization');
-    return step1();
+    return step1(sameBranch);
 }
 
 const init = async () => {

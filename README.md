@@ -8,7 +8,7 @@ Claudiomiro is a CLI tool that wraps the Claude AI assistant to provide a struct
 
 ### Workflow
 
-1. **Initialization**: Prompts for task description and creates a git branch
+1. **Initialization**: Prompts for task description and creates a git branch (can be skipped with `--same-branch`)
 2. **Planning**: Generates an improved prompt (PROMPT.md) and a detailed task breakdown (TODO.md)
 3. **Research**: Performs extensive research using context7 for library documentation
 4. **Implementation**: Executes all tasks from TODO.md while maintaining a live log (LOG.md)
@@ -57,8 +57,11 @@ claudiomiro /path/to/project --fresh
 # Skip git push at the end
 claudiomiro --push=false
 
+# Skip creating a new git branch (work on current branch)
+claudiomiro --same-branch
+
 # Combine options
-claudiomiro /path/to/project --fresh --push=false
+claudiomiro /path/to/project --fresh --push=false --same-branch
 ```
 
 The tool will guide you through the process with interactive prompts.
