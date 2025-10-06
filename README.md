@@ -54,6 +54,12 @@ claudiomiro --fresh
 # Start fresh in specific directory
 claudiomiro /path/to/project --fresh
 
+# Pass prompt directly (automatically starts fresh)
+claudiomiro --prompt="Add a login page with email and password"
+
+# Pass prompt with path
+claudiomiro /path/to/project --prompt="Implement user authentication"
+
 # Skip git push at the end
 claudiomiro --push=false
 
@@ -62,9 +68,10 @@ claudiomiro --same-branch
 
 # Combine options
 claudiomiro /path/to/project --fresh --push=false --same-branch
+claudiomiro --prompt="Fix the navigation bug" --push=false --same-branch
 ```
 
-The tool will guide you through the process with interactive prompts.
+The tool will guide you through the process with interactive prompts (unless you use `--prompt` to provide the task description directly).
 
 ## Generated Files
 

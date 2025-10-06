@@ -177,8 +177,8 @@ const getMultilineInput = () => {
     });
 };
 
-const step1 = async (sameBranch = false) => {
-    const task = await getMultilineInput();
+const step1 = async (sameBranch = false, promptText = null) => {
+    const task = promptText || await getMultilineInput();
 
     if (!task || task.trim().length < 10) {
         logger.error('Please provide more details (at least 10 characters)');
@@ -286,8 +286,12 @@ const isFullyImplemented = () => {
 }
 
 const chooseAction = async (i) => {
-    // Verifica se --fresh foi passado
-    const shouldStartFresh = process.argv.includes('--fresh');
+    // Verifica se --prompt foi passado e extrai o valor
+    const promptArg = process.argv.find(arg => arg.startsWith('--prompt='));
+    const promptText = promptArg ? promptArg.split('=').slice(1).join('=').replace(/^["']|["']$/g, '') : null;
+
+    // Verifica se --fresh foi passado (ou se --prompt foi usado, que automaticamente ativa --fresh)
+    const shouldStartFresh = process.argv.includes('--fresh') || promptText !== null;
 
     // Verifica se --push=false foi passado
     const shouldPush = !process.argv.some(arg => arg === '--push=false');
@@ -295,8 +299,8 @@ const chooseAction = async (i) => {
     // Verifica se --same-branch foi passado
     const sameBranch = process.argv.includes('--same-branch');
 
-    // Filtra os argumentos para pegar apenas o diretório (remove --fresh, --push=false e --same-branch)
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch');
+    // Filtra os argumentos para pegar apenas o diretório (remove --fresh, --push=false, --same-branch e --prompt)
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt'));
     const folderArg = args[0] || process.cwd();
 
     // Resolve o caminho absoluto e define a variável global
@@ -337,7 +341,7 @@ const chooseAction = async (i) => {
     }
 
     logger.step(1, 'Initialization');
-    return step1(sameBranch);
+    return step1(sameBranch, promptText);
 }
 
 const init = async () => {
