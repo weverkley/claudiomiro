@@ -77,8 +77,9 @@ const step1 = async () => {
     logger.startSpinner('Initializing task...');
 
     await executeClaude(`
-        Step 1: Create a git branch for this task
-        Step 2: Improve this prompt and create PROMPT.md
+        - Always update a file named LOG.md where you must explain what you are doing in real time.  
+        - Step 1: Create a git branch for this task
+        - Step 2: Improve this prompt and create PROMPT.md
         Task:
         \`\`\`
             ${response.task}
@@ -124,6 +125,7 @@ const step3 = () => {
 
 const step4 = () => {
     return executeClaude(`
+        - Always update a file named LOG.md where you must explain what you are doing in real time.  
         - Step 1: Run all tests (in every folder with package.json) - Example: "cd frontend && npm test" and "cd backend && bun test"  
         - Step 2: If any test fails – fix it.  
         - ULTRA IMPORTANT: Tests must use mocked data and never have a real connection to the database.  
@@ -135,7 +137,11 @@ const step4 = () => {
 }
 
 const step5 = async () => {
-    await executeClaude(`Commit the code and run git push (If it fails, fix whatever is necessary to make the commit work)`);
+    await executeClaude(`
+        - Always update a file named LOG.md where you must explain what you are doing in real time.  
+        - Step 1: git commit (If it fails, fix whatever is necessary to make the commit work)
+        - Step 2: git push (If it fails, fix whatever is necessary to make the commit work)
+    `);
     process.exit(0);
 }
 
