@@ -280,7 +280,7 @@ const isFullyImplemented = () => {
     return false;
 }
 
-const chooseAction = async () => {
+const chooseAction = async (i) => {
     // Verifica se --fresh foi passado
     const shouldStartFresh = process.argv.includes('--fresh');
 
@@ -305,7 +305,7 @@ const chooseAction = async () => {
     logger.path(`Working directory: ${folder}`);
     logger.newline();
 
-    if(shouldStartFresh){
+    if(shouldStartFresh && i === 0){
         startFresh();
     }
 
@@ -340,7 +340,7 @@ const init = async () => {
 
     let i = 0;
     while(i < 15){
-        await chooseAction();
+        await chooseAction(i);
         i++;
     }
 
