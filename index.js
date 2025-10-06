@@ -25,14 +25,14 @@ const startFresh = () => {
 
 const executeClaude = (text) => {
     return new Promise((resolve, reject) => {
-        const args = ['--project', folder, text];
+        const args = [text];
 
         logger.stopSpinner();
-        logger.command(`claude --project ${folder}`);
+        logger.command(`claude (in ${folder})`);
         logger.separator();
         logger.newline();
 
-        const claude = spawn('claude', args);
+        const claude = spawn('claude', args, { cwd: folder });
 
         // Mostra stdout em tempo real
         claude.stdout.on('data', (data) => {
