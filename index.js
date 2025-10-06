@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { spawn } = require('child_process');
 const prompts = require('prompts');
 const logger = require('./logger');
@@ -25,14 +26,19 @@ const startFresh = () => {
 
 const executeClaude = (text) => {
     return new Promise((resolve, reject) => {
-        const args = ['--dangerously-skip-permissions', '-p', text, '--output-format', 'stream-json', '--verbose'];
+        // Create temporary file for the prompt
+        const tmpFile = path.join(os.tmpdir(), `claudiomiro-prompt-${Date.now()}.txt`);
+        fs.writeFileSync(tmpFile, text, 'utf-8');
+
+        // Use sh to execute command with cat substitution
+        const command = `claude --dangerously-skip-permissions -p "$(cat '${tmpFile}')" --output-format stream-json --verbose`;
 
         logger.stopSpinner();
         logger.command(`claude --dangerously-skip-permissions -p --output-format stream-json (in ${folder})`);
         logger.separator();
         logger.newline();
 
-        const claude = spawn('claude', args, {
+        const claude = spawn('sh', ['-c', command], {
             cwd: folder,
             stdio: ['ignore', 'pipe', 'pipe']
         });
@@ -102,6 +108,15 @@ const executeClaude = (text) => {
 
         // Quando o processo terminar
         claude.on('close', (code) => {
+            // Clean up temporary file
+            try {
+                if (fs.existsSync(tmpFile)) {
+                    fs.unlinkSync(tmpFile);
+                }
+            } catch (err) {
+                logger.error(`Failed to cleanup temp file: ${err.message}`);
+            }
+
             logStream.write(`\n\n[${new Date().toISOString()}] Claude execution completed with code ${code}\n`);
             logStream.end();
 
@@ -119,6 +134,15 @@ const executeClaude = (text) => {
 
         // Tratamento de erro
         claude.on('error', (error) => {
+            // Clean up temporary file on error
+            try {
+                if (fs.existsSync(tmpFile)) {
+                    fs.unlinkSync(tmpFile);
+                }
+            } catch (err) {
+                logger.error(`Failed to cleanup temp file: ${err.message}`);
+            }
+
             logStream.write(`\n\nERROR: ${error.message}\n`);
             logStream.end();
             logger.error(`Failed to execute Claude: ${error.message}`);
