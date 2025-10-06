@@ -229,12 +229,64 @@ const step2 = () => {
 
 const step3 = () => {
     return executeClaude(`  
-        - Keep working till Implement everything from the TODO.md.  
-        - ULTRA IMPORTANT: Tests must use mocked data and never have a real connection to the database.  
-        - ULTRA IMPORTANT: The frontend must test by mocking the backend API responses to ensure that if the backend responds correctly, the frontend will work properly.  
-        - Update the TODO.md with the progress made.  
-        - The first line of TODO.md must be 'Fully implemented: <YES/NO>' (only "YES" or "NO" values are accepted on the first line).  
-        - Use context7  
+        OBJECTIVE
+        - Implement everything in TODO.md step by step.
+        - After each successful step, update TODO.md by changing "- [ ]" to "- [X]" for the exact item implemented. Never reword items.
+
+        HARD RULES
+        - Tests must use mocked data and never connect to a real database.
+        - Frontend tests must mock backend API responses.
+        - The first line of TODO.md must be exactly: "Fully implemented: <YES/NO>" (only YES or NO).
+        - Preserve headings, numbering, indentation, and bullet order. Only change the checkbox from [ ] to [X].
+        - Do NOT mark an item as done until:
+            1) Implementation is complete,
+            2) Lint/build pass,
+            3) All related tests pass.
+        - If an item is blocked or ambiguous, DO NOT guess. Add a sub-bullet under the item:
+        - "BLOCKED: <short reason>"
+        - Never mark partially done items. If you must split work, add temporary sub-bullets under the same item without altering the original text.
+        - Idempotent runs: keep all existing [X] checks intact.
+
+        OPERATING LOOP
+        1) Read TODO.md.
+        2) Set "Fully implemented: <YES/NO>" based on whether any "- [ ]" remain (YES only when none remain).
+        3) Pick the first unchecked item whose prerequisites are satisfied.
+        4) Implement the change.
+        5) Run verification:
+        - Lint/build
+        - Unit/integration tests (with mocks)
+        6) If verification passes:
+        - Update TODO.md: flip "- [ ]" to "- [X]" for that exact line.
+        - Append to the bottom of TODO.md (append-only):
+
+            ## Progress Log
+            - <timestamp ISO8601>  CHECKED: "<exact item text>"
+            files: <comma-separated paths>
+            cmds: <commands run>
+            result: pass
+
+        If verification fails:
+        - DO NOT check the item.
+        - Under the item, add a sub-bullet:
+            - "FAILED: <why/which step failed>"
+
+        FORMATTING CONSTRAINTS
+        - Only modify the one checkbox per completed item and append to "Progress Log".
+        - Do not rename sections or items.
+        - Do not alter code blocks or quoted text.
+        - Keep markdown checkboxes exactly as "- [ ]" and "- [X]" (uppercase X).
+
+        STOPPING CONDITIONS
+        - Continue until all items are "- [X]" or the process is blocked.
+        - When all items are checked, set first line to "Fully implemented: YES".
+
+        CONTEXT
+        - Use context7.
+
+        OUTPUT POLICY
+        - After each loop iteration, return:
+        1) The updated TODO.md (full file content),
+        2) A short summary of the step taken (one paragraph).
     `);    
 }
 
