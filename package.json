@@ -1,0 +1,23 @@
+{
+  "name": "claudiomiro",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": {
+    "claudiomiro": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "boxen": "^5.1.2",
+    "chalk": "^4.1.2",
+    "gradient-string": "^2.0.2",
+    "log-symbols": "^4.1.0",
+    "ora": "^5.4.1",
+    "prompts": "^2.4.2"
+  }
+}
