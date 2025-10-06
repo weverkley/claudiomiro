@@ -157,8 +157,12 @@ const isFullyImplemented = () => {
 }
 
 const chooseAction = async () => {
-    // Pega o argumento da linha de comando ou usa o diretório atual
-    const folderArg = process.argv[2] || process.cwd();
+    // Verifica se --fresh foi passado
+    const shouldStartFresh = process.argv.includes('--fresh');
+
+    // Filtra os argumentos para pegar apenas o diretório (remove --fresh)
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh');
+    const folderArg = args[0] || process.cwd();
 
     // Resolve o caminho absoluto e define a variável global
     folder = path.resolve(folderArg);
@@ -170,8 +174,6 @@ const chooseAction = async () => {
 
     logger.path(`Working directory: ${folder}`);
     logger.newline();
-
-    const shouldStartFresh = false;
 
     if(shouldStartFresh){
         startFresh();

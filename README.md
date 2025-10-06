@@ -47,6 +47,12 @@ claudiomiro
 
 # Run in specific directory
 claudiomiro /path/to/project
+
+# Start fresh (removes PROMPT.md, TODO.md, LOG.md, GITHUB_PR.md)
+claudiomiro --fresh
+
+# Start fresh in specific directory
+claudiomiro /path/to/project --fresh
 ```
 
 The tool will guide you through the process with interactive prompts.
