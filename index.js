@@ -25,10 +25,10 @@ const startFresh = () => {
 
 const executeClaude = (text) => {
     return new Promise((resolve, reject) => {
-        const args = [text];
+        const args = ['--dangerously-skip-permissions', text];
 
         logger.stopSpinner();
-        logger.command(`claude (in ${folder})`);
+        logger.command(`claude --dangerously-skip-permissions (in ${folder})`);
         logger.separator();
         logger.newline();
 
