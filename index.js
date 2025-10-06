@@ -52,48 +52,39 @@ const executeClaude = (text) => {
         claude.stdout.on('data', (data) => {
             const output = data.toString();
 
+            try {
+                const json = JSON.parse(output);
+
+                // Display based on event type
+                if (json.type === 'content_block_delta' && json.delta?.text) {
+                    // Show AI response text in real-time
+                    process.stdout.write(json.delta.text);
+                }
+                else if (json.type === 'tool_use_start' && json.tool_use?.name) {
+                    // Tool usage
+                    logger.info(`🔧 Using tool: ${json.tool_use.name}`);
+                }
+                else if (json.type === 'message_start') {
+                    // Message started
+                    logger.info('💭 Claude is thinking...');
+                }
+                else if (json.type === 'message_stop') {
+                    // Message completed
+                    process.stdout.write('\n');
+                }
+                else if (json.type === 'error') {
+                    // Error
+                    logger.error(`❌ ${json.error?.message || 'Unknown error'}`);
+                }
+                // Ignore other event types for cleaner output
+
+            } catch (e) {
+                // Not JSON - display raw output
+                process.stdout.write(output);
+            }
+
             // Log to file
             logStream.write(output);
-
-            // Parse JSON for friendly terminal display
-            buffer += output;
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-
-                try {
-                    const json = JSON.parse(line);
-
-                    // Display based on event type
-                    if (json.type === 'content_block_delta' && json.delta?.text) {
-                        // Show AI response text in real-time
-                        process.stdout.write(json.delta.text);
-                    }
-                    else if (json.type === 'tool_use_start' && json.tool_use?.name) {
-                        // Tool usage
-                        logger.info(`🔧 Using tool: ${json.tool_use.name}`);
-                    }
-                    else if (json.type === 'message_start') {
-                        // Message started
-                        logger.info('💭 Claude is thinking...');
-                    }
-                    else if (json.type === 'message_stop') {
-                        // Message completed
-                        process.stdout.write('\n');
-                    }
-                    else if (json.type === 'error') {
-                        // Error
-                        logger.error(`❌ ${json.error?.message || 'Unknown error'}`);
-                    }
-                    // Ignore other event types for cleaner output
-
-                } catch (e) {
-                    // Not JSON - display raw output
-                    process.stdout.write(output);
-                }
-            }
         });
 
         // Captura stderr
