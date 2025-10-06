@@ -14,14 +14,14 @@ Claudiomiro is a CLI tool that wraps the Claude AI assistant to provide a struct
 4. **Implementation**: Executes all tasks from TODO.md while maintaining a live log (LOG.md)
 5. **Testing**: Runs all tests and ensures they pass before proceeding
 6. **PR Creation**: Generates a GitHub pull request description (GITHUB_PR.md)
-7. **Commit & Push**: Commits the code and pushes to the repository
+7. **Commit & Push**: Commits the code and optionally pushes to the repository (can be skipped with `--push=false`)
 
 ### Key Features
 
 - 🤖 **Automated Workflow**: Complete development cycle from prompt to PR
 - 📝 **Structured Planning**: Generates detailed TODO lists for complex tasks
 - 🧪 **Test-Driven**: Ensures all tests pass before creating PRs
-- 📊 **Live Logging**: Maintains real-time logs of all actions taken
+- 📊 **Live Logging**: Maintains real-time logs of all actions taken (LOG.md) and complete execution logs (claudiomiro_log.txt)
 - 🎨 **Beautiful CLI**: Rich terminal UI with colors, spinners, and progress indicators
 - 🔄 **Iterative Process**: Automatically progresses through workflow stages
 
@@ -48,14 +48,32 @@ claudiomiro
 # Run in specific directory
 claudiomiro /path/to/project
 
-# Start fresh (removes PROMPT.md, TODO.md, LOG.md, GITHUB_PR.md)
+# Start fresh (removes PROMPT.md, TODO.md, LOG.md, GITHUB_PR.md, claudiomiro_log.txt)
 claudiomiro --fresh
 
 # Start fresh in specific directory
 claudiomiro /path/to/project --fresh
+
+# Skip git push at the end
+claudiomiro --push=false
+
+# Combine options
+claudiomiro /path/to/project --fresh --push=false
 ```
 
 The tool will guide you through the process with interactive prompts.
+
+## Generated Files
+
+During execution, Claudiomiro creates the following files in your project directory:
+
+- **PROMPT.md**: Enhanced and improved version of the original task description
+- **TODO.md**: Detailed breakdown of all tasks required to complete the feature
+- **LOG.md**: Real-time log of actions taken by Claude during implementation
+- **GITHUB_PR.md**: Generated pull request description based on all the work done
+- **claudiomiro_log.txt**: Complete execution log of all Claude interactions with timestamps
+
+Use `--fresh` flag to remove all these files and start from scratch.
 
 ## Requirements
 

@@ -9,7 +9,7 @@ const logger = require('./logger');
 let folder;
 
 const startFresh = () => {
-    const files = ['GITHUB_PR.md', 'LOG.md', 'PROMPT.md', 'TODO.md'];
+    const files = ['GITHUB_PR.md', 'LOG.md', 'PROMPT.md', 'TODO.md', 'claudiomiro_log.txt'];
 
     logger.task('Cleaning up previous files...');
     logger.indent();
@@ -25,20 +25,46 @@ const startFresh = () => {
 
 const executeClaude = (text) => {
     return new Promise((resolve, reject) => {
-        const args = ['--dangerously-skip-permissions', text];
+        const args = ['--dangerously-skip-permissions', '-p', text];
 
         logger.stopSpinner();
-        logger.command(`claude --dangerously-skip-permissions (in ${folder})`);
+        logger.command(`claude --dangerously-skip-permissions -p (in ${folder})`);
         logger.separator();
         logger.newline();
 
         const claude = spawn('claude', args, {
             cwd: folder,
-            stdio: 'inherit'
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
+
+        const logFilePath = path.join(folder, 'claudiomiro_log.txt');
+        const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
+
+        // Log separator with timestamp
+        const timestamp = new Date().toISOString();
+        logStream.write(`\n\n${'='.repeat(80)}\n`);
+        logStream.write(`[${timestamp}] Claude execution started\n`);
+        logStream.write(`${'='.repeat(80)}\n\n`);
+
+        // Captura stdout
+        claude.stdout.on('data', (data) => {
+            const output = data.toString();
+            process.stdout.write(output);
+            logStream.write(output);
+        });
+
+        // Captura stderr
+        claude.stderr.on('data', (data) => {
+            const output = data.toString();
+            process.stderr.write(output);
+            logStream.write(output);
         });
 
         // Quando o processo terminar
         claude.on('close', (code) => {
+            logStream.write(`\n\n[${new Date().toISOString()}] Claude execution completed with code ${code}\n`);
+            logStream.end();
+
             logger.newline();
             logger.separator();
 
@@ -53,6 +79,8 @@ const executeClaude = (text) => {
 
         // Tratamento de erro
         claude.on('error', (error) => {
+            logStream.write(`\n\nERROR: ${error.message}\n`);
+            logStream.end();
             logger.error(`Failed to execute Claude: ${error.message}`);
             reject(error);
         });
@@ -76,8 +104,7 @@ const step1 = async () => {
     logger.newline();
     logger.startSpinner('Initializing task...');
 
-    await executeClaude(`
-        - Always update a file named LOG.md where you must explain what you are doing in real time.  
+    await executeClaude(`  
         - Step 1: Create a git branch for this task
         - Step 2: Improve this prompt and create PROMPT.md
         Task:
@@ -112,8 +139,7 @@ const step2 = () => {
 }
 
 const step3 = () => {
-    return executeClaude(`
-        - Always update a file named LOG.md where you must explain what you are doing in real time.  
+    return executeClaude(`  
         - Keep working till Implement everything from the TODO.md.  
         - ULTRA IMPORTANT: Tests must use mocked data and never have a real connection to the database.  
         - ULTRA IMPORTANT: The frontend must test by mocking the backend API responses to ensure that if the backend responds correctly, the frontend will work properly.  
@@ -124,8 +150,7 @@ const step3 = () => {
 }
 
 const step4 = () => {
-    return executeClaude(`
-        - Always update a file named LOG.md where you must explain what you are doing in real time.  
+    return executeClaude(`  
         - Step 1: Run all tests (in every folder with package.json) - Example: "cd frontend && npm test" and "cd backend && bun test"  
         - Step 2: If any test fails – fix it.  
         - ULTRA IMPORTANT: Tests must use mocked data and never have a real connection to the database.  
@@ -136,11 +161,14 @@ const step4 = () => {
     `);
 }
 
-const step5 = async () => {
+const step5 = async (shouldPush = true) => {
+    const pushStep = shouldPush
+        ? '- Step 2: git push (If it fails, fix whatever is necessary to make the commit work)'
+        : '';
+
     await executeClaude(`
-        - Always update a file named LOG.md where you must explain what you are doing in real time.  
         - Step 1: git commit (If it fails, fix whatever is necessary to make the commit work)
-        - Step 2: git push (If it fails, fix whatever is necessary to make the commit work)
+        ${pushStep}
     `);
     process.exit(0);
 }
@@ -159,8 +187,11 @@ const chooseAction = async () => {
     // Verifica se --fresh foi passado
     const shouldStartFresh = process.argv.includes('--fresh');
 
-    // Filtra os argumentos para pegar apenas o diretório (remove --fresh)
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh');
+    // Verifica se --push=false foi passado
+    const shouldPush = !process.argv.some(arg => arg === '--push=false');
+
+    // Filtra os argumentos para pegar apenas o diretório (remove --fresh e --push=false)
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push'));
     const folderArg = args[0] || process.cwd();
 
     // Resolve o caminho absoluto e define a variável global
@@ -180,7 +211,7 @@ const chooseAction = async () => {
 
     if(fs.existsSync(path.join(folder, 'GITHUB_PR.md'))){
         logger.step(5, 'Creating pull request and committing');
-        return step5();
+        return step5(shouldPush);
     }
 
 
