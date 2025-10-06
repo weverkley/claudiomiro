@@ -175,9 +175,20 @@ const step5 = async (shouldPush = true) => {
 
 const isFullyImplemented = () => {
     const todo = fs.readFileSync(path.join(folder, 'TODO.md'), 'utf-8');
-    const firstLine = todo.split('\n')[0].toLowerCase().trim();
+    const lines = todo.split('\n').slice(0, 10); // Check first 10 lines
 
-    return firstLine === 'fully implemented: yes';
+    for (const line of lines) {
+        const trimmedLine = line.trim().toLowerCase();
+        // Check if line is exactly "fully implemented: yes" (not inside a task)
+        if (trimmedLine === 'fully implemented: yes' || trimmedLine.startsWith('fully implemented: yes')) {
+            // Make sure it's not part of a task (doesn't start with - [ ])
+            if (!line.trim().startsWith('-')) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 const chooseAction = async () => {
