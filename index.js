@@ -174,13 +174,10 @@ const step5 = async (shouldPush = true) => {
 }
 
 const isFullyImplemented = () => {
-    const todo = fs.readFileSync(path.join(folder, 'TODO.md'), 'utf-8').toLowerCase();
+    const todo = fs.readFileSync(path.join(folder, 'TODO.md'), 'utf-8');
+    const firstLine = todo.split('\n')[0].toLowerCase().trim();
 
-    if(todo.indexOf('fully implemented: yes') !== -1){
-        return true;
-    }
-
-    return false;
+    return firstLine === 'fully implemented: yes';
 }
 
 const chooseAction = async () => {
