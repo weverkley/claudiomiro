@@ -9,7 +9,7 @@ const logger = require('./logger');
 let folder;
 
 const startFresh = () => {
-    const files = ['GITHUB_PR.md', 'LOG.md', 'PROMPT.md', 'TODO.md', 'claudiomiro_log.txt'];
+    const files = ['GITHUB_PR.md', 'LOG.md', 'PROMPT.md', 'TODO.md', '.claudiomiro_log.txt'];
 
     logger.task('Cleaning up previous files...');
     logger.indent();
@@ -37,7 +37,7 @@ const executeClaude = (text) => {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        const logFilePath = path.join(folder, 'claudiomiro_log.txt');
+        const logFilePath = path.join(folder, '.claudiomiro_log.txt');
         const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 
         // Log separator with timestamp
