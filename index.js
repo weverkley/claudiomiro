@@ -51,37 +51,55 @@ const executeClaude = (text) => {
         // Captura stdout e processa JSON streaming
         claude.stdout.on('data', (data) => {
             const output = data.toString();
+            // Adiciona ao buffer
+            buffer += output;
 
-            try {
-                const json = JSON.parse(output);
+            // Processa linhas completas
+            const lines = buffer.split('\n');
 
-                // Display based on event type
-                if (json.type === 'content_block_delta' && json.delta?.text) {
-                    // Show AI response text in real-time
-                    process.stdout.write(json.delta.text);
-                }
-                else if (json.type === 'tool_use_start' && json.tool_use?.name) {
-                    // Tool usage
-                    logger.info(`🔧 Using tool: ${json.tool_use.name}`);
-                }
-                else if (json.type === 'message_start') {
-                    // Message started
-                    logger.info('💭 Claude is thinking...');
-                }
-                else if (json.type === 'message_stop') {
-                    // Message completed
-                    process.stdout.write('\n');
-                }
-                else if (json.type === 'error') {
-                    // Error
-                    logger.error(`❌ ${json.error?.message || 'Unknown error'}`);
-                }
-                // Ignore other event types for cleaner output
+            // A última linha pode estar incompleta, então mantém no buffer
+            buffer = lines.pop() || '';
 
-            } catch (e) {
-                // Not JSON - display raw output
-                process.stdout.write(output);
+
+            for (const line of lines) {
+                try {
+                    const json = JSON.parse(line);
+
+                    for(const msg of json.message.content){
+                        if(msg.text){
+                            process.stdout.write(msg.text);
+                        }
+                        // Display based on event type
+                        else if (msg.type === 'content_block_delta' && msg.delta?.text) {
+                            // Show AI response text in real-time
+                            process.stdout.write(msg.delta.text);
+                        }
+                        else if (msg.type === 'tool_use_start' && msg.tool_use?.name) {
+                            // Tool usage
+                            logger.info(`🔧 Using tool: ${msg.tool_use.name}`);
+                        }
+                        else if (msg.type === 'message_start') {
+                            // Message started
+                            logger.info('💭 Claude is thinking...');
+                        }
+                        else if (msg.type === 'message_stop') {
+                            // Message completed
+                            process.stdout.write('\n');
+                        }
+                        else if (msg.type === 'error') {
+                            // Error
+                            logger.error(`❌ ${msg.error?.message || 'Unknown error'}`);
+                        }else{
+                            process.stdout.write(JSON.stringify(msg));
+                        }
+                    }
+                } catch (e) {
+                    process.stdout.write(line);
+                }
             }
+
+            // Sempre mostra no terminal em tempo real
+            // process.stdout.write(output);
 
             // Log to file
             logStream.write(output);
