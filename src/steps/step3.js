@@ -16,6 +16,8 @@ PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 OBJECTIVE
 - Implement ${folder('TODO.md')} items one at a time following DAG order.
 - ULTRA IMPORTANT: ${folder('TODO.md')} REMOVE ALL BLOCKERS AND THINGS THAT CLAUDE CANNOT DO OR IS WAITING FOR THE USER.
+- ULTRA IMPORTANT: Fist line of ${folder('TODO.md')} NEEDS TO BE "Fully implemented: <"YES" OR "NO">".
+      - Only accepted for fist line of ${folder('TODO.md')} to be "Fully implemented: YES" or "Fully implemented: NO"
 
 ### TEST STRATEGY (rings)
 - R0 — smoke: typecheck/lint/build + short tests.
@@ -42,7 +44,7 @@ Pass required on all rings before check.
 - Denylist or unintended contract change → "FAILED: unintended diff".
 
 ### OPERATING LOOP
-1. Read ${folder('TODO.md')} and update first line to YES/NO.
+1. Read ${folder('TODO.md')} and update "Fully implemented:" to YES/NO.
 2. Pick next node whose prereqs are all checked.
 3. Apply BLOCKED POLICY if it has "BLOCKED:".
 4. Implement.
