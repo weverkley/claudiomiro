@@ -61,44 +61,59 @@ const executeClaude = (text) => {
             buffer = lines.pop() || '';
 
             const log = (text) => {
+                // Sobrescreve o bloco anterior se existir
                 if(overwriteBlockLines > 0){
                     overwriteBlock(overwriteBlockLines);
                 }
 
                 const max = process.stdout.columns || 80;
+                let lineCount = 0;
 
-                logger.info(`💬 Claude:`);
+                // Imprime cabeçalho
+                console.log(`💬 Claude:`);
+                lineCount++;
 
-                const split = text.split("\n");
-
-                for(const l of split){
-                    if(text.length > max){
-                        console.log(`${l}`.substring(0, max - 3) + '...');
+                // Processa e imprime o texto linha por linha
+                const lines = text.split("\n");
+                for(const line of lines){
+                    if(line.length > max){
+                        // Quebra linha longa em múltiplas linhas
+                        for(let i = 0; i < line.length; i += max){
+                            console.log(line.substring(i, i + max));
+                            lineCount++;
+                        }
                     }else{
-                        console.log(`${l}`);
+                        console.log(line);
+                        lineCount++;
                     }
                 }
 
-                overwriteBlockLines = split.length + 1;
+                // Atualiza contador para próximo overwrite
+                overwriteBlockLines = lineCount;
             }
 
             for (const line of lines) {
                 try {
                     const json = JSON.parse(line);
 
+                    let accumulatedText = '';
                     for(const msg of json.message.content){
                         if(msg.text){
-                            log(`${msg.text}`);
+                            accumulatedText += msg.text;
                         }
                         else if(msg.content){
-                            log(`${msg.content}`);
+                            accumulatedText += msg.content;
                         }
                         else if (msg.type === 'error') {
                             // Error
-                            log(`${msg.error?.message || 'Unknown error'}`);
+                            accumulatedText += (msg.error?.message || 'Unknown error');
                         } else {
-                            log(`${msg.type}`);
+                            accumulatedText += msg.type;
                         }
+                    }
+
+                    if(accumulatedText){
+                        log(accumulatedText);
                     }
                 } catch (e) {
                     log(`${line}`);
