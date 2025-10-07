@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
+const logger = require('../../logger');
 
 const step5 = async (tasks, shouldPush = true) => {
     
@@ -33,6 +34,7 @@ const step5 = async (tasks, shouldPush = true) => {
             ${pushStep}
     `);
     
+    logger.info(`✅ Claudiomiro has been successfully executed. Check out: ${state.folder}`);
     process.exit(0);
 }
 

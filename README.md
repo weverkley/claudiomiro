@@ -45,7 +45,7 @@ No manual intervention. No "continue" prompts. Just complete, production-ready c
 
 ### Safety Mechanisms
 
-- **Maximum 100 cycles** - Prevents runaway execution (change with `--maxCycles`)
+- **Maximum 100 cycles** - Prevents runaway execution (change with `--maxCycles` or disable with `--no-limit`)
 - **Progress validation** - Ensures forward progress each cycle
 - **Error detection** - Stops if same error repeats
 - **Manual override** - Use `--push=false` to review before final commit
@@ -119,6 +119,12 @@ claudiomiro --prompt="Fix login bug" --same-branch
 
 # Start fresh (removes all generated files)
 claudiomiro --fresh
+
+# Change maximum cycles (default: 15)
+claudiomiro --prompt="Complex refactoring" --maxCycles=50
+
+# Remove cycle limit (use with caution)
+claudiomiro --prompt="Very complex task" --no-limit
 
 # Combine options
 claudiomiro /path/to/project --prompt="Add GraphQL API" --push=false --same-branch

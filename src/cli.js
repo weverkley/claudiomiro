@@ -25,8 +25,11 @@ const chooseAction = async (i) => {
     // Verifica se --same-branch foi passado
     const sameBranch = process.argv.includes('--same-branch');
 
-    // Filtra os argumentos para pegar apenas o diretório (remove --fresh, --push=false, --same-branch, --prompt e --maxCycles)
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles'));
+    // Verifica se --no-limit foi passado
+    const noLimit = process.argv.includes('--no-limit');
+
+    // Filtra os argumentos para pegar apenas o diretório (remove --fresh, --push=false, --same-branch, --prompt, --maxCycles e --no-limit)
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles') && arg !== '--no-limit');
     const folderArg = args[0] || process.cwd();
 
     // Resolve o caminho absoluto e define a variável global
@@ -45,7 +48,7 @@ const chooseAction = async (i) => {
     }
 
     if(!fs.existsSync(state.claudiomiroFolder)){
-        return { step: step0(sameBranch), maxCycles };
+        return { step: step0(sameBranch), maxCycles: noLimit ? Infinity : maxCycles };
     }
 
     const tasks = fs
@@ -57,7 +60,11 @@ const chooseAction = async (i) => {
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
 
-    for(const task of tasks){
+    for(let taskIndex = 0; taskIndex < tasks.length; taskIndex++){
+        const task = tasks[taskIndex];
+        const currentTask = taskIndex + 1;
+        const totalTasks = tasks.length;
+
         if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'GITHUB_PR.md'))){
             logger.info(`${task} is done`);
             continue;
@@ -67,47 +74,49 @@ const chooseAction = async (i) => {
 
         if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'TODO.md'))){
             if(!isFullyImplemented(path.join(state.claudiomiroFolder, task, 'TODO.md'))){
-                logger.step(3, 'Implementing tasks');
-                return { step: step3(task), maxCycles };
+                logger.step(currentTask, totalTasks, 3, 'Implementing tasks');
+                return { step: step3(task), maxCycles: noLimit ? Infinity : maxCycles };
             }
 
 
             if(
-                isFullyImplemented(path.join(state.claudiomiroFolder, task, 'TODO.md')) 
+                isFullyImplemented(path.join(state.claudiomiroFolder, task, 'TODO.md'))
             ){
                 if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'CODE_REVIEW.md'))){
-                    logger.step(4, 'Running tests and creating PR');
-                    return { step: step4(task), maxCycles };
+                    logger.step(currentTask, totalTasks, 4, 'Running tests and creating PR');
+                    return { step: step4(task), maxCycles: noLimit ? Infinity : maxCycles };
                 }else{
-                    logger.step(3.1, 'Running code');
-                    return { step: codeReview(task), maxCycles };
+                    logger.step(currentTask, totalTasks, 3.1, 'Running code');
+                    return { step: codeReview(task), maxCycles: noLimit ? Infinity : maxCycles };
                 }
             }
         }
 
 
         if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'PROMPT.md'))){
-            logger.step(2, 'Research and planning');
-            return { step: step2(task), maxCycles };
+            logger.step(currentTask, totalTasks, 2, 'Research and planning');
+            return { step: step2(task), maxCycles: noLimit ? Infinity : maxCycles };
         }
 
-        logger.step(1, 'Initialization');
-        return { step: step1(task), maxCycles };
+        logger.step(currentTask, totalTasks, 1, 'Initialization');
+        return { step: step1(task), maxCycles: noLimit ? Infinity : maxCycles };
     }
 
     logger.info(`All tasks are done...`);
 
     if(fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))){
-        logger.step(5, 'Creating pull request and committing');
-        return { step: step5(tasks, shouldPush), maxCycles };
+        logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
+        return { step: step5(tasks, shouldPush), maxCycles: noLimit ? Infinity : maxCycles };
     }
 }
 
 const init = async () => {
     logger.banner();
 
+    const noLimit = process.argv.includes('--no-limit');
+
     let i = 0;
-    let maxCycles = 100;
+    let maxCycles = noLimit ? Infinity : 100;
 
     while(i < maxCycles){
         const result = await chooseAction(i);

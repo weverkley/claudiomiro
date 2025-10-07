@@ -45,10 +45,12 @@ class Logger {
     }
 
     // Log de step/fase
-    step(number, message) {
+    step(task, tasks, number, message) {
+        const tasksText = chalk.bold.white(`[TASK ${task}/${tasks}]`);
+
         const stepText = chalk.bold.white(`[STEP ${number}]`);
         const arrow = chalk.gray('→');
-        console.log(`\n${stepText} ${arrow} ${chalk.cyan(message)}\n`);
+        console.log(`\n${tasksText} ${stepText} ${arrow} ${chalk.cyan(message)}\n`);
     }
 
     // Box para mensagens importantes
