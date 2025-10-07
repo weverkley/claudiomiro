@@ -7,11 +7,6 @@ const step4 = (task) => {
 
   const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
-  // Remove CODE_REVIEW.md if it exists, since tests may have failed
-  if(fs.existsSync(folder('CODE_REVIEW.md'))){
-    fs.rmSync(folder('CODE_REVIEW.md'));
-  }
-
     return executeClaude(`
 PHASE: QUALITY GATE & PR PACKAGING
 
