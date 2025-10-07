@@ -7,7 +7,7 @@ const startFresh = (createFolder = false) => {
     logger.indent();
 
     if(fs.existsSync(state.claudiomiroFolder)){
-        fs.rmSync(state.claudiomiroFolder);
+        fs.rmSync(state.claudiomiroFolder, { recursive: true });
         logger.success(`${state.claudiomiroFolder} removed`);
     }
 

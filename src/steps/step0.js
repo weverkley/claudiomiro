@@ -29,17 +29,71 @@ const step0 = async (sameBranch = false, promptText = null) => {
     const stepNumber = sameBranch ? 1 : 2;
 
     await executeClaude(`
-        ${branchStep} - Step ${stepNumber}: Decompose the user prompt into granular, verifiable JIRA-style tasks.
+        ${branchStep} - Step ${stepNumber}: Decompose the user prompt into deeply granular, verifiable JIRA-style tasks and sub-tasks.
 
-        You are an autonomous agent specialized in **breaking down complex objectives into minimal, self-contained sub-tasks**.  
-        Your goal is to **translate the user prompt into clear, actionable, and testable tasks** — each one with a complete scope, its own reasoning, and a defined deliverable.
+        You are an autonomous system-design agent specialized in **recursive task decomposition** — transforming abstract user goals into a hierarchy of **atomic, testable, and context-independent tasks**.
         
-        Each generated task must be saved as a separate file:
-        ${state.claudiomiroFolder}/TASK1/TASK.md
-        ${state.claudiomiroFolder}/TASK2/TASK.md
-        ${state.claudiomiroFolder}/TASK3/TASK.md
+        Your mission is to **expand each main requirement into as many independent TASKs as necessary**, ensuring no ambiguity or missing logical link between them.
+        
+        Each final atomic task must be saved as its own file:
+        ${state.claudiomiroFolder}/TASK1/TASK.md  
+        ${state.claudiomiroFolder}/TASK2/TASK.md  
+        ${state.claudiomiroFolder}/TASK3/TASK.md 
         ...
+
+        ---
+        ### 🧠 Thinking & Methodology
+
+            1. **Recursive Breakdown**
+            - Start by listing all high-level requirements in the user prompt.
+            - For each one, **recursively expand** it into smaller, testable components.
+            - Continue decomposing until each sub-task can be *fully implemented and verified* without additional context.
+
+            2. **Autonomous Context Isolation**
+            - Each \`TASK.md\` must be 100% self-contained.
+            - It must include all assumptions, definitions, and relevant context required for another agent or developer to execute it without referring to the parent prompt.
+
+            3. **Granularity Guidelines**
+            - Each final task should be **1 action = 1 file**.
+            - Example of decomposition:
+                - “Ensure all filters work” →  
+                - Test filter by period  
+                - Test filter by status  
+                - Test filter by amount  
+                - Test filter interaction when pressing Enter  
+                - Verify UI reflects filtered results correctly
+
+            4. **Deep Reasoning Before Writing**
+            - Analyze not just what is being asked, but *why* — the user’s intent, expected system behavior, and possible edge cases.
+            - Document reasoning under **“Reasoning Trace”** in each task.
+
+            5. **Explicit Unknowns**
+            - When something is ambiguous, don’t invent.  
+                Instead, document it under an **“Assumptions”** section.
+
+            6. **Testability & Verification**
+            - Each atomic task must define:
+                - **Acceptance Criteria** → binary pass/fail conditions.  
+                - **Verification Checklist** → concrete validation steps.  
+                - **Testing Logic** → describe how it will be validated (unit, integration, or manual).
+
+            7. **Self-Audit Protocol**
+            - Before finalizing a task:
+                - Confirm it can be executed alone.
+                - Confirm it has measurable success conditions.
+                - Confirm it requires no external state.
+
+            8. **Research Summary**
+            - For each task, summarize key references, libraries, or methods relevant to implementation.
+
+        ---
+
+        ### 🎯 Output Expectation
         
+        Generate a **set of atomic tasks** — not just one per topic.  
+        Each one must describe a specific, testable, verifiable action derived from the user’s main request.  
+        Use the sorting filenames (\`TASK1\`, \`TASK2\`, ...) in order of dependency or logical sequence.
+
         ---
         
         ### 🔧 Rules & Methodology
