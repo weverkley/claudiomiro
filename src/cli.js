@@ -4,8 +4,9 @@ const logger = require('../logger');
 const state = require('./config/state');
 const { startFresh } = require('./services/file-manager');
 const { isFullyImplemented } = require('./utils/validation');
-const { step1, step2, step3, step4, step5, codeReview } = require('./steps');
+const { step1, step1_1, step2, step3, step4, step5, codeReview } = require('./steps');
 const { step0 } = require('./steps/step0');
+const { DAGExecutor } = require('./services/dag-executor');
 
 const chooseAction = async (i) => {
     // Verifica se --prompt foi passado e extrai o valor
@@ -59,6 +60,23 @@ const chooseAction = async (i) => {
     })
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
+    // Verifica se todos os step1 completaram e step1.1 ainda não rodou
+    const allHavePrompt = tasks.every(task =>
+        fs.existsSync(path.join(state.claudiomiroFolder, task, 'PROMPT.md'))
+    );
+
+    const noneHaveDependencies = tasks.every(task => {
+        const taskMdPath = path.join(state.claudiomiroFolder, task, 'TASK.md');
+        if (!fs.existsSync(taskMdPath)) return true;
+        const content = fs.readFileSync(taskMdPath, 'utf-8');
+        return !content.match(/@dependencies/);
+    });
+
+    // Se todos têm PROMPT.md mas nenhum tem @dependencies, roda step1.1
+    if (allHavePrompt && noneHaveDependencies && tasks.length > 1) {
+        logger.step(tasks.length, tasks.length, 1.1, 'Analyzing task dependencies');
+        return { step: step1_1(), maxCycles: noLimit ? Infinity : maxCycles };
+    }
 
     for(let taskIndex = 0; taskIndex < tasks.length; taskIndex++){
         const task = tasks[taskIndex];
@@ -110,6 +128,69 @@ const chooseAction = async (i) => {
     }
 }
 
+/**
+ * Constrói o grafo de tasks lendo as dependências de cada TASK.md
+ * @returns {Object} Grafo de tasks { TASK1: {deps: [], status: 'pending'}, ... }
+ */
+const buildTaskGraph = () => {
+    if (!fs.existsSync(state.claudiomiroFolder)) {
+        return null;
+    }
+
+    const tasks = fs
+        .readdirSync(state.claudiomiroFolder)
+        .filter(name => {
+            const fullPath = path.join(state.claudiomiroFolder, name);
+            return fs.statSync(fullPath).isDirectory();
+        })
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+    if (tasks.length === 0) {
+        return null;
+    }
+
+    const graph = {};
+    let hasDependencies = false;
+
+    for (const task of tasks) {
+        const taskMdPath = path.join(state.claudiomiroFolder, task, 'TASK.md');
+
+        if (!fs.existsSync(taskMdPath)) {
+            // Task sem TASK.md ainda, assume sem dependências
+            graph[task] = {
+                deps: [],
+                status: fs.existsSync(path.join(state.claudiomiroFolder, task, 'GITHUB_PR.md'))
+                    ? 'completed'
+                    : 'pending'
+            };
+            continue;
+        }
+
+        const taskMd = fs.readFileSync(taskMdPath, 'utf-8');
+
+        // Parse @dependencies do arquivo (primeira linha ou primeiras linhas)
+        // Formato: @dependencies [TASK1, TASK2] ou @dependencies []
+        const depsMatch = taskMd.match(/@dependencies\s*\[(.*?)\]/);
+        const deps = depsMatch
+            ? depsMatch[1].split(',').map(d => d.trim()).filter(Boolean)
+            : [];
+
+        if (deps.length > 0) {
+            hasDependencies = true;
+        }
+
+        graph[task] = {
+            deps,
+            status: fs.existsSync(path.join(state.claudiomiroFolder, task, 'GITHUB_PR.md'))
+                ? 'completed'
+                : 'pending'
+        };
+    }
+
+    // Se nenhuma task tem dependências, retorna null para usar fluxo sequencial
+    return hasDependencies ? graph : null;
+}
+
 const init = async () => {
     logger.banner();
 
@@ -124,6 +205,9 @@ const init = async () => {
 
     const noLimit = process.argv.includes('--no-limit');
 
+    // Verifica se --push=false foi passado
+    const shouldPush = !process.argv.some(arg => arg === '--push=false');
+
     let i = 0;
     let maxCycles = noLimit ? Infinity : 100;
 
@@ -135,6 +219,34 @@ const init = async () => {
         if (result && result.step) {
             await result.step;
         }
+
+        // Após executar uma ação, verifica se deve usar DAG executor
+        // Isso acontece depois que step0 cria as tasks
+        if (fs.existsSync(state.claudiomiroFolder)) {
+            const taskGraph = buildTaskGraph();
+
+            if (taskGraph) {
+                // Há tasks com dependências, usa DAG executor
+                logger.info('Tasks with dependencies detected, switching to parallel execution mode');
+                logger.newline();
+
+                const executor = new DAGExecutor(taskGraph);
+                await executor.run();
+
+                // Após DAG executor, executa step5 para criar o PR final
+                const tasks = Object.keys(taskGraph);
+                if (!fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))) {
+                    logger.newline();
+                    logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
+                    await step5(tasks, shouldPush);
+                }
+
+                // Termina o loop
+                logger.success('All tasks completed!');
+                return;
+            }
+        }
+
         i++;
     }
 

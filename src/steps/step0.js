@@ -89,9 +89,9 @@ const step0 = async (sameBranch = false, promptText = null) => {
         ---
 
         ### 🎯 Output Expectation
-        
-        Generate a **set of atomic tasks** — not just one per topic.  
-        Each one must describe a specific, testable, verifiable action derived from the user’s main request.  
+
+        Generate a **set of atomic tasks** — not just one per topic.
+        Each one must describe a specific, testable, verifiable action derived from the user's main request.
         Use the sorting filenames (\`TASK1\`, \`TASK2\`, ...) in order of dependency or logical sequence.
 
         ---
@@ -143,7 +143,7 @@ const step0 = async (sameBranch = false, promptText = null) => {
         ---
         
         ### 🧩 Output Format for Each TASK.md
-        
+
         Each file must strictly follow this structure:
         "
             # Task: [Clear and concise title]
