@@ -25,21 +25,47 @@ When using Claude Code for complex tasks, you've probably noticed it **stops bef
 Claudiomiro doesn't just run once. It **loops autonomously** until the entire task is complete:
 
 ```
-Cycle 1: [Step 1] Creating PROMPT.md and TODO.md
-Cycle 2: [Step 2] Researching codebase and patterns
-Cycle 3: [Step 3] Implementing tasks (TODO shows "Fully implemented: NO")
-Cycle 4: [Step 3] Continue implementing (still "NO")
-Cycle 5: [Step 3] Continue implementing (still "NO")
+Cycle 1: [Step 0] Decomposing complex task into 3 sub-tasks
+Cycle 2: [Step 1] Creating PROMPT.md for TASK1
+Cycle 3: [Step 2] Researching codebase and patterns for TASK1
+Cycle 4: [Step 3] Implementing TASK1 (TODO shows "Fully implemented: NO")
+Cycle 5: [Step 3] Continue implementing TASK1 (still "NO")
 Cycle 6: [Step 3] Final implementation (changes to "Fully implemented: YES")
-Cycle 7: [Step 4] Running tests... ❌ 3 tests failed
-Cycle 8: [Step 3] Fixing failing tests
-Cycle 9: [Step 4] Running tests... ✅ All tests passed!
-Cycle 10: [Step 5] Creating commit and pushing
+Cycle 7: [Step 3.1] Code review... ✅ All checks passed!
+Cycle 8: [Step 4] Running tests... ❌ 2 tests failed
+Cycle 9: [Step 3] Fixing failing tests
+Cycle 10: [Step 4] Running tests... ✅ All tests passed!
+Cycle 11: [Step 1-4] Processing TASK2 and TASK3...
+Cycle 12: [Step 5] Creating commit and pushing
 
-✓ Task completed in 10 autonomous cycles
+✓ Task completed in 12 autonomous cycles
 ```
 
 No manual intervention. No "continue" prompts. Just complete, production-ready code.
+
+## What's New in v1.1 🎉
+
+### Task Decomposition (New Step 0)
+Claudiomiro now intelligently breaks down complex requests into granular, independent sub-tasks:
+- **JIRA-style task breakdown** - Each sub-task is self-contained with clear objectives
+- **Parallel execution** - Multiple related tasks organized in `.claudiomiro/TASK1/`, `.claudiomiro/TASK2/`, etc.
+- **Independent context** - Each task file includes everything needed for autonomous execution
+- **Clear acceptance criteria** - Binary pass/fail verification for each sub-task
+
+### Automated Code Review (New Step 3.1)
+After implementation, a senior-level code review automatically validates:
+- ✅ **Requirement alignment** - Verifies all acceptance criteria are met
+- ✅ **Code quality & correctness** - Checks for bugs, edge cases, and error handling
+- ✅ **Architecture compliance** - Ensures adherence to system patterns and SOLID principles
+- ✅ **Performance & maintainability** - Identifies complexity and optimization opportunities
+- **Quality gate** - Can send implementation back for fixes if issues are found
+
+### Refactored Architecture
+Complete codebase reorganization for better maintainability:
+- **Modular design** - Clean separation of concerns with services, steps, and utilities
+- **Improved logging** - Smart output formatting with tool icons (🔧 Bash, 📖 Read, ✍️ Write)
+- **Better state management** - Centralized configuration and folder management
+- **Professional output** - Cleaner real-time display with overwriting blocks
 
 ## Real-World Impact
 
@@ -67,13 +93,15 @@ No manual intervention. No "continue" prompts. Just complete, production-ready c
 **Claudiomiro Time**: 8 minutes
 **Result**: Root cause identified in 3 files, race conditions eliminated, tests added
 
-## The 5-Step Autonomous Workflow
+## The 6-Step Autonomous Workflow
 
-1. **Initialization** - Analyzes task, creates git branch, enhances the prompt
-2. **Research** - Deeply researches codebase and relevant documentation
-3. **Implementation** - *Runs multiple times autonomously* until fully complete
-4. **Testing** - Runs all tests, fixes failures, loops until all pass
-5. **Commit & Push** - Creates meaningful commits and pushes to repository
+- **Step 0: Task Decomposition** - Breaks complex requests into granular, self-contained sub-tasks
+- **Step 1: Initialization** - Analyzes each task, creates git branch, enhances prompts
+- **Step 2: Research** - Deeply researches codebase and relevant documentation
+- **Step 3: Implementation** - *Runs multiple times autonomously* until fully complete
+- **Step 3.1: Code Review** - Senior-level automated review with requirement validation
+- **Step 4: Testing & PR** - Runs all tests, fixes failures, creates PR and commits
+- **Step 5: Commit & Push** - Pushes changes to repository
 
 ### Safety Mechanisms
 
@@ -85,10 +113,12 @@ No manual intervention. No "continue" prompts. Just complete, production-ready c
 ## Key Features
 
 - 🔄 **Truly Autonomous**: Loops until task is 100% complete
+- 🧩 **Intelligent Decomposition**: Breaks complex tasks into granular, independent sub-tasks
 - 🧠 **Deep Analysis**: Understands your codebase patterns and architecture
+- 👨‍💻 **Automated Code Review**: Senior-level review validates quality before testing
 - 🧪 **Quality Enforced**: Never skips tests, always validates
 - 📊 **Full Transparency**: Live logs show every decision and action
-- 🎯 **Production Ready**: Code is tested, documented, and ready to merge
+- 🎯 **Production Ready**: Code is tested, reviewed, documented, and ready to merge
 - ⚡ **Massive Time Savings**: 95-98% reduction in development time
 
 ## Prerequisites for Optimal Performance
@@ -210,15 +240,22 @@ and fix with proper tests to prevent regression."
 
 ## Generated Files
 
-Claudiomiro creates these files to track progress and enable autonomous execution:
+Claudiomiro creates a `.claudiomiro/` folder to organize tasks and track progress:
 
-- **PROMPT.md** - Enhanced task description with analysis
-- **TODO.md** - Detailed breakdown of all tasks (`Fully implemented: YES/NO`)
-- **LOG.md** - Real-time log of actions taken during implementation
-- **GITHUB_PR.md** - Generated pull request description
-- **claudiomiro_log.txt** - Complete execution log with timestamps
+```
+.claudiomiro/
+├── TASK1/
+│   ├── TASK.md              # Self-contained task description with acceptance criteria
+│   ├── PROMPT.md            # Enhanced task description with analysis
+│   ├── TODO.md              # Detailed breakdown (`Fully implemented: YES/NO`)
+│   ├── CODE_REVIEW.md       # Automated code review report
+│   └── GITHUB_PR.md         # Generated pull request description
+├── TASK2/
+│   └── ...
+└── log.txt                  # Complete execution log with timestamps
+```
 
-**Tip:** Review `TODO.md` early to validate the implementation plan. Use `--fresh` to start over.
+**Tip:** Each `TASK.md` is fully self-contained for independent execution. Review early to validate the plan. Use `--fresh` to start over.
 
 ## Best Practices
 
@@ -250,6 +287,8 @@ Claudiomiro creates these files to track progress and enable autonomous executio
 
 Traditional AI assistants:
 - ❌ Stop after one response
+- ❌ Handle one monolithic task
+- ❌ No code quality validation
 - ❌ You manually run tests
 - ❌ You manually fix failures
 - ❌ You create commits/PRs
@@ -257,11 +296,51 @@ Traditional AI assistants:
 
 **Claudiomiro:**
 - ✅ Runs autonomously until complete (up to 15 cycles)
+- ✅ Decomposes complex tasks intelligently
+- ✅ Built-in senior-level code review
 - ✅ Automatically runs tests
 - ✅ Automatically fixes test failures
 - ✅ Creates commits and PRs
-- ✅ Structured 5-step workflow
+- ✅ Structured 6-step workflow with quality gates
 - ✅ Production-ready output
+
+## Technical Architecture (v1.1)
+
+The codebase has been completely refactored for maintainability and extensibility:
+
+### Modular Structure
+```
+index.js                    # Entry point (now just 7 lines!)
+logger.js                   # Beautiful CLI output
+src/
+├── cli.js                 # Main CLI loop and orchestration
+├── config/
+│   └── state.js           # Centralized state management
+├── services/
+│   ├── claude-executor.js # Claude API execution
+│   ├── claude-logger.js   # Smart output formatting with tool icons
+│   ├── file-manager.js    # File operations and cleanup
+│   └── prompt-reader.js   # User input handling
+├── steps/
+│   ├── step0.js           # Task decomposition
+│   ├── step1.js           # Initialization
+│   ├── step2.js           # Research & planning
+│   ├── step3.js           # Implementation
+│   ├── code-review.js     # Automated code review
+│   ├── step4.js           # Testing & PR creation
+│   ├── step5.js           # Commit & push
+│   └── index.js           # Step exports
+└── utils/
+    └── validation.js      # Validation utilities
+```
+
+### Key Improvements
+- **500+ lines eliminated** from the main file
+- **Clean separation of concerns** - Each module has a single responsibility
+- **Improved testability** - Modular design enables unit testing
+- **Better error handling** - Centralized logging and error management
+- **Enhanced user experience** - Smart output formatting with real-time updates
+- **Extensibility** - Easy to add new steps or modify existing ones
 
 ## Contributing
 
