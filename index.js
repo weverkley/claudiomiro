@@ -219,119 +219,160 @@ const step1 = async (sameBranch = false, promptText = null) => {
     const stepNumber = sameBranch ? 1 : 2;
 
     await executeClaude(`
-        ${branchStep}- Step ${stepNumber}: Improve this prompt and create PROMPT.md
-        Task:
-        \`\`\`
-            ${task}
-        \`\`\`
+${branchStep}- Step ${stepNumber}: Establish PROCESS FOUNDATIONS and create PROMPT.md
 
-        Rules:
+Return a PROMPT.md with these sections:
 
-        Super think about it and follow the steps:
-            1.	Read relevant files, images, or URLs.
-            2.	Make a plan for how to approach a specific problem and create TODO.md.
+## OBJECTIVE
+- Rewrite the user’s ask clearly.
+- Done when: list measurable acceptance criteria.
 
-        Inside TODO.md, you must specify every step required to solve the problem.
+## CONSTRAINTS
+- Backend: tests for each layer + integration tests on routes (mock DB).
+- Frontend: tests for all components (mock API).
+- Database: migrations only.
+- TODO.md first line: "Fully implemented: NO".
+- Never include deployment steps.
 
-        IMPORTANT — Remember the rules:
-            •	In TODO.md, only include code-related tasks. Leave out anything that must be done manually.
-            •	Do not write anything about deployment in TODO.md.
-            •	In the backend, we must have tests for every layer, and integration tests for the routes.
-            •	In the frontend, we must have tests for every component.
-            •	Do not alter the database manually — everything must be done with migrations.
-            •	The first line of TODO.md must be exactly: "Fully implemented: NO"
-            •	ULTRA IMPORTANT: Tests must use mocked data only and must never connect to the real database.
-    `);
+## CRITIQUE PASS (Top 5 Risks)
+- List 5 risks + mitigations.
+
+## OPERATING PRINCIPLES
+- Atomic DAG nodes.
+- Proofs required for each.
+- No guessing; mark BLOCKED if unclear.
+
+Task:
+\`\`\`
+${task}
+\`\`\`
+`);
 
     logger.stopSpinner();
     logger.success('Task initialized successfully');
 }
 
 const step2 = () => {
-    return executeClaude(`Now read the PROMPT.md, perform a complete and extensive research, and then update the TODO.md based on your findings. Use context7`);
+    return executeClaude(`
+        PHASE: CONTEXT SELECTION & PLANNING
+
+Read PROMPT.md and generate TODO.md with the first line "Fully implemented: NO".
+
+### CONTEXT SELECTION
+- Limit to 30 artifacts (files/dirs/URLs) with "why relevant".
+- Explicitly list out-of-scope items.
+
+### PLAN (DAG)
+Each node must have:
+- description
+- prereq: [other nodes]
+- output: expected files/changes
+- proof: commands (lint|build|test)
+- change_fence.allowlist: list of permitted paths/patterns
+- risk_budget: low|medium|high
+
+### CONTRACT SURFACE MAP
+List contracts that cannot change without a dedicated BREAKING node:
+- endpoints
+- exported types/functions
+- events/schemas
+- env/config
+
+### POLICY
+- Do not include deployment tasks.
+- No node without proof.
+- At least one root node (no prereqs).
+
+Output a full TODO.md including the PLAN and CONTRACT MAP.
+Use context7.
+`);
 }
 
 const step3 = () => {
     return executeClaude(`  
-        OBJECTIVE
-        - Implement everything in TODO.md step by step.
-        - After each successful step, update TODO.md by changing "- [ ]" to "- [X]" for the exact item implemented. Never reword items.
+PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 
-        HARD RULES
-        - Tests must use mocked data and never connect to a real database.
-        - Frontend tests must mock backend API responses.
-        - The first line of TODO.md must be exactly: "Fully implemented: <YES/NO>" (only YES or NO).
-        - Preserve headings, numbering, indentation, and bullet order. Only change the checkbox from [ ] to [X].
-        - Do NOT mark an item as done until:
-            1) Implementation is complete,
-            2) Lint/build pass,
-            3) All related tests pass.
-        - If an item is blocked or ambiguous, DO NOT guess. Add a sub-bullet under the item:
-            - "BLOCKED: <short reason>"
-        - Never mark partially done items. If you must split work, add temporary sub-bullets under the same item without altering the original text.
-        - Idempotent runs: keep all existing [X] checks intact.
+OBJECTIVE
+- Implement TODO.md items one at a time following DAG order.
 
-        BLOCKED POLICY (UPDATED)
-        - If an item has a sub-bullet exactly starting with "BLOCKED:" under it, treat it as non-actionable for this run:
-        - Immediately flip that item's checkbox from "- [ ]" to "- [X]" without changing its text.
-        - Do NOT attempt implementation, lint/build, or tests for that item.
-        - In the Progress Log, set result to "blocked-skip" and record a brief reason copied verbatim from the BLOCKED line.
-        - Never reword the original item or its BLOCKED sub-bullet.
-        - This exception applies ONLY to items explicitly marked with a "BLOCKED:" sub-bullet.
+### TEST STRATEGY (rings)
+- R0 — smoke: typecheck/lint/build + short tests.
+- R1 — affected modules only.
+- R2 — full regression.
+Pass required on all rings before check.
 
-        OPERATING LOOP
-        1) Read TODO.md.
-        2) Set "Fully implemented: <YES/NO>" based on whether any "- [ ]" remain (YES only when none remain).
-        3) Pick the first unchecked item whose prerequisites are satisfied.
-        3a) If that item contains a "BLOCKED:" sub-bullet, apply the BLOCKED POLICY and skip directly to step 6.
-        4) Implement the change.
-        5) Run verification:
-        - Lint/build
-        - Unit/integration tests (with mocks)
-        6) If verification passes (or BLOCKED POLICY was applied):
-        - Update TODO.md: flip "- [ ]" to "- [X]" for that exact line.
-        - Append to the bottom of TODO.md (append-only):
+### CHANGE FENCE
+- After implementation, run "git diff --name-only".
+- Must be subset of change_fence.allowlist.
+- If not, mark "FAILED: change fence violated (<file>)" and do not check.
 
-            ## Progress Log
-            - <timestamp ISO8601>  CHECKED: "<exact item text>"
-            files: <comma-separated paths>
-            cmds: <commands run>
-            result: <pass | blocked-skip>
+### CONTRACT GATE
+- Run contract tests for any touched contract.
+- Failures → do not check.
 
-        If verification fails:
-        - DO NOT check the item.
-        - Under the item, add a sub-bullet:
-            - "FAILED: <why/which step failed>"
+### HIGH-RISK POLICY
+- If risk_budget=high → enable SHADOW MODE:
+  - Keep old vs new impl under feature flag.
+  - Run A/B comparators on same fixtures.
+  - Differences block checkbox.
 
-        FORMATTING CONSTRAINTS
-        - Only modify the one checkbox per completed item and append to "Progress Log".
-        - Do not rename sections or items.
-        - Do not alter code blocks or quoted text.
-        - Keep markdown checkboxes exactly as "- [ ]" and "- [X]" (uppercase X).
+### DIFF GUARD
+- Denylist or unintended contract change → "FAILED: unintended diff".
 
-        STOPPING CONDITIONS
-        - Continue until all items are "- [X]" or the process is blocked on items without a "BLOCKED:" sub-bullet.
-        - When all items are checked, set first line to "Fully implemented: YES".
+### OPERATING LOOP
+1. Read TODO.md and update first line to YES/NO.
+2. Pick next node whose prereqs are all checked.
+3. Apply BLOCKED POLICY if it has "BLOCKED:".
+4. Implement.
+5. Run proofs (R0→R1→R2, contracts, fences).
+6. If all pass:
+   - Flip "- [ ]"→"- [X]" for the node.
+   - Append to Progress Log:
+     - timestamp
+     - files, cmds
+     - ring results
+     - fence result
+     - result: pass|blocked-skip
+7. If any fail:
+   - Add sub-bullet "FAILED: <cause>".
 
-        CONTEXT
-        - Use context7.
+### STOP-DIFF
+- Do not alter TODO item names or unrelated files.
+- No contract file edits without BREAKING node.
 
-        OUTPUT POLICY
-        - After each loop iteration, return:
-        1) The updated TODO.md (full file content),
-        2) A short summary of the step taken (one paragraph).
+### BLOCKED POLICY
+- Node with "BLOCKED:" → skip + mark checked + result "blocked-skip".
+
+### OUTPUT
+- Updated TODO.md + Progress Log summary.
+Use context7.
     `);    
 }
 
 const step4 = () => {
     return executeClaude(`  
-        - Step 1: Run all tests (in every folder with package.json) - Example: "cd frontend && npm test" and "cd backend && bun test"  
-        - Step 2: If any test fails – fix it.  
-        - ULTRA IMPORTANT: Tests must use mocked data and never have a real connection to the database.  
-        - ULTRA IMPORTANT: The frontend must test by mocking the backend API responses to ensure that if the backend responds correctly, the frontend will work properly.  
-        - Step 3: Check all frontend calls to the backend and verify they are correct and actually exist.  
-        - Step 4: IF AND ONLY IF ALL TESTS PASS: Create a file named GITHUB_PR.md based on PROMPT.md, TODO.md, and LOG.md.  
-        - Do not create GITHUB_PR.md if any test is failing.  
+PHASE: QUALITY GATE & PR PACKAGING
+
+### GATES
+- All test rings passed on last iteration.
+- Invariants checklist:
+  [ ] coverage of affected modules not decreased
+  [ ] build time within 10% of baseline
+  [ ] no new error logs in tests
+  [ ] no contract violations
+  [ ] migrations consistent with schema
+
+If all pass:
+- Create GITHUB_PR.md combining PROMPT.md + TODO.md + LOG.md.
+
+### PR CONTENT
+- Diff summary by risk.
+- Contracts changed (if any) + migration notes.
+- Evidence: ring results + invariants.
+
+If any gate fails:
+- Do not create GITHUB_PR.md.
+- Add "FAILED: <cause>" under affected node.
     `);
 }
 
@@ -341,13 +382,15 @@ const step5 = async (shouldPush = true) => {
         : '';
 
     await executeClaude(`
-        - Step 1: git commit (If it fails, fix whatever is necessary to make the commit work)
-        ${pushStep}
+        HARD RULES:
+            - NEVER MENTION “Claude” or “Claude Code” or anything related to Claude or AI in the commit.
+            - NEVER use Co-Authored or any link to Claude or anything related.
+            - ULTRA IMPORTANT: Commit using the user’s default Git user.
+            - ULTRA IMPORTANT: All credit and authorship must be given to the user, not to Claude or any AI.
 
-        - IMPORTANT: NEVER MENTION “Claude” or “Claude Code” or anything related to Claude or AI in the commit.
-        - IMPORTANT: NEVER use Co-Authored or any link to Claude or anything related.
-        - ULTRA IMPORTANT: Commit using the user’s default Git user.
-        - ULTRA IMPORTANT: All credit and authorship must be given to the user, not to Claude or any AI.
+        TODO: 
+            - Step 1: git commit (If it fails, fix whatever is necessary to make the commit work)
+            ${pushStep}
     `);
     process.exit(0);
 }
@@ -375,6 +418,10 @@ const chooseAction = async (i) => {
     const promptArg = process.argv.find(arg => arg.startsWith('--prompt='));
     const promptText = promptArg ? promptArg.split('=').slice(1).join('=').replace(/^["']|["']$/g, '') : null;
 
+    // Verifica se --maxCycles foi passado e extrai o valor
+    const maxCyclesArg = process.argv.find(arg => arg.startsWith('--maxCycles='));
+    const maxCycles = maxCyclesArg ? parseInt(maxCyclesArg.split('=')[1], 10) : 15;
+
     // Verifica se --fresh foi passado (ou se --prompt foi usado, que automaticamente ativa --fresh)
     const shouldStartFresh = process.argv.includes('--fresh') || promptText !== null;
 
@@ -384,8 +431,8 @@ const chooseAction = async (i) => {
     // Verifica se --same-branch foi passado
     const sameBranch = process.argv.includes('--same-branch');
 
-    // Filtra os argumentos para pegar apenas o diretório (remove --fresh, --push=false, --same-branch e --prompt)
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt'));
+    // Filtra os argumentos para pegar apenas o diretório (remove --fresh, --push=false, --same-branch, --prompt e --maxCycles)
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles'));
     const folderArg = args[0] || process.cwd();
 
     // Resolve o caminho absoluto e define a variável global
@@ -405,41 +452,49 @@ const chooseAction = async (i) => {
 
     if(fs.existsSync(path.join(folder, 'GITHUB_PR.md'))){
         logger.step(5, 'Creating pull request and committing');
-        return step5(shouldPush);
+        return { step: step5(shouldPush), maxCycles };
     }
 
 
     if(fs.existsSync(path.join(folder, 'TODO.md'))){
         if(isFullyImplemented()){
             logger.step(4, 'Running tests and creating PR');
-            return step4();
+            return { step: step4(), maxCycles };
         }else{
             logger.step(3, 'Implementing tasks');
-            return step3();
+            return { step: step3(), maxCycles };
         }
     }
 
 
     if(fs.existsSync(path.join(folder, 'PROMPT.md'))){
         logger.step(2, 'Research and planning');
-        return step2();
+        return { step: step2(), maxCycles };
     }
 
     logger.step(1, 'Initialization');
-    return step1(sameBranch, promptText);
+    return { step: step1(sameBranch, promptText), maxCycles };
 }
 
 const init = async () => {
     logger.banner();
 
     let i = 0;
-    while(i < 15){
-        await chooseAction(i);
+    let maxCycles = 15;
+
+    while(i < maxCycles){
+        const result = await chooseAction(i);
+        if (result && result.maxCycles) {
+            maxCycles = result.maxCycles;
+        }
+        if (result && result.step) {
+            await result.step;
+        }
         i++;
     }
 
-    logger.error('Maximum iteration limit reached (15 cycles)');
-    logger.box('The agent has completed 15 cycles. Please review the progress and restart if needed.', {
+    logger.error(`Maximum iteration limit reached (${maxCycles} cycles)`);
+    logger.box(`The agent has completed ${maxCycles} cycles. Please review the progress and restart if needed.`, {
         borderColor: 'yellow',
         title: 'Limit Reached'
     });
