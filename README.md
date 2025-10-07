@@ -8,7 +8,7 @@ Transform days of complex development work into minutes while maintaining produc
 
 ## The Problem with Claude Code
 
-When using Claude Code for complex tasks, you've probably noticed it **stops before completing the job**. The result? You find yourself typing "continue" over and over again, managing the workflow manually.
+When using Claude Code for complex tasks, you've probably noticed it **stops before completing the job**. The result? You find yourself typing "continue", testing, reviewing, over and over again, managing all the workflow manually.
 
 ## What is Claudiomiro?
 
