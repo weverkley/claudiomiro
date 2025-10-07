@@ -43,30 +43,6 @@ Cycle 12: [Step 5] Creating commit and pushing
 
 No manual intervention. No "continue" prompts. Just complete, production-ready code.
 
-## What's New in v1.1 🎉
-
-### Task Decomposition (New Step 0)
-Claudiomiro now intelligently breaks down complex requests into granular, independent sub-tasks:
-- **JIRA-style task breakdown** - Each sub-task is self-contained with clear objectives
-- **Parallel execution** - Multiple related tasks organized in `.claudiomiro/TASK1/`, `.claudiomiro/TASK2/`, etc.
-- **Independent context** - Each task file includes everything needed for autonomous execution
-- **Clear acceptance criteria** - Binary pass/fail verification for each sub-task
-
-### Automated Code Review (New Step 3.1)
-After implementation, a senior-level code review automatically validates:
-- ✅ **Requirement alignment** - Verifies all acceptance criteria are met
-- ✅ **Code quality & correctness** - Checks for bugs, edge cases, and error handling
-- ✅ **Architecture compliance** - Ensures adherence to system patterns and SOLID principles
-- ✅ **Performance & maintainability** - Identifies complexity and optimization opportunities
-- **Quality gate** - Can send implementation back for fixes if issues are found
-
-### Refactored Architecture
-Complete codebase reorganization for better maintainability:
-- **Modular design** - Clean separation of concerns with services, steps, and utilities
-- **Improved logging** - Smart output formatting with tool icons (🔧 Bash, 📖 Read, ✍️ Write)
-- **Better state management** - Centralized configuration and folder management
-- **Professional output** - Cleaner real-time display with overwriting blocks
-
 ## Real-World Impact
 
 ### Use Case 1: Eliminating Code Duplication
@@ -304,7 +280,7 @@ Traditional AI assistants:
 - ✅ Structured 6-step workflow with quality gates
 - ✅ Production-ready output
 
-## Technical Architecture (v1.1)
+## Technical Architecture
 
 The codebase has been completely refactored for maintainability and extensibility:
 

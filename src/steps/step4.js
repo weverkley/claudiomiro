@@ -7,6 +7,11 @@ const step4 = (task) => {
 
   const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
+  // Remove CODE_REVIEW.md if it exists, since tests may have failed
+  if(fs.existsSync(folder('CODE_REVIEW.md'))){
+    fs.rmSync(folder('CODE_REVIEW.md'));
+  }
+
     return executeClaude(`
 PHASE: QUALITY GATE & PR PACKAGING
 
@@ -28,9 +33,11 @@ If all pass:
 - Evidence: ring results + invariants.
 
 If any gate fails:
-- Do not create ${folder('GITHUB_PR.md')}.
-- Add "FAILED: <cause>" under affected node.
-    `);
+    1. Do not create ${folder('GITHUB_PR.md')}.
+    2. **Delete \`${folder('CODE_REVIEW.md')}\`** 
+    2. **Refactor \`${folder('TODO.md')}\`** to reflect all corrections, improvements, or missing details.
+    3. IMPORTANT: Update the **first line** of \`${folder('TODO.md')}\` to: \`Fully implemented: NO\`
+`);
 }
 
 module.exports = { step4 };
