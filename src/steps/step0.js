@@ -10,7 +10,6 @@ const step0 = async (sameBranch = false, promptText = null) => {
     const task = promptText || await getMultilineInput();
     const folder = (file) => path.join(state.claudiomiroFolder, file);
 
-    fs.writeFileSync(folder('INITIAL_PROMPT.md'), promptText);
 
     if (!task || task.trim().length < 10) {
         logger.error('Please provide more details (at least 10 characters)');
@@ -21,6 +20,7 @@ const step0 = async (sameBranch = false, promptText = null) => {
     logger.startSpinner('Initializing task...');
 
     startFresh(true);
+    fs.writeFileSync(folder('INITIAL_PROMPT.md'), task);
 
     const branchStep = sameBranch
         ? ''
