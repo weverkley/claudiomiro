@@ -113,8 +113,13 @@ const chooseAction = async (i) => {
 const init = async () => {
     logger.banner();
 
+    // Inicializa o state.folder antes de usá-lo
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles') && arg !== '--no-limit');
+    const folderArg = args[0] || process.cwd();
+    state.setFolder(folderArg);
+
     if(fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))){
-        startFresh(true);
+        startFresh();
     }
 
     const noLimit = process.argv.includes('--no-limit');
