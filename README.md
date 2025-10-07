@@ -2,9 +2,9 @@
 
 ![Claudiomiro](http://www.samuelfaj.com/files/posts/claudiomiro.png)
 
-**100% Autonomous AI Development Agent**
+**Send your prompt — get a fully planned, executed, reviewed, and committed task.**
 
-Transform days of complex development work into minutes while maintaining production-ready code quality.
+Turn days of complex development into a fully automated process — without sacrificing production-grade code quality.
 
 ## The Problem with Claude Code
 
