@@ -104,7 +104,7 @@ const chooseAction = async (i) => {
 
     logger.info(`All tasks are done...`);
 
-    if(fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))){
+    if(!fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))){
         logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
         return { step: step5(tasks, shouldPush), maxCycles: noLimit ? Infinity : maxCycles };
     }
@@ -112,6 +112,10 @@ const chooseAction = async (i) => {
 
 const init = async () => {
     logger.banner();
+
+    if(fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))){
+        startFresh(true);
+    }
 
     const noLimit = process.argv.includes('--no-limit');
 
