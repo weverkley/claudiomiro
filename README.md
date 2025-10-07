@@ -2,7 +2,7 @@
 
 ![Claudiomiro](http://www.samuelfaj.com/files/posts/claudiomiro.png)
 
-**Send your prompt — get a fully planned, executed, reviewed, and committed task.**
+**Send your prompt — get a fully planned, executed, reviewed, tested and committed task.**
 
 Turn days of complex development into a fully automated process — without sacrificing production-grade code quality.
 
