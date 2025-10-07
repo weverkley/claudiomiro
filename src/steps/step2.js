@@ -36,11 +36,13 @@ List contracts that cannot change without a dedicated BREAKING node:
 
 ### POLICY
 - Do not include deployment tasks.
+- Do not include manual tasks.
+- Do not include tasks for the user to do.
 - No node without proof.
 - At least one root node (no prereqs).
 
 Output a full ${folder('TODO.md')} including the PLAN and CONTRACT MAP.
-Use context7.
+use context7 to build up to date TODO.md
 `);
 }
 

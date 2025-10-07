@@ -13,66 +13,75 @@ const step3 = (task) => {
     return executeClaude(`
 PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 
+IMPORTANT:
+- First line of ${folder('TODO.md')} MUST BE "Fully implemented: YES" or "Fully implemented: NO"
+
 OBJECTIVE
-- Implement ${folder('TODO.md')} items one at a time following DAG order.
-- ULTRA IMPORTANT: ${folder('TODO.md')} REMOVE ALL BLOCKERS AND THINGS THAT CLAUDE CANNOT DO OR IS WAITING FOR THE USER.
-- ULTRA IMPORTANT: Fist line of ${folder('TODO.md')} NEEDS TO BE "Fully implemented: <"YES" OR "NO">".
-      - Only accepted for fist line of ${folder('TODO.md')} to be "Fully implemented: YES" or "Fully implemented: NO"
+- Implement all actionable items in ${folder('TODO.md')}
+- Remove all blockers or manual tasks that Claude cannot perform
 
-### TEST STRATEGY (rings)
-- R0 — smoke: typecheck/lint/build + short tests.
-- R1 — affected modules only.
-- R2 — full regression.
-Pass required on all rings before check.
-
-### CHANGE FENCE
-- After implementation, run "git diff --name-only".
-- Must be subset of change_fence.allowlist.
-- If not, mark "FAILED: change fence violated (<file>)" and do not check.
-
-### CONTRACT GATE
-- Run contract tests for any touched contract.
-- Failures → do not check.
-
-### HIGH-RISK POLICY
-- If risk_budget=high → enable SHADOW MODE:
-  - Keep old vs new impl under feature flag.
-  - Run A/B comparators on same fixtures.
-  - Differences block checkbox.
-
-### DIFF GUARD
-- Denylist or unintended contract change → "FAILED: unintended diff".
+---
 
 ### OPERATING LOOP
 1. Read ${folder('TODO.md')} and update "Fully implemented:" to YES/NO.
-2. Pick next node whose prereqs are all checked.
+2. Pick one uncompleted item.
 3. Apply BLOCKED POLICY if it has "BLOCKED:".
-4. Implement.
-5. Run proofs (R0→R1→R2, contracts, fences).
-6. If all pass:
-   - Flip "- [ ]"→"- [X]" for the node.
-   - Append to Progress Log:
-     - timestamp
-     - files, cmds
-     - ring results
-     - fence result
-     - result: pass|blocked-skip
-7. If any fail:
-   - Add sub-bullet "FAILED: <cause>".
+4. Perform the work required by the item.
+   - If successful → mark as [X].
+   - If failed → add sub-bullet "FAILED: <cause>".
+5. If all items completed → run TEST STRATEGY.
 
-### STOP-DIFF
-- Do not alter TODO item names or unrelated files.
-- No contract file edits without BREAKING node.
+---
+
+### TEST STRATEGY
+- Run smoke tests (typecheck, lint, build, short tests).
+- Test affected modules and directly related modules only.
+- Do not run full regression (done later).
+- Follow TEST FAILURE POLICY.
+
+---
+
+### TEST FAILURE POLICY
+- If any test fails:
+  - Identify module and cause.
+  - Reopen the related TODO item.
+  - Add "FAILED: test failure in <module>".
+  - Return to step 2.
+
+---
+
+### EXIT CONDITION
+- Stop only when:
+  - All items are marked as [X] or BLOCKED/FAILED, **and**
+  - "Fully implemented: YES" confirmed after test re-run.
+
+---
 
 ### BLOCKED POLICY
-- Node with "BLOCKED:" → skip + mark checked + result "blocked-skip".
+- Item with "BLOCKED:" → skip, mark checked, note "blocked-skip" result.
 
-- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO - remove them.
-- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO - remove them.
+---
+
+### STOP-DIFF
+- Never rename TODO items or modify unrelated files.
+- Never change contract files unless explicitly allowed by BREAKING node.
+
+---
+
+### CHANGE ATOMICITY
+- Each item = one atomic change.
+- Merge only logically dependent consecutive items.
+
+---
+
+### MCP USAGE
+- You may use external tools (MCPs) for static analysis, testing, or diffing.
+- Never modify TODO.md or unrelated files using MCPs.
+
+---
 
 ### OUTPUT
-- Updated ${folder('TODO.md')} + Progress Log summary.
-Use context7.
+- Updated ${folder('TODO.md')} with accurate state and failure notes.
     `);
 }
 

@@ -11,23 +11,13 @@ const step4 = (task) => {
 PHASE: QUALITY GATE & PR PACKAGING
 
 ### GATES
-- All test rings passed on last iteration.
-- Invariants checklist:
-  [ ] coverage of affected modules not decreased
-  [ ] build time within 10% of baseline
-  [ ] no new error logs in tests
-  [ ] no contract violations
-  [ ] migrations consistent with schema
+- Run smoke tests (typecheck, lint, build, short tests).
+- Run full regression tests.
 
 If all pass:
-- Create ${folder('GITHUB_PR.md')} combining ${folder('PROMPT.md')} + ${folder('TODO.md')}.
+- Create ${folder('GITHUB_PR.md')} explaining in one paragraph what was done.
 
-### PR CONTENT
-- Diff summary by risk.
-- Contracts changed (if any) + migration notes.
-- Evidence: ring results + invariants.
-
-If any gate fails:
+If any fails:
     1. Do not create ${folder('GITHUB_PR.md')}.
     2. **Delete \`${folder('CODE_REVIEW.md')}\`** 
     2. **Refactor \`${folder('TODO.md')}\`** to reflect all corrections, improvements, or missing details.

@@ -19,36 +19,52 @@ const step1 = async (task) => {
 
 
     await executeClaude(`
-- Step 1: Establish PROCESS FOUNDATIONS and create ${folder('PROMPT.md')}
-
-Return a ${folder('PROMPT.md')} with these sections:
-
-## OBJECTIVE
-- Rewrite the user's ask clearly.
-- Done when: list measurable acceptance criteria.
-
-## CONSTRAINTS
-- Backend: tests for each layer + integration tests on routes (mock DB).
-- Frontend: tests for all components (mock API).
-- Database: migrations only.
-- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO.
-- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO.
-- ${folder('TODO.md')} first line: "Fully implemented: NO".
-- Never include deployment steps.
-
-## CRITIQUE PASS (Top 5 Risks)
-- List 5 risks + mitigations.
-
-## OPERATING PRINCIPLES
-- Atomic DAG nodes.
-- Proofs required for each.
-- No guessing; mark BLOCKED if unclear.
-
-Task:
-\`\`\`
-${prompt}
-\`\`\`
-`);
+        - Step 1: Establish PROCESS FOUNDATIONS and create ${folder('PROMPT.md')} (lean mode)
+        
+        Return a concise ${folder('PROMPT.md')} with only these sections:
+        
+        ---
+        
+        ## OBJECTIVE (≤ 5 lines)
+        - Restate the user request clearly in plain language.  
+        - Complete when 3–6 **binary acceptance criteria** are listed.
+        
+        ---
+        
+        ## CONSTRAINTS (short bullets)
+        - Backend: tests per layer + integration (mocks DB).  
+        - Frontend: component tests (mock API).  
+        - Database: migrations only.  
+        - **NO deployment.**  
+        - ${folder('TODO.md')}: first line must be "Fully implemented: NO".  
+        - No manual or non-executable tasks.
+        
+        ---
+        
+        ## TOP RISKS (max 3) + MITIGATIONS (1 line each)
+        
+        ---
+        
+        ## OPERATING PRINCIPLES (5 bullets)
+        - Atomic DAG nodes (critical path first).  
+        - Each task requires proof commands (≤ 3).  
+        - No guessing → mark BLOCKED in BACKLOG.  
+        - Respect file budgets (tasks ≤ 20, depth ≤ 3).  
+        - Stop planning after 15 min → begin execution.
+        
+        ---
+        
+        ## PLAN SUMMARY (≤ 10 bullets)
+        - List the macro execution sequence (critical path only).  
+        - Reference the \`TASK_INDEX.md\` that will be generated next.
+        
+        ---
+        
+        Task:
+        \`\`\`
+        ${prompt}
+        \`\`\`
+    `);
 
     logger.stopSpinner();
     logger.success(`${task} - Task initialized successfully`);
