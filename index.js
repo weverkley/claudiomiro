@@ -231,6 +231,8 @@ Return a PROMPT.md with these sections:
 - Backend: tests for each layer + integration tests on routes (mock DB).
 - Frontend: tests for all components (mock API).
 - Database: migrations only.
+- ULTRA IMPORTANT: TODO.md CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO.
+- ULTRA IMPORTANT: TODO.md CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO.
 - TODO.md first line: "Fully implemented: NO".
 - Never include deployment steps.
 
@@ -257,6 +259,9 @@ const step2 = () => {
         PHASE: CONTEXT SELECTION & PLANNING
 
 Read PROMPT.md and generate TODO.md with the first line "Fully implemented: NO".
+
+- ULTRA IMPORTANT: TODO.md CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO.
+- ULTRA IMPORTANT: TODO.md CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO.
 
 ### CONTEXT SELECTION
 - Limit to 30 artifacts (files/dirs/URLs) with "why relevant".
@@ -294,6 +299,7 @@ PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 
 OBJECTIVE
 - Implement TODO.md items one at a time following DAG order.
+- ULTRA IMPORTANT: TODO.md REMOVE ALL BLOCKERS AND THINGS THAT CLAUDE CANNOT DO OR IS WAITING FOR THE USER.
 
 ### TEST STRATEGY (rings)
 - R0 — smoke: typecheck/lint/build + short tests.
@@ -342,6 +348,9 @@ Pass required on all rings before check.
 
 ### BLOCKED POLICY
 - Node with "BLOCKED:" → skip + mark checked + result "blocked-skip".
+
+- ULTRA IMPORTANT: TODO.md CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO - remove them.
+- ULTRA IMPORTANT: TODO.md CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO - remove them.
 
 ### OUTPUT
 - Updated TODO.md + Progress Log summary.
