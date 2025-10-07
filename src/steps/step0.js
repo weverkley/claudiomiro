@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const state = require('../config/state');
 const logger = require('../../logger');
 const { executeClaude } = require('../services/claude-executor');
 const { getMultilineInput } = require('../services/prompt-reader');
-const state = require('../config/state');
 const { startFresh } = require('../services/file-manager');
 
 const step0 = async (sameBranch = false, promptText = null) => {
@@ -113,11 +113,6 @@ const step0 = async (sameBranch = false, promptText = null) => {
                 1. Compare actual outputs with acceptance criteria.
                 2. If any criterion fails → mark as "RETRY REQUIRED".
                 3. If all pass → mark as "SUCCESS".
-                4. Log summary in ${state.claudiomiroFolder}/LOG.md:
-                - Task name
-                - Status (SUCCESS/FAILED)
-                - Summary of findings
-                - Next suggested step (if any)
 
             ## Reasoning Trace
                 Summarize how the task was interpreted, why each step was chosen, and what trade-offs were considered.

@@ -20,7 +20,7 @@ PHASE: QUALITY GATE & PR PACKAGING
   [ ] migrations consistent with schema
 
 If all pass:
-- Create ${folder('GITHUB_PR.md')} combining ${folder('PROMPT.md')} + ${folder('TODO.md')} + ${folder('LOG.md')}.
+- Create ${folder('GITHUB_PR.md')} combining ${folder('PROMPT.md')} + ${folder('TODO.md')}.
 
 ### PR CONTENT
 - Diff summary by risk.

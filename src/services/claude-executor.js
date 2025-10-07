@@ -4,6 +4,7 @@ const os = require('os');
 const { spawn } = require('child_process');
 const logger = require('../../logger');
 const state = require('../config/state');
+const { processClaudeMessage } = require('./claude-logger');
 
 const overwriteBlock = (lines) => {
     // Move o cursor para cima N linhas e limpa cada uma
@@ -26,7 +27,7 @@ const executeClaude = (text) => {
         const command = `claude --dangerously-skip-permissions -p "$(cat '${tmpFile}')" --output-format stream-json --verbose`;
 
         logger.stopSpinner();
-        logger.command(`claude --dangerously-skip-permissions -p --output-format stream-json (in ${state.folder})`);
+        logger.command(`claude --dangerously-skip-permissions ...`);
         logger.separator();
         logger.newline();
 
@@ -35,7 +36,7 @@ const executeClaude = (text) => {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        const logFilePath = path.join(state.folder, '.claudiomiro_log.txt');
+        const logFilePath = path.join(state.claudiomiroFolder, 'log.txt');
         const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 
         // Log separator with timestamp
@@ -93,30 +94,9 @@ const executeClaude = (text) => {
             }
 
             for (const line of lines) {
-                try {
-                    const json = JSON.parse(line);
-
-                    let accumulatedText = '';
-                    for(const msg of json.message.content){
-                        if(msg.text){
-                            accumulatedText += msg.text;
-                        }
-                        else if(msg.content){
-                            accumulatedText += msg.content;
-                        }
-                        else if (msg.type === 'error') {
-                            // Error
-                            accumulatedText += (msg.error?.message || 'Unknown error');
-                        } else {
-                            accumulatedText += msg.type;
-                        }
-                    }
-
-                    if(accumulatedText){
-                        log(accumulatedText);
-                    }
-                } catch (e) {
-                    log(`${line}`);
+                const text = processClaudeMessage(line);
+                if(text){
+                    log(text);
                 }
             }
 
