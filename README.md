@@ -18,7 +18,7 @@ When using Claude Code for complex tasks, you've probably noticed it **stops bef
 - ✅ Analyzes your entire codebase
 - ✅ Identifies patterns and best practices
 - ✅ Implements comprehensive solutions
-- ✅ **Runs autonomously until completion** (up to 15 cycles)
+- ✅ **Runs autonomously until completion** (up to 100 cycles)
 
 ### The Magic: Autonomous Looping
 
@@ -43,45 +43,9 @@ Cycle 12: [Step 5] Creating commit and pushing
 
 No manual intervention. No "continue" prompts. Just complete, production-ready code.
 
-## Real-World Impact
-
-### Use Case 1: Eliminating Code Duplication
-**Task**: Unify 4 near-identical modules (2,264 lines of duplicated code)
-**Manual Estimate**: 2-3 days
-**Claudiomiro Time**: 12 minutes
-**Result**: 81.6% code reduction, comprehensive tests, zero bugs
-
-### Use Case 2: Complete Feature Implementation
-**Task**: Multi-step user onboarding system (5 steps, backend, emails, OAuth, tests)
-**Manual Estimate**: 3-5 days
-**Claudiomiro Time**: 25 minutes
-**Result**: 105 tests, 97.3% coverage, mobile-responsive UI
-
-### Use Case 3: Large-Scale Refactoring
-**Task**: Migrate from session-based auth to JWT across entire stack (127 files)
-**Manual Estimate**: 2 weeks
-**Claudiomiro Time**: 35 minutes
-**Result**: Zero downtime migration, 126 tests, all functionality preserved
-
-### Use Case 4: Critical Bug Investigation
-**Task**: Find and fix intermittent data corruption bug
-**Manual Estimate**: Days of debugging
-**Claudiomiro Time**: 8 minutes
-**Result**: Root cause identified in 3 files, race conditions eliminated, tests added
-
-## The 6-Step Autonomous Workflow
-
-- **Step 0: Task Decomposition** - Breaks complex requests into granular, self-contained sub-tasks
-- **Step 1: Initialization** - Analyzes each task, creates git branch, enhances prompts
-- **Step 2: Research** - Deeply researches codebase and relevant documentation
-- **Step 3: Implementation** - *Runs multiple times autonomously* until fully complete
-- **Step 3.1: Code Review** - Senior-level automated review with requirement validation
-- **Step 4: Testing & PR** - Runs all tests, fixes failures, creates PR and commits
-- **Step 5: Commit & Push** - Pushes changes to repository
-
 ### Safety Mechanisms
 
-- **Maximum 15 cycles** - Prevents runaway execution
+- **Maximum 100 cycles** - Prevents runaway execution (change with `--maxCycles`)
 - **Progress validation** - Ensures forward progress each cycle
 - **Error detection** - Stops if same error repeats
 - **Manual override** - Use `--push=false` to review before final commit
@@ -196,23 +160,6 @@ Investigate root cause in /services/FinancialService.js
 and fix with proper tests to prevent regression."
 ```
 
-## When to Use Claudiomiro
-
-### Perfect For ✅
-
-- **Eliminating code duplication** - Refactor similar modules into shared components
-- **Implementing complete features** - End-to-end feature development with tests
-- **Large-scale refactorings** - Architectural changes across many files
-- **Complex bug investigations** - Finding and fixing non-obvious issues
-- **Technology migrations** - Switch libraries, frameworks, or patterns
-- **Adding test coverage** - Comprehensive test suites for existing code
-
-### Less Suitable For ❌
-
-- Quick experiments or prototypes
-- Learning exercises (you want to write code yourself)
-- Highly creative/ambiguous tasks
-- Tasks requiring frequent human judgment calls
 
 ## Generated Files
 
@@ -232,26 +179,6 @@ Claudiomiro creates a `.claudiomiro/` folder to organize tasks and track progres
 ```
 
 **Tip:** Each `TASK.md` is fully self-contained for independent execution. Review early to validate the plan. Use `--fresh` to start over.
-
-## Best Practices
-
-### Write Better Prompts
-- ✅ Include file paths when relevant
-- ✅ Describe current state AND desired state
-- ✅ Mention specific constraints or requirements
-- ✅ Reference similar patterns in your codebase
-
-### Trust the Process
-- ✅ Let Claudiomiro complete all 5 steps autonomously
-- ✅ Don't interrupt mid-execution
-- ✅ Review the generated `TODO.md` early to validate approach
-- ✅ Use `--push=false` first time to review changes before pushing
-
-### Maximize Value
-- ✅ Use for large, time-consuming tasks
-- ✅ Apply to repetitive refactorings
-- ✅ Leverage for test coverage improvements
-- ✅ Use for architectural improvements
 
 ## Requirements
 
@@ -279,44 +206,6 @@ Traditional AI assistants:
 - ✅ Creates commits and PRs
 - ✅ Structured 6-step workflow with quality gates
 - ✅ Production-ready output
-
-## Technical Architecture
-
-The codebase has been completely refactored for maintainability and extensibility:
-
-### Modular Structure
-```
-index.js                    # Entry point (now just 7 lines!)
-logger.js                   # Beautiful CLI output
-src/
-├── cli.js                 # Main CLI loop and orchestration
-├── config/
-│   └── state.js           # Centralized state management
-├── services/
-│   ├── claude-executor.js # Claude API execution
-│   ├── claude-logger.js   # Smart output formatting with tool icons
-│   ├── file-manager.js    # File operations and cleanup
-│   └── prompt-reader.js   # User input handling
-├── steps/
-│   ├── step0.js           # Task decomposition
-│   ├── step1.js           # Initialization
-│   ├── step2.js           # Research & planning
-│   ├── step3.js           # Implementation
-│   ├── code-review.js     # Automated code review
-│   ├── step4.js           # Testing & PR creation
-│   ├── step5.js           # Commit & push
-│   └── index.js           # Step exports
-└── utils/
-    └── validation.js      # Validation utilities
-```
-
-### Key Improvements
-- **500+ lines eliminated** from the main file
-- **Clean separation of concerns** - Each module has a single responsibility
-- **Improved testability** - Modular design enables unit testing
-- **Better error handling** - Centralized logging and error management
-- **Enhanced user experience** - Smart output formatting with real-time updates
-- **Extensibility** - Easy to add new steps or modify existing ones
 
 ## Contributing
 

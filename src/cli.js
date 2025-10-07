@@ -107,7 +107,7 @@ const init = async () => {
     logger.banner();
 
     let i = 0;
-    let maxCycles = 15;
+    let maxCycles = 100;
 
     while(i < maxCycles){
         const result = await chooseAction(i);
