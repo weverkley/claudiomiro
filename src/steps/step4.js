@@ -1,6 +1,12 @@
+const fs = require('fs');
+const path = require('path');
+const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
 
 const step4 = (task) => {
+
+  const folder = (file) => path.join(state.claudiomiroFolder, task, file);
+
     return executeClaude(`
 PHASE: QUALITY GATE & PR PACKAGING
 
@@ -14,7 +20,7 @@ PHASE: QUALITY GATE & PR PACKAGING
   [ ] migrations consistent with schema
 
 If all pass:
-- Create ${task}/GITHUB_PR.md combining ${task}/PROMPT.md + ${task}/TODO.md + ${task}/LOG.md.
+- Create ${folder('GITHUB_PR.md')} combining ${folder('PROMPT.md')} + ${folder('TODO.md')} + ${folder('LOG.md')}.
 
 ### PR CONTENT
 - Diff summary by risk.
@@ -22,7 +28,7 @@ If all pass:
 - Evidence: ring results + invariants.
 
 If any gate fails:
-- Do not create GITHUB_PR.md.
+- Do not create ${folder('GITHUB_PR.md')}.
 - Add "FAILED: <cause>" under affected node.
     `);
 }

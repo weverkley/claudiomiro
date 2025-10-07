@@ -5,6 +5,17 @@ const { spawn } = require('child_process');
 const logger = require('../../logger');
 const state = require('../config/state');
 
+const overwriteBlock = (lines) => {
+    // Move o cursor para cima N linhas e limpa cada uma
+    process.stdout.write(`\x1b[${lines}A`);
+    for (let i = 0; i < lines; i++) {
+      process.stdout.write('\x1b[2K'); // limpa linha
+      process.stdout.write('\x1b[1B'); // desce uma linha
+    }
+    // Volta para o topo do bloco
+    process.stdout.write(`\x1b[${lines}A`);
+  }
+
 const executeClaude = (text) => {
     return new Promise((resolve, reject) => {
         // Create temporary file for the prompt
@@ -35,6 +46,8 @@ const executeClaude = (text) => {
 
         let buffer = '';
 
+        let overwriteBlockLines = 0;
+
         // Captura stdout e processa JSON streaming
         claude.stdout.on('data', (data) => {
             const output = data.toString();
@@ -47,28 +60,48 @@ const executeClaude = (text) => {
             // A última linha pode estar incompleta, então mantém no buffer
             buffer = lines.pop() || '';
 
+            const log = (text) => {
+                if(overwriteBlockLines > 0){
+                    overwriteBlock(overwriteBlockLines);
+                }
+
+                const max = process.stdout.columns || 80;
+
+                logger.info(`💬 Claude:`);
+
+                const split = text.split("\n");
+
+                for(const l of split){
+                    if(text.length > max){
+                        console.log(`${l}`.substring(0, max - 3) + '...');
+                    }else{
+                        console.log(`${l}`);
+                    }
+                }
+
+                overwriteBlockLines = split.length + 1;
+            }
+
             for (const line of lines) {
                 try {
                     const json = JSON.parse(line);
 
                     for(const msg of json.message.content){
                         if(msg.text){
-                            logger.info('💬 Claude:');
-                            console.log(msg.text);
+                            log(`${msg.text}`);
                         }
                         else if(msg.content){
-                            logger.info('💬 Claude:');
-                            console.log(msg.content);
+                            log(`${msg.content}`);
                         }
                         else if (msg.type === 'error') {
                             // Error
-                            logger.error(`❌ Claude: ${msg.error?.message || 'Unknown error'}`);
+                            log(`${msg.error?.message || 'Unknown error'}`);
                         } else {
-                            logger.info('💬 Claude: '  + msg.type + '...');
+                            log(`${msg.type}`);
                         }
                     }
                 } catch (e) {
-                    logger.error(line);
+                    log(`${line}`);
                 }
             }
 
@@ -79,7 +112,7 @@ const executeClaude = (text) => {
         // Captura stderr
         claude.stderr.on('data', (data) => {
             const output = data.toString();
-            process.stderr.write(output);
+            // process.stderr.write(output);
             logStream.write('[STDERR] ' + output);
         });
 
@@ -94,8 +127,12 @@ const executeClaude = (text) => {
                 logger.error(`Failed to cleanup temp file: ${err.message}`);
             }
 
+            logger.newline();
+            logger.newline();
+            
             logStream.write(`\n\n[${new Date().toISOString()}] Claude execution completed with code ${code}\n`);
             logStream.end();
+
 
             logger.newline();
             logger.separator();

@@ -1,19 +1,21 @@
+const fs = require('fs');
+const path = require('path');
+const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
 
 const step3 = (task) => {
-    const fs = require('fs');
-    const path = require('path');
+    const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
-    if(fs.existsSync(path.join(task, 'CODE_REVIEW.md'))){
-      fs.rmSync(path.join(task, 'CODE_REVIEW.md'));
+    if(fs.existsSync(folder('CODE_REVIEW.md'))){
+      fs.rmSync(folder('CODE_REVIEW.md'));
     }
 
     return executeClaude(`
 PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 
 OBJECTIVE
-- Implement ${task}/TODO.md items one at a time following DAG order.
-- ULTRA IMPORTANT: ${task}/TODO.md REMOVE ALL BLOCKERS AND THINGS THAT CLAUDE CANNOT DO OR IS WAITING FOR THE USER.
+- Implement ${folder('TODO.md')} items one at a time following DAG order.
+- ULTRA IMPORTANT: ${folder('TODO.md')} REMOVE ALL BLOCKERS AND THINGS THAT CLAUDE CANNOT DO OR IS WAITING FOR THE USER.
 
 ### TEST STRATEGY (rings)
 - R0 — smoke: typecheck/lint/build + short tests.
@@ -40,7 +42,7 @@ Pass required on all rings before check.
 - Denylist or unintended contract change → "FAILED: unintended diff".
 
 ### OPERATING LOOP
-1. Read ${task}/TODO.md and update first line to YES/NO.
+1. Read ${folder('TODO.md')} and update first line to YES/NO.
 2. Pick next node whose prereqs are all checked.
 3. Apply BLOCKED POLICY if it has "BLOCKED:".
 4. Implement.
@@ -63,11 +65,11 @@ Pass required on all rings before check.
 ### BLOCKED POLICY
 - Node with "BLOCKED:" → skip + mark checked + result "blocked-skip".
 
-- ULTRA IMPORTANT: ${task}/TODO.md CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO - remove them.
-- ULTRA IMPORTANT: ${task}/TODO.md CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO - remove them.
+- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO - remove them.
+- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO - remove them.
 
 ### OUTPUT
-- Updated ${task}/TODO.md + Progress Log summary.
+- Updated ${folder('TODO.md')} + Progress Log summary.
 Use context7.
     `);
 }

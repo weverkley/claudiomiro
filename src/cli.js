@@ -4,7 +4,7 @@ const logger = require('../logger');
 const state = require('./config/state');
 const { startFresh } = require('./services/file-manager');
 const { isFullyImplemented } = require('./utils/validation');
-const { step1, step2, step3, step4, step5 } = require('./steps');
+const { step1, step2, step3, step4, step5, codeReview } = require('./steps');
 const { step0 } = require('./steps/step0');
 
 const chooseAction = async (i) => {
@@ -53,38 +53,40 @@ const chooseAction = async (i) => {
     .filter(name => {
         const fullPath = path.join(state.claudiomiroFolder, name);
         return fs.statSync(fullPath).isDirectory();
-    });
+    })
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
 
     for(const task of tasks){
-        if(fs.existsSync(path.join(task, 'GITHUB_PR.md'))){
+        if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'GITHUB_PR.md'))){
             logger.info(`${task} is done`);
             continue;
         }
 
         logger.info(`Working in task ${task}...`);
 
-        if(fs.existsSync(path.join(task, 'TODO.md'))){
-            if(!isFullyImplemented(path.join(task, 'TODO.md'))){
+        if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'TODO.md'))){
+            if(!isFullyImplemented(path.join(state.claudiomiroFolder, task, 'TODO.md'))){
                 logger.step(3, 'Implementing tasks');
                 return { step: step3(task), maxCycles };
             }
 
 
             if(
-                isFullyImplemented(path.join(task, 'TODO.md')) 
+                isFullyImplemented(path.join(state.claudiomiroFolder, task, 'TODO.md')) 
             ){
-                if(fs.existsSync(path.join(task, 'TODO.md'))){
+                if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'CODE_REVIEW.md'))){
                     logger.step(4, 'Running tests and creating PR');
                     return { step: step4(task), maxCycles };
                 }else{
-                    logger.step(3.1, 'Running code review');
-                    return { step: step4(task), maxCycles };
+                    logger.step(3.1, 'Running code');
+                    return { step: codeReview(task), maxCycles };
                 }
             }
         }
 
 
-        if(fs.existsSync(path.join(task, 'PROMPT.md'))){
+        if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'PROMPT.md'))){
             logger.step(2, 'Research and planning');
             return { step: step2(task), maxCycles };
         }

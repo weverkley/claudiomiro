@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const state = require('../config/state');
 
-const isFullyImplemented = (file => {
+const isFullyImplemented = (file) => {
     const todo = fs.readFileSync(file, 'utf-8');
     const lines = todo.split('\n').slice(0, 10); // Check first 10 lines
 

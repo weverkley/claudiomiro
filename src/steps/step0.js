@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const logger = require('../../logger');
 const { executeClaude } = require('../services/claude-executor');
 const { getMultilineInput } = require('../services/prompt-reader');

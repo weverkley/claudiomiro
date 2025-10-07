@@ -1,18 +1,21 @@
 const fs = require('fs');
 const path = require('path');
+const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
 
 const codeReview = (task) => {
-    if(fs.existsSync(path.join(task, 'CODE_REVIEW.md'))){
-      fs.rmSync(path.join(task, 'CODE_REVIEW.md'));
+    const folder = (file) => path.join(state.claudiomiroFolder, task, file);
+
+    if(fs.existsSync(folder('CODE_REVIEW.md'))){
+      fs.rmSync(folder('CODE_REVIEW.md'));
     }
 
     return executeClaude(`
       You are acting as a **senior autonomous code reviewer**.
 
       Your objective is to read and deeply analyze the following files:
-      - ${task}/PROMPT.md — describes the original requirements and intent.
-      - ${task}/TODO.md — describes what was implemented.
+      - ${folder('PROMPT.md')} — describes the original requirements and intent.
+      - ${folder('TODO.md')} — describes what was implemented.
 
       Your mission is to conduct a **complete, context-aware review** of the task implementation.
 
@@ -21,7 +24,7 @@ const codeReview = (task) => {
       ### 🧩 Review Objectives
 
       1. **Requirement Alignment**
-        - Verify that every item in \`${task}/TODO.md\` fully satisfies the scope and intent defined in \`${task}/PROMPT.md\`.
+        - Verify that every item in \`${folder('TODO.md')}\` fully satisfies the scope and intent defined in \`${folder('PROMPT.md')}\`.
         - Identify any missing requirements, partial implementations, or over-extended scopes.
 
       2. **Code Quality & Correctness**
@@ -42,8 +45,8 @@ const codeReview = (task) => {
 
       ### 🧠 Reasoning & Validation
 
-      - Conduct a **comprehensive analysis** of all changes implied by \`${task}/TODO.md\`.
-      - Cross-reference each change with its original goal in \`${task}/PROMPT.md\`.
+      - Conduct a **comprehensive analysis** of all changes implied by \`${folder('TODO.md')}\`.
+      - Cross-reference each change with its original goal in \`${folder('PROMPT.md')}\`.
       - When in doubt, prefer precision over assumption: highlight potential ambiguities in the review file rather than guessing.
 
       ---
@@ -52,12 +55,12 @@ const codeReview = (task) => {
 
       If the review determines that changes are required:
 
-      1. **Refactor \`${task}/TODO.md\`** to reflect all corrections, improvements, or missing details.
-      2. Update the **first line** of \`${task}/TODO.md\` to: \`Fully implemented: NO\`
+      1. **Refactor \`${folder('TODO.md')}\`** to reflect all corrections, improvements, or missing details.
+      2. Update the **first line** of \`${folder('TODO.md')}\` to: \`Fully implemented: NO\`
       This signals that the implementation still requires attention before it can be approved.
 
       If everything is correct and complete:
-        - Confirm that the first line of \`${task}/TODO.md\` is: \`Fully implemented: YES\`
+        - Confirm that the first line of \`${folder('TODO.md')}\` is: \`Fully implemented: YES\`
 
       ---
 

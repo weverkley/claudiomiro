@@ -1,9 +1,13 @@
 const fs = require('fs');
+const path = require('path');
+const state = require('../config/state');
 const logger = require('../../logger');
 const { executeClaude } = require('../services/claude-executor');
 
 const step1 = async (task) => {
-    const prompt = fs.readFileSync(path.join(task, 'TASK.md'));
+    const folder = (file) => path.join(state.claudiomiroFolder, task, file);
+   
+    const prompt = fs.readFileSync(path.join(state.claudiomiroFolder, task, 'TASK.md'), 'utf-8');
 
     if (!prompt || prompt.trim().length < 10) {
         logger.error('Please provide more details (at least 10 characters)');
@@ -15,9 +19,9 @@ const step1 = async (task) => {
 
 
     await executeClaude(`
-- Step 1: Establish PROCESS FOUNDATIONS and create ${task}/PROMPT.md
+- Step 1: Establish PROCESS FOUNDATIONS and create ${folder('PROMPT.md')}
 
-Return a ${task}/PROMPT.md with these sections:
+Return a ${folder('PROMPT.md')} with these sections:
 
 ## OBJECTIVE
 - Rewrite the user's ask clearly.
@@ -27,9 +31,9 @@ Return a ${task}/PROMPT.md with these sections:
 - Backend: tests for each layer + integration tests on routes (mock DB).
 - Frontend: tests for all components (mock API).
 - Database: migrations only.
-- ULTRA IMPORTANT: ${task}/TODO.md CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO.
-- ULTRA IMPORTANT: ${task}/TODO.md CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO.
-- ${task}/TODO.md first line: "Fully implemented: NO".
+- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO.
+- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO.
+- ${folder('TODO.md')} first line: "Fully implemented: NO".
 - Never include deployment steps.
 
 ## CRITIQUE PASS (Top 5 Risks)

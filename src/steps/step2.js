@@ -1,13 +1,18 @@
+const fs = require('fs');
+const path = require('path');
+const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
 
 const step2 = (task) => {
+    const folder = (file) => path.join(state.claudiomiroFolder, task, file);
+
     return executeClaude(`
         PHASE: CONTEXT SELECTION & PLANNING
 
-Read ${task}/PROMPT.md and generate ${task}/TODO.md with the first line "Fully implemented: NO".
+Read ${folder('PROMPT.md')} and generate ${folder('TODO.md')} with the first line "Fully implemented: NO".
 
-- ULTRA IMPORTANT: ${task}/TODO.md CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO.
-- ULTRA IMPORTANT: ${task}/TODO.md CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO.
+- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO.
+- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO.
 
 ### CONTEXT SELECTION
 - Limit to 30 artifacts (files/dirs/URLs) with "why relevant".
@@ -34,7 +39,7 @@ List contracts that cannot change without a dedicated BREAKING node:
 - No node without proof.
 - At least one root node (no prereqs).
 
-Output a full ${task}/TODO.md including the PLAN and CONTRACT MAP.
+Output a full ${folder('TODO.md')} including the PLAN and CONTRACT MAP.
 Use context7.
 `);
 }
