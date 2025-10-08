@@ -12,6 +12,8 @@ PHASE: IMPLEMENTATION PLANNING
 Read ${folder('PROMPT.md')} and create ${folder('TODO.md')}.
 
 **CRITICAL RULES:**
+- DO NOT create any git commits (commits happen only in the final step)
+- DO NOT run git add, git commit, or git push commands
 - First line MUST be: "Fully implemented: NO"
 - Create 5-10 actionable items MAX (not 50+)
 - Group related changes together

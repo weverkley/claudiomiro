@@ -15,7 +15,7 @@ const step5 = async (tasks, shouldPush = true) => {
 
 
     const pushStep = shouldPush
-        ? '- Step 2: git push (If it fails, fix whatever is necessary to make the commit work)'
+        ? '- Step 3: git push (If it fails, fix whatever is necessary to make the commit work)'
         : '';
 
     await executeClaude(`
@@ -30,7 +30,8 @@ const step5 = async (tasks, shouldPush = true) => {
         And learn what was done in this branch.
 
         TODO:
-            - Step 1: git commit (If it fails, fix whatever is necessary to make the commit work)
+            - Step 1: Run full test suite & integration tests (If it fails, fix whatever is necessary to make work)
+            - Step 2: git commit (If it fails, fix whatever is necessary to make the commit work)
             ${pushStep}
     `);
     

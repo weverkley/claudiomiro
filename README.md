@@ -15,36 +15,40 @@ When using Claude Code for complex tasks, you've probably noticed it **stops bef
 
 ## What is Claudiomiro?
 
-**Claudiomiro** is a Node.js CLI that wraps Claude AI in a structured, **autonomous workflow**. Unlike simple code generators, Claudiomiro:
+**Claudiomiro** is a Node.js CLI that wraps Claude AI in a structured, **autonomous workflow** with **parallel task execution**. Unlike simple code generators, Claudiomiro:
 
 - ✅ Thinks through complex problems
 - ✅ Analyzes your entire codebase
 - ✅ Identifies patterns and best practices
+- ✅ **Maximizes parallelism** - executes independent tasks simultaneously
 - ✅ Implements comprehensive solutions
 - ✅ **Runs autonomously until completion** (up to 100 cycles)
 
-### The Magic: Autonomous Looping
+### The Magic: Autonomous Looping + Parallel Execution
 
-Claudiomiro doesn't just run once. It **loops autonomously** until the entire task is complete:
+Claudiomiro doesn't just run once. It **loops autonomously** until the entire task is complete, and **executes independent tasks in parallel** to maximize speed:
 
 ```
-Cycle 1: [Step 0] Decomposing complex task into 3 sub-tasks
-Cycle 2: [Step 1] Creating PROMPT.md for TASK1
-Cycle 3: [Step 2] Researching codebase and patterns for TASK1
-Cycle 4: [Step 3] Implementing TASK1 (TODO shows "Fully implemented: NO")
-Cycle 5: [Step 3] Continue implementing TASK1 (still "NO")
-Cycle 6: [Step 3] Final implementation (changes to "Fully implemented: YES")
-Cycle 7: [Step 3.1] Code review... ✅ All checks passed!
-Cycle 8: [Step 4] Running tests... ❌ 2 tests failed
-Cycle 9: [Step 3] Fixing failing tests
-Cycle 10: [Step 4] Running tests... ✅ All tests passed!
-Cycle 11: [Step 1-4] Processing TASK2 and TASK3...
-Cycle 12: [Step 5] Creating commit and pushing
+Cycle 1: [Step 0] Decomposing complex task into 5 parallelizable sub-tasks
+Cycle 2: [Step 1] Analyzing dependencies and creating execution plan
+         → EXECUTION_PLAN.md created (3 layers, max 4 parallel tasks)
 
-✓ Task completed in 12 autonomous cycles
+Parallel Execution Started (DAG Executor):
+  🚀 Running 4 tasks in parallel: TASK2, TASK3, TASK4, TASK5
+  ▶️  TASK2: Research → Implement → Code Review → Tests... ✅
+  ▶️  TASK3: Research → Implement → Code Review → Tests... ✅
+  ▶️  TASK4: Research → Implement → Code Review → Tests... ✅
+  ▶️  TASK5: Research → Implement → Code Review → Tests... ✅
+
+  🚀 Running 1 task in parallel: TASK6 (depends on TASK2-5)
+  ▶️  TASK6: Integration tests... ✅
+
+Cycle 3: [Step 5] Creating commit and pushing
+
+✓ Task completed in 3 autonomous cycles (4 tasks ran in parallel)
 ```
 
-No manual intervention. No "continue" prompts. Just complete, production-ready code.
+No manual intervention. No "continue" prompts. Just complete, production-ready code — **now faster with parallel execution**.
 
 ### Safety Mechanisms
 
@@ -56,7 +60,9 @@ No manual intervention. No "continue" prompts. Just complete, production-ready c
 ## Key Features
 
 - 🔄 **Truly Autonomous**: Loops until task is 100% complete
-- 🧩 **Intelligent Decomposition**: Breaks complex tasks into granular, independent sub-tasks
+- ⚡ **Parallel Execution**: Runs independent tasks simultaneously (2 per CPU core, max 5)
+- 🧩 **Intelligent Decomposition**: Breaks complex tasks into granular, independent sub-tasks optimized for parallelism
+- 📊 **Smart Dependency Analysis**: Creates execution plan with layers and critical path
 - 🧠 **Deep Analysis**: Understands your codebase patterns and architecture
 - 👨‍💻 **Automated Code Review**: Senior-level review validates quality before testing
 - 🧪 **Quality Enforced**: Never skips tests, always validates
@@ -129,8 +135,15 @@ claudiomiro --prompt="Complex refactoring" --maxCycles=50
 # Remove cycle limit (use with caution)
 claudiomiro --prompt="Very complex task" --no-limit
 
+# Control parallel execution (default: 2 per core, max 5)
+claudiomiro --prompt="Build microservices" --maxConcurrent=10
+
+# Run only specific steps
+claudiomiro --steps=2,3,4  # Skip planning, only implement
+claudiomiro --step=0       # Only create task decomposition
+
 # Combine options
-claudiomiro /path/to/project --prompt="Add GraphQL API" --push=false --same-branch
+claudiomiro /path/to/project --prompt="Add GraphQL API" --push=false --maxConcurrent=8
 ```
 
 ### Example Prompts
@@ -176,18 +189,27 @@ Claudiomiro creates a `.claudiomiro/` folder to organize tasks and track progres
 
 ```
 .claudiomiro/
+├── EXECUTION_PLAN.md        # Parallel execution strategy with dependency graph
 ├── TASK1/
-│   ├── TASK.md              # Self-contained task description with acceptance criteria
-│   ├── PROMPT.md            # Enhanced task description with analysis
+│   ├── TASK.md              # Self-contained task with dependencies (Depends on: NONE)
+│   ├── PROMPT.md            # Enhanced description with parallelization notes
 │   ├── TODO.md              # Detailed breakdown (`Fully implemented: YES/NO`)
 │   ├── CODE_REVIEW.md       # Automated code review report
 │   └── GITHUB_PR.md         # Generated pull request description
 ├── TASK2/
+│   ├── TASK.md              # Dependencies: TASK1 | Parallel with: TASK3, TASK4
+│   └── ...
+├── TASK3/
 │   └── ...
 └── log.txt                  # Complete execution log with timestamps
 ```
 
-**Tip:** Each `TASK.md` is fully self-contained for independent execution. Review early to validate the plan. Use `--fresh` to start over.
+**Key Files:**
+- **EXECUTION_PLAN.md**: Visual map showing execution layers, dependency graph, critical path, and parallelism ratio
+- **TASK.md**: Each task is fully self-contained with explicit dependencies (or NONE for parallel tasks)
+- **PROMPT.md**: Includes parallelization notes (layer, parallel siblings, complexity)
+
+**Tip:** Review `EXECUTION_PLAN.md` early to validate the parallel execution strategy. Use `--fresh` to start over.
 
 ## Requirements
 
@@ -208,13 +230,15 @@ Traditional AI assistants:
 
 **Claudiomiro:**
 - ✅ Runs autonomously until complete (up to 15 cycles)
-- ✅ Decomposes complex tasks intelligently
+- ✅ Decomposes complex tasks with parallelism optimization
+- ✅ Executes independent tasks simultaneously (DAG executor)
+- ✅ Smart dependency analysis and execution planning
 - ✅ Built-in senior-level code review
 - ✅ Automatically runs tests
 - ✅ Automatically fixes test failures
 - ✅ Creates commits and PRs
 - ✅ Structured 6-step workflow with quality gates
-- ✅ Production-ready output
+- ✅ Production-ready output — faster with parallel execution
 
 ## Contributing
 

@@ -7,11 +7,11 @@ const { step2, step3, step4, codeReview } = require('../steps');
 const { isFullyImplemented } = require('../utils/validation');
 
 class DAGExecutor {
-  constructor(tasks, allowedSteps = null) {
+  constructor(tasks, allowedSteps = null, maxConcurrent = null) {
     this.tasks = tasks; // { TASK1: {deps: [], status: 'pending'}, ... }
     this.allowedSteps = allowedSteps; // null = todos os steps, ou array de números
-    // Usa metade dos cores disponíveis, mínimo 1, máximo 5
-    this.maxConcurrent = Math.max(1, Math.min(5, Math.floor(os.cpus().length / 2)));
+    // 2 por core, máximo 5, ou valor customizado via --maxConcurrent
+    this.maxConcurrent = maxConcurrent || Math.min(5, os.cpus().length * 2);
     this.running = new Set(); // Tasks atualmente em execução
   }
 
@@ -170,7 +170,11 @@ class DAGExecutor {
    * Executa todas as tasks respeitando dependências
    */
   async run() {
-    logger.info(`Starting DAG executor with max ${this.maxConcurrent} concurrent tasks`);
+    const coreCount = os.cpus().length;
+    const defaultMax = Math.min(5, coreCount * 2);
+    const isCustom = this.maxConcurrent !== defaultMax;
+
+    logger.info(`Starting DAG executor with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
     logger.newline();
 
     while (true) {

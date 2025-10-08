@@ -13,7 +13,9 @@ const step3 = (task) => {
     return executeClaude(`
 PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 
-IMPORTANT:
+CRITICAL RULES:
+- DO NOT create any git commits (commits happen only in the final step)
+- DO NOT run git add, git commit, or git push commands
 - First line of ${folder('TODO.md')} MUST BE "Fully implemented: YES" or "Fully implemented: NO"
 
 OBJECTIVE

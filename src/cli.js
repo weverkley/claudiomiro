@@ -34,6 +34,10 @@ const chooseAction = async (i) => {
         ? stepsArg.split('=')[1].split(',').map(s => parseInt(s.trim(), 10))
         : null; // null = executa todos os steps
 
+    // Verifica se --maxConcurrent foi passado
+    const maxConcurrentArg = process.argv.find(arg => arg.startsWith('--maxConcurrent='));
+    const maxConcurrent = maxConcurrentArg ? parseInt(maxConcurrentArg.split('=')[1], 10) : null;
+
     // Helper para verificar se um step deve ser executado
     const shouldRunStep = (stepNumber) => {
         if (!allowedSteps) return true; // Se --steps não foi passado, executa tudo
@@ -47,6 +51,7 @@ const chooseAction = async (i) => {
         arg !== '--same-branch' &&
         !arg.startsWith('--prompt') &&
         !arg.startsWith('--maxCycles') &&
+        !arg.startsWith('--maxConcurrent') &&
         !arg.startsWith('--steps') &&
         !arg.startsWith('--step=') &&
         arg !== '--no-limit'
@@ -142,7 +147,7 @@ const chooseAction = async (i) => {
         logger.info('Switching to parallel execution mode with DAG executor');
         logger.newline();
 
-        const executor = new DAGExecutor(taskGraph, allowedSteps);
+        const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent);
         await executor.run();
 
         // Após DAG executor, criar PR final
@@ -224,7 +229,7 @@ const init = async () => {
     logger.banner();
 
     // Inicializa o state.folder antes de usá-lo
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles') && arg !== '--no-limit');
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit');
     const folderArg = args[0] || process.cwd();
     state.setFolder(folderArg);
 
