@@ -77,7 +77,7 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
 
         ### 5. Mandatory Final Assembly Check (NEW)
         Always add a **final task** after all others:
-        **TASK_FINAL — System Cohesion & Assembly Validation**
+        **Final Task (label it with the next sequential numeric id, e.g., TASK5) — System Cohesion & Assembly Validation**
         - Depends on **ALL** previous tasks.
         - Validates cross-task coherence (contracts, interfaces, naming, folder structure).
         - Confirms tests/doc build and that the system is assembled as planned.
@@ -110,14 +110,14 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         - TASK4: [name] - Depends: TASK2, TASK3
 
         ### Final Layer Ω: System Cohesion & Assembly Validation (MANDATORY)
-        - TASK_FINAL: System Cohesion & Assembly Validation - Depends: ALL PRIOR TASKS
+        - Final Task (e.g., TASK5): System Cohesion & Assembly Validation - Depends: ALL PRIOR TASKS (use the next sequential numeric id)
 
         ## Dependency Graph
         TASK1 → TASK2 ──┐
-             └─ TASK3 ──┴─> TASK4 → TASK_FINAL
+             └─ TASK3 ──┴─> TASK4 → Final Task (e.g., TASK5)
 
         ## Critical Path
-        TASK1 → TASK2 → TASK4 → TASK_FINAL (longest sequence)
+        TASK1 → TASK2 → TASK4 → Final Task (e.g., TASK5) (longest sequence)
         \`\`\`
 
         ### B) ${state.claudiomiroFolder}/TASKX/TASK.md
@@ -179,9 +179,9 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         2. [Risk] → [Mitigation]
         \`\`\`
 
-        ### D) SPECIAL (MANDATORY) — ${state.claudiomiroFolder}/TASK_FINAL/*
+        ### D) SPECIAL (MANDATORY) — ${state.claudiomiroFolder}/TASK{finalNumber}/* (use the highest sequential task id)
         \`\`\`markdown
-        # Task: System Cohesion & Assembly Validation
+        # Task: System Cohesion & Assembly Validation (label this directory with the next sequential numeric id)
 
         ## Objective
         Validate that all tasks fit together coherently and the final system matches the Execution Plan with no mismatches, missing links, or contract drift.
@@ -226,7 +226,7 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         3. **Document** → Create EXECUTION_PLAN.md first
         4. **Generate** → TASK.md + PROMPT.md for each (fully autonomous)
         5. **Verify** → Each task = complete context (no cross-refs)
-        6. **Add Final Task** → Always include TASK_FINAL (cohesion & assembly validation)
+        6. **Add Final Task** → Always include a final numeric task for cohesion & assembly validation
 
         ---
 
@@ -237,7 +237,7 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         Layer 0: TASK1 (HTTP server initialization)
         Layer 1: TASK2 (endpoint A), TASK3 (endpoint B), TASK4 (endpoint C) ← PARALLEL
         Layer 2: TASK5 (integration tests)
-        Final Ω: TASK_FINAL (system cohesion & assembly validation)
+        Final Ω: TASK6 (system cohesion & assembly validation)
 
         Result: 3 tasks run simultaneously (Layer 1)
 
@@ -249,7 +249,7 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         - Dependencies = minimal & explicit
         - Each task = 100% autonomous (includes all context)
         - EXECUTION_PLAN.md shows clear parallel opportunities
-        - **TASK_FINAL present and passes**
+        - Final task (next numeric id) present and passes
         - Parallelism ratio > 2.0
 
         ---
@@ -260,7 +260,7 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         ❌ Tasks depend on each other "because related"
         ❌ "See TASK1 for context" (breaks autonomy)
         ❌ Same file modified by parallel tasks
-        ❌ **Missing final cohesion task (TASK_FINAL)**
+        ❌ **Missing final cohesion task (final numeric task)**
         
         ✅ **CORE RULE:** Independent work units = separate tasks (different files/modules/features)
         ✅ Multiple endpoints/routes/handlers = multiple tasks
@@ -275,7 +275,7 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         ${task}
         \`\`\`
 
-        Think: What's Layer 0? What can run in parallel? What's the critical path? Ensure TASK_FINAL closes the loop.
+        Think: What's Layer 0? What can run in parallel? What's the critical path? Ensure the final numeric task closes the loop.
     `;
 
 const getHardModePrompt = (branchStep, stepNumber, task) => `
@@ -342,7 +342,7 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         Default: INDEPENDENT unless proven otherwise
 
         ### 9. Mandatory Final Assembly Check (NEW)
-        Add a final task **TASK_FINAL — System Cohesion & Assembly Validation**, depending on **ALL** prior tasks, to verify cross-task coherence and correct final assembly.
+        Add a final task (label it with the next sequential numeric id, e.g., TASK8 — System Cohesion & Assembly Validation), depending on **ALL** prior tasks, to verify cross-task coherence and correct final assembly.
 
         ---
 
@@ -376,16 +376,16 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         ⚡ TASK6-7 run in PARALLEL
 
         ### Final Layer Ω: System Cohesion & Assembly Validation (MANDATORY)
-        - TASK_FINAL: System Cohesion & Assembly Validation - Depends: ALL PRIOR TASKS
+        - Final Task (e.g., TASK8): System Cohesion & Assembly Validation - Depends: ALL PRIOR TASKS (use the next sequential numeric id)
 
         ## Dependency Graph
         TASK1 → TASK3 ──┐
-             └─ TASK4 ──┴─> TASK6 → TASK_FINAL
+             └─ TASK4 ──┴─> TASK6 → Final Task (e.g., TASK8)
         TASK2 → TASK5 ──┘           ▲
                                     └── TASK7
 
         ## Critical Path
-        TASK1 → TASK3 → TASK6 → TASK_FINAL (longest sequence)
+        TASK1 → TASK3 → TASK6 → Final Task (e.g., TASK8) (longest sequence)
 
         ## Reasoning Summary
         Brief explanation of why tasks were split this way and what parallelization opportunities exist
@@ -491,9 +491,9 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         - [ ] [Binary pass/fail 5]
         \`\`\`
 
-        ### D) SPECIAL (MANDATORY) — ${state.claudiomiroFolder}/TASK_FINAL/*
+        ### D) SPECIAL (MANDATORY) — ${state.claudiomiroFolder}/TASK{finalNumber}/* (use the highest sequential task id)
         \`\`\`markdown
-        # Task: System Cohesion & Assembly Validation
+        # Task: System Cohesion & Assembly Validation (label this directory with the next sequential numeric id)
 
         ## Objective
         Ensure the entire system is coherent, complete, and faithful to the plan; detect and document any cross-task inconsistencies; certify final assembly quality.
@@ -553,7 +553,7 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         4. **Document Plan** → EXECUTION_PLAN.md + reasoning
         5. **Generate Tasks** → TASK.md + PROMPT.md (complete context)
         6. **Verify Parallelism** → Max tasks per layer, minimal deps
-        7. **Add Final Task** → Always include TASK_FINAL (cohesion & assembly validation)
+        7. **Add Final Task** → Always include a final numeric task for cohesion & assembly validation
 
         ---
 
@@ -577,7 +577,7 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         ← TASK6-7 run in PARALLEL
 
         Final Ω:
-        - TASK_FINAL (system cohesion & assembly validation) - Depends: ALL
+        - TASK8 (system cohesion & assembly validation) - Depends: ALL
 
         Result: 5 tasks in parallel across layers; Final gate ensures coherence.
 
@@ -591,14 +591,14 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         - EXECUTION_PLAN.md shows parallel opportunities
         - Parallelism ratio > 2.0
         - Every task: reasoning trace, assumptions, research, criteria
-        - **TASK_FINAL present and passing** with reports
+        - Final task (next numeric id) present and passing with reports
         \n
         ## 🚨 Anti-Patterns
 
         ❌ Missing reasoning/assumptions/criteria
         ❌ Same file modified by parallel tasks
         ❌ Vague acceptance criteria
-        ❌ **Omitting TASK_FINAL**
+        ❌ **Omitting final numeric task**
 
         ✅ Independent units per feature
         ✅ Real coupling only
@@ -619,7 +619,7 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         - What assumptions am I making?
         - What could go wrong?
         - How will each task be verified?
-        - **How will TASK_FINAL certify the whole system?**
+        - **How will the final numeric task certify the whole system?**
     `;
     
 module.exports = { step0 };
