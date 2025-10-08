@@ -13,14 +13,17 @@ Turn days of complex development into a fully automated process — without sacr
 **Examples:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example)
 
+------
 
-## The Problem with Claude Code
+## The Problem with Agents
 
-When using Claude Code for complex tasks, you've probably noticed it **stops before completing the job**. The result? You find yourself typing "continue", testing, reviewing, over and over again, managing all the workflow manually.
+When using Claude Code / Cursor / Codex for complex tasks, you've probably noticed it **stops before completing the job**. The result? You find yourself typing "continue", testing, reviewing, over and over again, managing all the workflow manually.
+
+------
 
 ## What is Claudiomiro?
 
-**Claudiomiro** is a Node.js CLI that wraps Claude AI (and optionally OpenAI Codex) in a structured, **autonomous workflow** with **parallel task execution**. Unlike simple code generators, Claudiomiro:
+**Claudiomiro** is a Node.js CLI that wraps Claude AI or OpenAI Codex in a structured, **autonomous workflow** with **parallel task execution**. Unlike simple code generators, Claudiomiro:
 
 - ✅ Thinks through complex problems
 - ✅ Analyzes your entire codebase
@@ -88,7 +91,7 @@ For best results, your project should have:
 - Comprehensive linting with strict rules
 - High test coverage (>80%)
 - Integration tests for critical paths
-- MCPs configured (gives Claude superpowers)
+- MCPs configured (gives Claude/Codex superpowers)
 
 **Why?** Linting and tests create a **feedback loop** that enables Claudiomiro to validate its work and iterate autonomously until everything is perfect.
 
@@ -309,9 +312,9 @@ Each task includes:
 ## Requirements
 
 - **Node.js** (v14+)
-- **Claude CLI** installed and configured ([Setup Guide](https://docs.anthropic.com/claude/docs))
-- **Codex CLI** installed and authenticated (only if you plan to use `--codex`, see [Codex exec docs](https://github.com/openai/codex/blob/main/docs/exec.md))
 - **Git repository** (initialized with at least one commit)
+- **Claude CLI** installed and configured ([Setup Guide](https://docs.anthropic.com/claude/docs)) or 
+- **Codex CLI** installed and authenticated (only if you plan to use `--codex`, see [Codex exec docs](https://github.com/openai/codex/blob/main/docs/exec.md))
 
 ## What Makes This Different?
 
