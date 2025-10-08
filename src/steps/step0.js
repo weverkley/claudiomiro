@@ -173,7 +173,6 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
 
         ## CONSTRAINTS
         - Include tests with implementation
-        - TODO.md first line: "Fully implemented: NO"
         - No manual/deployment steps
         - Multi-repository/directory work is fully supported - NOT a blocker
 
@@ -478,10 +477,8 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
 
         ## CONSTRAINTS
         - Include tests with implementation
-        - TODO.md first line: "Fully implemented: NO"
         - No manual/deployment steps
         - Multi-repository/directory work is fully supported - NOT a blocker
-        - ${state.claudiomiroFolder}/TODO.md CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO
         - Backend: tests for each layer + integration tests
         - Frontend: tests for all components (mock API)
 

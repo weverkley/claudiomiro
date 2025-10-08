@@ -5,7 +5,7 @@ describe('TerminalRenderer', () => {
   let renderer;
   let mockWrite;
   let originalColumns;
-  let moveCursorSpy;
+  let cursorToSpy;
   let clearScreenDownSpy;
 
   beforeEach(() => {
@@ -16,7 +16,7 @@ describe('TerminalRenderer', () => {
     originalColumns = process.stdout.columns;
     process.stdout.columns = 120;
 
-    moveCursorSpy = jest.spyOn(readline, 'moveCursor').mockImplementation(() => {});
+    cursorToSpy = jest.spyOn(readline, 'cursorTo').mockImplementation(() => {});
     clearScreenDownSpy = jest.spyOn(readline, 'clearScreenDown').mockImplementation(() => {});
 
     renderer = new TerminalRenderer();
@@ -30,8 +30,8 @@ describe('TerminalRenderer', () => {
     if (process.stdout && originalColumns !== undefined) {
       process.stdout.columns = originalColumns;
     }
-    if (moveCursorSpy) {
-      moveCursorSpy.mockRestore();
+    if (cursorToSpy) {
+      cursorToSpy.mockRestore();
     }
     if (clearScreenDownSpy) {
       clearScreenDownSpy.mockRestore();
@@ -246,11 +246,15 @@ describe('TerminalRenderer', () => {
       // First render
       renderer.renderBlock(['Line 1', 'Line 2']);
       mockWrite.mockClear();
+      cursorToSpy.mockClear();
+      clearScreenDownSpy.mockClear();
 
       // Second render should clear previous 2 lines
       renderer.renderBlock(['New line 1', 'New line 2', 'New line 3']);
 
-      expect(moveCursorSpy).toHaveBeenCalledWith(process.stdout, 0, -2);
+      expect(cursorToSpy).toHaveBeenNthCalledWith(1, process.stdout, 0);
+      expect(mockWrite).toHaveBeenCalledWith('\x1b[2A');
+      expect(cursorToSpy).toHaveBeenNthCalledWith(2, process.stdout, 0);
       expect(clearScreenDownSpy).toHaveBeenCalledWith(process.stdout);
       expect(mockWrite).toHaveBeenCalledWith('New line 1\nNew line 2\nNew line 3\n');
       expect(renderer.lastLineCount).toBe(3);
@@ -304,9 +308,13 @@ describe('TerminalRenderer', () => {
     test('should handle render after clear', () => {
       renderer.renderBlock(['Line 1', 'Line 2', 'Line 3']);
       mockWrite.mockClear();
+      cursorToSpy.mockClear();
+      clearScreenDownSpy.mockClear();
 
       renderer.renderBlock([]);
-      expect(moveCursorSpy).toHaveBeenCalledWith(process.stdout, 0, -3);
+      expect(cursorToSpy).toHaveBeenNthCalledWith(1, process.stdout, 0);
+      expect(mockWrite).toHaveBeenCalledWith('\x1b[3A');
+      expect(cursorToSpy).toHaveBeenNthCalledWith(2, process.stdout, 0);
       expect(clearScreenDownSpy).toHaveBeenCalledWith(process.stdout);
       expect(renderer.lastLineCount).toBe(0);
     });
@@ -315,7 +323,7 @@ describe('TerminalRenderer', () => {
       renderer.renderBlock(['First', 'Second']);
 
       // Should only have the render call, no cursor movement
-      expect(moveCursorSpy).not.toHaveBeenCalled();
+      expect(cursorToSpy).not.toHaveBeenCalled();
       expect(clearScreenDownSpy).not.toHaveBeenCalled();
       expect(mockWrite).toHaveBeenCalledTimes(1);
       expect(mockWrite).toHaveBeenCalledWith('First\nSecond\n');
@@ -366,9 +374,13 @@ describe('TerminalRenderer', () => {
 
     // Update with same number of lines
     mockWrite.mockClear();
+    cursorToSpy.mockClear();
+    clearScreenDownSpy.mockClear();
     renderer.renderBlock(['D', 'E', 'F']);
 
-    expect(moveCursorSpy).toHaveBeenCalledWith(process.stdout, 0, -3);
+    expect(cursorToSpy).toHaveBeenNthCalledWith(1, process.stdout, 0);
+    expect(mockWrite).toHaveBeenCalledWith('\x1b[3A');
+    expect(cursorToSpy).toHaveBeenNthCalledWith(2, process.stdout, 0);
     expect(clearScreenDownSpy).toHaveBeenCalledWith(process.stdout);
     expect(mockWrite).toHaveBeenCalledWith('D\nE\nF\n');
   });

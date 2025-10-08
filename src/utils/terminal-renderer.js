@@ -89,8 +89,19 @@ class TerminalRenderer {
 
     // Clear previous content if any
     if (this.lastLineCount > 0) {
-      readline.moveCursor(process.stdout, 0, -this.lastLineCount);
-      readline.clearScreenDown(process.stdout);
+      const canUseTTYControls = typeof process.stdout.isTTY === 'boolean' ? process.stdout.isTTY : true;
+      if (canUseTTYControls) {
+        try {
+          readline.cursorTo(process.stdout, 0);
+          this.moveCursorUp(this.lastLineCount);
+          readline.cursorTo(process.stdout, 0);
+          readline.clearScreenDown(process.stdout);
+        } catch (error) {
+          process.stdout.write('\x1b[2J\x1b[H');
+        }
+      } else {
+        process.stdout.write('\x1b[2J\x1b[H');
+      }
     }
 
     // Render new lines
