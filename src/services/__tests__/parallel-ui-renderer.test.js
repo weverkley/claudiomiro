@@ -190,7 +190,7 @@ describe('ParallelUIRenderer', () => {
     test('should display Done for completed tasks without Claude message', () => {
       const taskState = {
         status: 'completed',
-        step: 'Step 4 - Running tests and creating PR',
+        step: 'Step 4 - Code review and PR',
         message: 'Last Claude command'
       };
 

@@ -5,7 +5,7 @@
  * @param {Object} taskStates - Object mapping task names to state objects {status, step, message}
  * @returns {number} Integer percentage (0-100) representing completed steps
  */
-const STEP_SEQUENCE = ['step 2', 'step 3', 'step 3.1', 'step 4'];
+const STEP_SEQUENCE = ['step 2', 'step 3', 'step 4'];
 
 function normalize(value) {
   return value ? value.toString().toLowerCase() : '';

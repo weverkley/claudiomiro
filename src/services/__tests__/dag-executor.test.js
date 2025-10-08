@@ -4,7 +4,7 @@ const os = require('os');
 const { DAGExecutor } = require('../dag-executor');
 const logger = require('../../../logger');
 const state = require('../../config/state');
-const { step2, step3, step4, codeReview } = require('../../steps');
+const { step2, step3, step4 } = require('../../steps');
 const { isFullyImplemented } = require('../../utils/validation');
 const ParallelStateManager = require('../parallel-state-manager');
 const ParallelUIRenderer = require('../parallel-ui-renderer');
@@ -332,7 +332,6 @@ describe('DAGExecutor', () => {
       step2.mockResolvedValue();
       step3.mockResolvedValue();
       step4.mockResolvedValue();
-      codeReview.mockResolvedValue();
     });
 
     it('should skip task if GITHUB_PR.md already exists', async () => {
@@ -421,7 +420,7 @@ describe('DAGExecutor', () => {
       expect(step3).toHaveBeenCalledTimes(1);
     });
 
-    it('should execute codeReview if CODE_REVIEW.md does not exist', async () => {
+    it('should execute step4 if CODE_REVIEW.md does not exist', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks);
       executor.running.add('TASK1');
@@ -430,20 +429,21 @@ describe('DAGExecutor', () => {
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
         if (filepath.includes('CODE_REVIEW.md')) {
-          if (reviewCalled) return true;
-          return false;
+          return reviewCalled;
         }
-        if (filepath.includes('GITHUB_PR.md') && reviewCalled) return true;
+        if (filepath.includes('GITHUB_PR.md')) {
+          return reviewCalled;
+        }
         return false;
       });
 
-      codeReview.mockImplementation(async () => {
+      step4.mockImplementation(async () => {
         reviewCalled = true;
       });
 
       await executor.executeTask('TASK1');
 
-      expect(codeReview).toHaveBeenCalledWith('TASK1');
+      expect(step4).toHaveBeenCalledWith('TASK1');
     });
 
     it('should execute step4 if GITHUB_PR.md does not exist', async () => {
@@ -523,7 +523,7 @@ describe('DAGExecutor', () => {
       });
 
       await expect(executor.executeTask('TASK1')).rejects.toThrow(
-        'Maximum attempts (15) reached for TASK1'
+        'Maximum attempts (20) reached for TASK1'
       );
 
       expect(tasks.TASK1.status).toBe('failed');
@@ -603,14 +603,10 @@ describe('DAGExecutor', () => {
         implementedCount++;
       });
 
-      codeReview.mockImplementation(async () => {
-        // codeReview creates CODE_REVIEW.md
-      });
-
-      step4.mockImplementation(async () => {
-        step4Calls++;
-        // First call doesn't create PR, resets implementation
-        if (step4Calls === 1) {
+     step4.mockImplementation(async () => {
+       step4Calls++;
+       // First call doesn't create PR, resets implementation
+       if (step4Calls === 1) {
           implementedCount = 0; // Simulate TODO.md being reset
         }
       });
@@ -960,7 +956,6 @@ describe('DAGExecutor', () => {
       step2.mockResolvedValue();
       step3.mockResolvedValue();
       step4.mockResolvedValue();
-      codeReview.mockResolvedValue();
     });
 
     it('should initialize state manager with task names in constructor', () => {
@@ -1110,28 +1105,6 @@ describe('DAGExecutor', () => {
       await executor.executeTask('TASK1');
     });
 
-    it('should update step info when executing code review', async () => {
-      const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks);
-      executor.running.add('TASK1');
-
-      let reviewCalled = false;
-      fs.existsSync.mockImplementation((filepath) => {
-        if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md')) return reviewCalled;
-        if (filepath.includes('GITHUB_PR.md') && reviewCalled) return true;
-        return false;
-      });
-
-      codeReview.mockImplementation(async () => {
-        reviewCalled = true;
-        const states = executor.stateManager.getAllTaskStates();
-        expect(states.TASK1.step).toBe('Step 3.1 - Code review');
-      });
-
-      await executor.executeTask('TASK1');
-    });
-
     it('should update step info when executing step 4', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks);
@@ -1148,7 +1121,7 @@ describe('DAGExecutor', () => {
       step4.mockImplementation(async () => {
         step4Called = true;
         const states = executor.stateManager.getAllTaskStates();
-        expect(states.TASK1.step).toBe('Step 4 - Running tests and creating PR');
+        expect(states.TASK1.step).toBe('Step 4 - Code review and PR');
       });
 
       await executor.executeTask('TASK1');

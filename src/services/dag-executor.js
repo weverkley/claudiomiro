@@ -3,7 +3,7 @@ const path = require('path');
 const os = require('os');
 const logger = require('../../logger');
 const state = require('../config/state');
-const { step2, step3, step4, codeReview } = require('../steps');
+const { step2, step3, step4 } = require('../steps');
 const { isFullyImplemented } = require('../utils/validation');
 const ParallelStateManager = require('./parallel-state-manager');
 const ParallelUIRenderer = require('./parallel-ui-renderer');
@@ -82,7 +82,7 @@ class DAGExecutor {
   }
 
   /**
-   * Executa o ciclo completo de uma task: step2 → step3 → codeReview → step4
+   * Executa o ciclo completo de uma task: step2 → step3 → step4
    * (step1 foi incorporado ao step0 e já criou PROMPT.md)
    */
   async executeTask(taskName) {
@@ -136,13 +136,6 @@ class DAGExecutor {
           continue; // Volta para verificar se está implementado
         }
 
-        // Step 3.1: Code Review
-        if (!fs.existsSync(path.join(taskPath, 'CODE_REVIEW.md'))) {
-          this.stateManager.updateTaskStep(taskName, 'Step 3.1 - Code review');
-          await codeReview(taskName);
-          continue; // Volta para verificar se precisa refazer
-        }
-
         // Se step 3 foi executado e não devemos executar step 4, para aqui
         if (!this.shouldRunStep(4)) {
           this.stateManager.updateTaskStatus(taskName, 'completed');
@@ -151,17 +144,18 @@ class DAGExecutor {
           return;
         }
 
-        // Step 4: Testes finais e PR
-        if (!fs.existsSync(path.join(taskPath, 'GITHUB_PR.md'))) {
-          this.stateManager.updateTaskStep(taskName, 'Step 4 - Running tests and creating PR');
+        const codeReviewPath = path.join(taskPath, 'CODE_REVIEW.md');
+        const prPath = path.join(taskPath, 'GITHUB_PR.md');
+
+        // Step 4: Code review e preparação do PR
+        if (!fs.existsSync(codeReviewPath) || !fs.existsSync(prPath)) {
+          this.stateManager.updateTaskStep(taskName, 'Step 4 - Code review and PR');
           await step4(taskName);
 
-          // Verifica se step4 criou o PR ou voltou para TODO
-          if (fs.existsSync(path.join(taskPath, 'GITHUB_PR.md'))) {
-            break; // Completou!
+          // Se não criou PR (por reprovação), continua o loop
+          if (!fs.existsSync(prPath)) {
+            continue;
           }
-          // Se não criou PR, continua o loop (step4 deve ter resetado TODO.md)
-          continue;
         }
 
         // Se chegou aqui, tem GITHUB_PR.md, terminou!

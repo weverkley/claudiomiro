@@ -4,51 +4,81 @@ const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
 
 const step4 = (task) => {
+    const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
-  const folder = (file) => path.join(state.claudiomiroFolder, task, file);
+    if(fs.existsSync(folder('CODE_REVIEW.md'))){
+      fs.rmSync(folder('CODE_REVIEW.md'));
+    }
 
     return executeClaude(`
-PHASE: QUALITY GATE & PR PACKAGING (Task-Specific)
+      You are a **fast code reviewer** focused on catching critical issues.
 
-CRITICAL RULES:
-- DO NOT create any git commits (commits happen only in the final step)
-- DO NOT run git add, git commit, or git push commands
-- DO NOT run full regression or integration tests (those run in the final step)
+      CRITICAL RULES:
+      - DO NOT create any git commits (commits happen only in the final step)
+      - DO NOT run git add, git commit, or git push commands
 
-### GATES (Task-Specific Only)
+      Review these files:
+      - ${folder('PROMPT.md')} — what was requested
+      - ${folder('TODO.md')} — what was done
 
-Run ONLY the tests related to THIS task:
-- Typecheck/lint the modified files
-- Unit tests for the modules created/modified in THIS task
-- DO NOT run full test suite
-- DO NOT run integration tests
-- DO NOT run e2e tests
+      ## Quick Checklist (90 seconds max)
 
-**Why?** Multiple tasks are running in parallel. Full/integration tests run only once at the end (step5).
+      ✅ **Requirements**: Does TODO.md match PROMPT.md scope? Any missing features?
+      ✅ **Critical bugs**: Any obvious errors, regressions, or missing error handling?
+      ✅ **Tests**: Are acceptance criteria actually tested?
 
----
+      **Skip** deep architecture analysis, performance optimization, and philosophy.
 
-If all task-specific tests pass:
-- Create ${folder('GITHUB_PR.md')} explaining in one paragraph what was done.
+      ### Testing & Checks Policy
 
-If any fails:
-    1. Do not create ${folder('GITHUB_PR.md')}.
-    2. **Delete \`${folder('CODE_REVIEW.md')}\`**
-    3. **Refactor \`${folder('TODO.md')}\`** to reflect all corrections, improvements, or missing details.
-    4. IMPORTANT: Update the **first line** of \`${folder('TODO.md')}\` to: \`Fully implemented: NO\`
+      - Run ONLY the unit tests, linters, and typecheckers that cover the files touched by this task (e.g. \`npm test ./pasta-revisando\`, \`eslint ./pasta-revisando\`, \`tsc --noEmit ./pasta-revisando/index.ts\`).
+      - DO NOT trigger full-project commands like \`npm test\`, \`npm run lint\`, \`tsc --noEmit\`, etc. — the final quality gate runs the full suite.
+      - If targeted commands are missing, note that explicitly as a blocker.
 
----
+      ## Decision
 
-## How to Run Task-Specific Tests
+      If everything looks **functionally correct**:
+      - Confirm first line of \`${folder('TODO.md')}\` is: \`Fully implemented: YES\`
+      - Add in the second line of \`${folder('TODO.md')}\`: "Code review passed"
+      - Create ${folder('GITHUB_PR.md')} explaining in one paragraph what was done.
+      - Create \`${folder('CODE_REVIEW.md')}\`:
+        \`\`\`markdown
+        # Code Review
 
-Examples:
-- \`npm test -- path/to/modified/file.test.js\` (Jest)
-- \`pytest tests/specific_module_test.py\` (Python)
-- \`go test ./pkg/modified-package\` (Go)
-- \`cargo test module_name\` (Rust)
+        ## Status
+        ✅ APPROVED
 
-Focus on the FILES created/modified in THIS task's TODO.md.
-`, task);
+        ## Summary
+        Requirements met, no critical issues found.
+
+        ## Checks
+        - ✅ Requirements match scope
+        - ✅ No critical bugs detected
+        - ✅ Tests cover acceptance criteria
+        \`\`\`
+
+      If **problems found**:
+      - Update \`${folder('TODO.md')}\` ADDING IN Implementation Plan the specific fixes needed
+      - Set first line of \`${folder('TODO.md')}\` to: \`Fully implemented: NO\`
+      - Add in the second line of \`${folder('TODO.md')}\`: "Why code review failed: "
+      - Create \`${folder('CODE_REVIEW.md')}\`:
+        \`\`\`markdown
+        # Code Review
+
+        ## Status
+        ❌ NEEDS WORK
+
+        ## Issues Found
+        - [Specific problem with fix suggestion]
+        - [Specific problem with fix suggestion]
+
+        ## Action Required
+        Review updated TODO.md for corrections.
+        \`\`\`
+
+      **Be pragmatic**: If it works and meets requirements, approve it quickly.
+      Focus only on blockers, not style preferences.
+    `, task);
 }
 
 module.exports = { step4 };

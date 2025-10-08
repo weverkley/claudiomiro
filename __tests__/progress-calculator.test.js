@@ -36,33 +36,33 @@ describe('calculateProgress', () => {
     test('counts steps completed for running tasks', () => {
       const taskStates = {
         task1: makeState('running', 'Step 3 - Implementing tasks'),
-        task2: makeState('running', 'Step 3.1 - Code review')
+        task2: makeState('running', 'Step 4 - Code review and PR')
       };
 
-      // (1 + 2) completed steps out of (2 tasks × 4 steps) = 37.5% → 38%
-      expect(calculateProgress(taskStates)).toBe(38);
+      // (1 + 2) completed steps out of (2 tasks × 3 steps) = 50% → 50%
+      expect(calculateProgress(taskStates)).toBe(50);
     });
 
     test('counts completed tasks as all steps finished', () => {
       const taskStates = {
         task1: makeState('completed'),
-        task2: makeState('running', 'Step 4 - Running tests and creating PR'),
+        task2: makeState('running', 'Step 4 - Code review and PR'),
         task3: makeState('pending')
       };
 
-      // (4 + 3 + 0) / 12 = 58.33% → 58%
-      expect(calculateProgress(taskStates)).toBe(58);
+      // (3 + 2 + 0) / 9 = 55.55% → 56%
+      expect(calculateProgress(taskStates)).toBe(56);
     });
 
     test('counts failed tasks based on the last recorded step', () => {
       const taskStates = {
-        task1: makeState('failed', 'Step 4 - Running tests and creating PR'),
+        task1: makeState('failed', 'Step 4 - Code review and PR'),
         task2: makeState('completed'),
         task3: makeState('pending')
       };
 
-      // (3 + 4 + 0) / 12 = 58.33% → 58%
-      expect(calculateProgress(taskStates)).toBe(58);
+      // (2 + 3 + 0) / 9 = 55.55% → 56%
+      expect(calculateProgress(taskStates)).toBe(56);
     });
 
     test('returns 100% when every task is completed', () => {
@@ -93,18 +93,18 @@ describe('calculateProgress', () => {
         task3: makeState('pending')
       };
 
-      // 1 / 12 = 8.33% → 8%
-      expect(calculateProgress(taskStates)).toBe(8);
+      // 1 / 9 = 11.11% → 11%
+      expect(calculateProgress(taskStates)).toBe(11);
     });
 
     test('rounds up when fractional part is .5 or higher', () => {
       const taskStates = {
         task1: makeState('completed'),
-        task2: makeState('running', 'Step 4 - Running tests and creating PR')
+        task2: makeState('running', 'Step 4 - Code review and PR')
       };
 
-      // (4 + 3) / 8 = 87.5% → 88%
-      expect(calculateProgress(taskStates)).toBe(88);
+      // (3 + 2) / 6 = 83.33% → 83%
+      expect(calculateProgress(taskStates)).toBe(83);
     });
   });
 
@@ -124,7 +124,7 @@ describe('calculateProgress', () => {
     test('returns same result for repeated calls with same input', () => {
       const taskStates = {
         task1: makeState('completed'),
-        task2: makeState('failed', 'Step 3.1 - Code review'),
+        task2: makeState('failed', 'Step 4 - Code review and PR'),
         task3: makeState('running', 'Step 3 - Implementing tasks')
       };
 
@@ -143,18 +143,18 @@ describe('calculateProgress', () => {
       expect(calculateProgress(taskStates)).toBe(100);
     });
 
-    test('returns 75% for a task running Step 4', () => {
+    test('returns 67% for a task running Step 4', () => {
       const taskStates = {
-        task1: makeState('running', 'Step 4 - Running tests and creating PR')
+        task1: makeState('running', 'Step 4 - Code review and PR')
       };
-      expect(calculateProgress(taskStates)).toBe(75);
+      expect(calculateProgress(taskStates)).toBe(67);
     });
 
-    test('returns 50% for a task at Step 3.1', () => {
+    test('returns 33% for a task at Step 3', () => {
       const taskStates = {
-        task1: makeState('running', 'Step 3.1 - Code review')
+        task1: makeState('running', 'Step 3 - Implementing tasks')
       };
-      expect(calculateProgress(taskStates)).toBe(50);
+      expect(calculateProgress(taskStates)).toBe(33);
     });
 
     test('returns 0% for a task at Step 2', () => {

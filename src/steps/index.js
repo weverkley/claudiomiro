@@ -4,7 +4,6 @@ const { step2 } = require('./step2');
 const { step3 } = require('./step3');
 const { step4 } = require('./step4');
 const { step5 } = require('./step5');
-const { codeReview } = require('./code-review');
 
 module.exports = {
     step0,
@@ -12,6 +11,5 @@ module.exports = {
     step2,
     step3,
     step4,
-    step5,
-    codeReview
+    step5
 };
