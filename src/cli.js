@@ -32,6 +32,18 @@ const chooseAction = async (i) => {
     const modeArg = process.argv.find(arg => arg.startsWith('--mode='));
     const mode = modeArg ? modeArg.split('=')[1] : 'auto'; // default: auto
 
+    // Verifica se --codex ou --claude foi passado
+    const codexFlag = process.argv.includes('--codex');
+    const claudeFlag = process.argv.includes('--claude');
+
+    if (codexFlag && claudeFlag) {
+        logger.error('Use only one executor flag: --claude or --codex');
+        process.exit(1);
+    }
+
+    const executorType = codexFlag ? 'codex' : 'claude';
+    state.setExecutorType(executorType);
+
     // Verifica se --steps= ou --step= foi passado (quais steps executar)
     const stepsArg = process.argv.find(arg => arg.startsWith('--steps=') || arg.startsWith('--step='));
     const allowedSteps = stepsArg
@@ -59,7 +71,9 @@ const chooseAction = async (i) => {
         !arg.startsWith('--steps') &&
         !arg.startsWith('--step=') &&
         arg !== '--no-limit' &&
-        !arg.startsWith('--mode')
+        !arg.startsWith('--mode') &&
+        arg !== '--codex' &&
+        arg !== '--claude'
     );
     const folderArg = args[0] || process.cwd();
 
@@ -72,6 +86,9 @@ const chooseAction = async (i) => {
     }
 
     logger.path(`Working directory: ${state.folder}`);
+    logger.newline();
+
+    logger.info(`Executor selected: ${executorType === 'codex' ? 'Codex' : 'Claude'}`);
     logger.newline();
 
     // Mostra quais steps serão executados se --steps foi especificado

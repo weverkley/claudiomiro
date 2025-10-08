@@ -18,7 +18,7 @@ const overwriteBlock = (lines) => {
     process.stdout.write(`\x1b[${lines}A`);
   }
 
-const executeClaude = (text, taskName = null) => {
+const runClaude = (text, taskName = null) => {
     return new Promise((resolve, reject) => {
         const stateManager = taskName ? ParallelStateManager.getInstance() : null;
         // Create temporary file for the prompt
@@ -164,6 +164,15 @@ const executeClaude = (text, taskName = null) => {
             reject(error);
         });
     });
-}
+};
+
+const executeClaude = (text, taskName = null) => {
+    if (state.executorType === 'codex') {
+        const { executeCodex } = require('./codex-executor');
+        return executeCodex(text, taskName);
+    }
+
+    return runClaude(text, taskName);
+};
 
 module.exports = { executeClaude };
