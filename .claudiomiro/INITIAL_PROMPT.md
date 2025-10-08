@@ -1,1 +1,0 @@
-Garanta que cada arquivo tenha testes unitários (jest) e crie github actions

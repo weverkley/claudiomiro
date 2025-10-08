@@ -56,7 +56,7 @@ Fully implemented: NO
 5. Use context7 if needed to understand current codebase patterns
 
 **IMPORTANT**: Quality over quantity. 5 well-defined items > 20 tiny items.
-`);
+`, task);
 }
 
 module.exports = { step2 };

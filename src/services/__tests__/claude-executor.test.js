@@ -10,11 +10,13 @@ jest.mock('child_process');
 jest.mock('../../../logger');
 jest.mock('../../config/state');
 jest.mock('../claude-logger');
+jest.mock('../parallel-state-manager');
 
 const logger = require('../../../logger');
 const state = require('../../config/state');
 const { processClaudeMessage } = require('../claude-logger');
 const { MockChildProcess } = require('../../__tests__/mocks/child_process');
+const { ParallelStateManager } = require('../parallel-state-manager');
 
 describe('claude-executor', () => {
   let mockChildProcess;
@@ -482,6 +484,123 @@ describe('claude-executor', () => {
       expect(writeStreamWriteSpy).toHaveBeenCalled(); // Log written
       expect(fs.unlinkSync).toHaveBeenCalled(); // Temp file cleaned
       expect(logger.success).toHaveBeenCalled(); // Success logged
+    });
+  });
+
+  describe('ParallelStateManager integration', () => {
+    let mockStateManager;
+
+    beforeEach(() => {
+      // Create mock state manager instance
+      mockStateManager = {
+        updateClaudeMessage: jest.fn()
+      };
+
+      // Mock getInstance to return our mock instance
+      ParallelStateManager.getInstance = jest.fn(() => mockStateManager);
+    });
+
+    it('should work without taskName (backward compatibility)', async () => {
+      const promise = executeClaude('test prompt');
+
+      // Should not call getInstance
+      expect(ParallelStateManager.getInstance).not.toHaveBeenCalled();
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should call getInstance when taskName provided', async () => {
+      const promise = executeClaude('test prompt', 'TASK1');
+
+      // Should call getInstance
+      expect(ParallelStateManager.getInstance).toHaveBeenCalled();
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should call updateClaudeMessage when taskName provided and message received', async () => {
+      const promise = executeClaude('test prompt', 'TASK1');
+
+      const jsonLine = JSON.stringify({ type: 'text', text: 'Test message from Claude' });
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine + '\n'));
+
+      expect(mockStateManager.updateClaudeMessage).toHaveBeenCalledWith('TASK1', 'Test message from Claude');
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should not call updateClaudeMessage when taskName not provided', async () => {
+      const promise = executeClaude('test prompt');
+
+      const jsonLine = JSON.stringify({ type: 'text', text: 'Test message' });
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine + '\n'));
+
+      expect(mockStateManager.updateClaudeMessage).not.toHaveBeenCalled();
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should call updateClaudeMessage for multiple messages', async () => {
+      const promise = executeClaude('test prompt', 'TASK2');
+
+      const jsonLine1 = JSON.stringify({ type: 'text', text: 'Message 1' });
+      const jsonLine2 = JSON.stringify({ type: 'text', text: 'Message 2' });
+      const jsonLine3 = JSON.stringify({ type: 'text', text: 'Message 3' });
+
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine1 + '\n'));
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine2 + '\n'));
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine3 + '\n'));
+
+      expect(mockStateManager.updateClaudeMessage).toHaveBeenCalledTimes(3);
+      expect(mockStateManager.updateClaudeMessage).toHaveBeenNthCalledWith(1, 'TASK2', 'Message 1');
+      expect(mockStateManager.updateClaudeMessage).toHaveBeenNthCalledWith(2, 'TASK2', 'Message 2');
+      expect(mockStateManager.updateClaudeMessage).toHaveBeenNthCalledWith(3, 'TASK2', 'Message 3');
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should not call updateClaudeMessage for non-text messages', async () => {
+      const promise = executeClaude('test prompt', 'TASK3');
+
+      // processClaudeMessage returns null for non-text messages
+      processClaudeMessage.mockReturnValue(null);
+
+      const jsonLine = JSON.stringify({ type: 'other', data: 'something' });
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine + '\n'));
+
+      expect(mockStateManager.updateClaudeMessage).not.toHaveBeenCalled();
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should handle taskName with special characters', async () => {
+      const promise = executeClaude('test prompt', 'TASK-123_special');
+
+      const jsonLine = JSON.stringify({ type: 'text', text: 'Test' });
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine + '\n'));
+
+      expect(mockStateManager.updateClaudeMessage).toHaveBeenCalledWith('TASK-123_special', 'Test');
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should pass correct taskName even with errors', async () => {
+      const promise = executeClaude('test prompt', 'TASK_ERROR');
+
+      const jsonLine = JSON.stringify({ type: 'text', text: 'Error message' });
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine + '\n'));
+
+      expect(mockStateManager.updateClaudeMessage).toHaveBeenCalledWith('TASK_ERROR', 'Error message');
+
+      setTimeout(() => mockChildProcess.emit('close', 1), 10);
+      await expect(promise).rejects.toThrow();
     });
   });
 });

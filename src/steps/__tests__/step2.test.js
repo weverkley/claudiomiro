@@ -43,11 +43,11 @@ describe('step2', () => {
   });
 
   describe('step2 function execution flow', () => {
-    it('should call executeClaude with a prompt', async () => {
+    it('should call executeClaude with a prompt and task name', async () => {
       await step2('TASK1');
 
       expect(executeClaude).toHaveBeenCalledTimes(1);
-      expect(executeClaude).toHaveBeenCalledWith(expect.any(String));
+      expect(executeClaude).toHaveBeenCalledWith(expect.any(String), 'TASK1');
     });
 
     it('should generate correct folder paths for task files', async () => {

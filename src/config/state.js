@@ -4,6 +4,7 @@ class State {
     constructor() {
         this._folder = null;
         this._claudiomiroFolder = null;
+        this._executorType = 'claude';
     }
 
     setFolder(folderPath) {
@@ -17,6 +18,18 @@ class State {
 
     get claudiomiroFolder() {
         return this._claudiomiroFolder;
+    }
+
+    setExecutorType(type) {
+        const allowed = ['claude', 'codex'];
+        if (!allowed.includes(type)) {
+            throw new Error(`Invalid executor type: ${type}`);
+        }
+        this._executorType = type;
+    }
+
+    get executorType() {
+        return this._executorType;
     }
 }
 

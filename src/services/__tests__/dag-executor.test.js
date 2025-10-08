@@ -6,6 +6,10 @@ const logger = require('../../../logger');
 const state = require('../../config/state');
 const { step2, step3, step4, codeReview } = require('../../steps');
 const { isFullyImplemented } = require('../../utils/validation');
+const ParallelStateManager = require('../parallel-state-manager');
+const ParallelUIRenderer = require('../parallel-ui-renderer');
+const TerminalRenderer = require('../../utils/terminal-renderer');
+const { calculateProgress } = require('../../utils/progress-calculator');
 
 // Mock all external dependencies
 jest.mock('fs');
@@ -13,10 +17,14 @@ jest.mock('../../../logger');
 jest.mock('../../config/state');
 jest.mock('../../steps');
 jest.mock('../../utils/validation');
+jest.mock('../parallel-ui-renderer');
+jest.mock('../../utils/terminal-renderer');
+jest.mock('../../utils/progress-calculator');
 
 describe('DAGExecutor', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    ParallelStateManager.reset();
     state.claudiomiroFolder = '/mock/claudiomiro';
   });
 
@@ -286,7 +294,7 @@ describe('DAGExecutor', () => {
       expect(executor.executeTask).toHaveBeenCalledTimes(2);
     });
 
-    it('should log the tasks being executed', async () => {
+    it('should execute tasks without logging task progress', async () => {
       const tasks = {
         TASK1: { deps: [], status: 'pending' },
         TASK2: { deps: [], status: 'pending' }
@@ -296,7 +304,8 @@ describe('DAGExecutor', () => {
 
       await executor.executeWave();
 
-      expect(logger.info).toHaveBeenCalledWith(
+      // Should not log task progress (handled by UI renderer)
+      expect(logger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Running 2 task(s) in parallel')
       );
     });
@@ -337,9 +346,6 @@ describe('DAGExecutor', () => {
       expect(tasks.TASK1.status).toBe('completed');
       expect(executor.running.has('TASK1')).toBe(false);
       expect(step2).not.toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('already completed')
-      );
     });
 
     it('should execute step2 if TODO.md does not exist', async () => {
@@ -944,6 +950,395 @@ describe('DAGExecutor', () => {
 
       expect(executor.executeTask).toHaveBeenCalledTimes(1);
       expect(executor.executeTask).toHaveBeenCalledWith('TASK2');
+    });
+  });
+
+  describe('ParallelStateManager Integration', () => {
+    beforeEach(() => {
+      fs.existsSync.mockReturnValue(false);
+      isFullyImplemented.mockReturnValue(true);
+      step2.mockResolvedValue();
+      step3.mockResolvedValue();
+      step4.mockResolvedValue();
+      codeReview.mockResolvedValue();
+    });
+
+    it('should initialize state manager with task names in constructor', () => {
+      const tasks = {
+        TASK1: { deps: [], status: 'pending' },
+        TASK2: { deps: ['TASK1'], status: 'pending' },
+        TASK3: { deps: [], status: 'pending' }
+      };
+      const executor = new DAGExecutor(tasks);
+
+      expect(executor.stateManager).toBeInstanceOf(ParallelStateManager);
+      const allStates = executor.stateManager.getAllTaskStates();
+      expect(Object.keys(allStates)).toEqual(['TASK1', 'TASK2', 'TASK3']);
+      expect(allStates.TASK1.status).toBe('pending');
+      expect(allStates.TASK2.status).toBe('pending');
+      expect(allStates.TASK3.status).toBe('pending');
+    });
+
+    it('should return state manager instance via getStateManager', () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+
+      const stateManager = executor.getStateManager();
+      expect(stateManager).toBe(executor.stateManager);
+      expect(stateManager).toBeInstanceOf(ParallelStateManager);
+    });
+
+    it('should update state to running when task starts', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      fs.existsSync.mockReturnValue(true); // Already completed
+
+      await executor.executeTask('TASK1');
+
+      const states = executor.stateManager.getAllTaskStates();
+      // Should be updated to running at start, then to completed
+      expect(states.TASK1.status).toBe('completed');
+    });
+
+    it('should update state to completed when task completes successfully', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      let step4Called = false;
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('TODO.md')) return true;
+        if (filepath.includes('CODE_REVIEW.md')) return true;
+        if (filepath.includes('GITHUB_PR.md')) return step4Called;
+        return false;
+      });
+
+      step4.mockImplementation(async () => {
+        step4Called = true;
+      });
+
+      await executor.executeTask('TASK1');
+
+      const states = executor.stateManager.getAllTaskStates();
+      expect(states.TASK1.status).toBe('completed');
+    });
+
+    it('should update state to failed when task fails', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('TODO.md')) return true;
+        return false;
+      });
+
+      const error = new Error('Task failed');
+      step3.mockRejectedValue(error);
+      isFullyImplemented.mockReturnValue(false);
+
+      await expect(executor.executeTask('TASK1')).rejects.toThrow('Task failed');
+
+      const states = executor.stateManager.getAllTaskStates();
+      expect(states.TASK1.status).toBe('failed');
+    });
+
+    it('should update state to failed when max attempts reached', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      isFullyImplemented.mockReturnValue(false);
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('TODO.md')) return true;
+        return false;
+      });
+
+      await expect(executor.executeTask('TASK1')).rejects.toThrow('Maximum attempts');
+
+      const states = executor.stateManager.getAllTaskStates();
+      expect(states.TASK1.status).toBe('failed');
+    });
+
+    it('should update step info when executing step 2', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      let step2Called = false;
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('GITHUB_PR.md') && step2Called) return true;
+        if (filepath.includes('TODO.md')) return step2Called;
+        if (filepath.includes('CODE_REVIEW.md') && step2Called) return true;
+        return false;
+      });
+
+      step2.mockImplementation(async () => {
+        step2Called = true;
+        const states = executor.stateManager.getAllTaskStates();
+        expect(states.TASK1.step).toBe('Step 2 - Research and planning');
+      });
+
+      await executor.executeTask('TASK1');
+    });
+
+    it('should update step info when executing step 3', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      let step3Calls = 0;
+      isFullyImplemented.mockImplementation(() => {
+        step3Calls++;
+        return step3Calls > 1;
+      });
+
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('TODO.md')) return true;
+        if (filepath.includes('CODE_REVIEW.md') && step3Calls > 1) return true;
+        if (filepath.includes('GITHUB_PR.md') && step3Calls > 1) return true;
+        return false;
+      });
+
+      step3.mockImplementation(async () => {
+        const states = executor.stateManager.getAllTaskStates();
+        expect(states.TASK1.step).toContain('Step 3 - Implementing tasks');
+      });
+
+      await executor.executeTask('TASK1');
+    });
+
+    it('should update step info when executing code review', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      let reviewCalled = false;
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('TODO.md')) return true;
+        if (filepath.includes('CODE_REVIEW.md')) return reviewCalled;
+        if (filepath.includes('GITHUB_PR.md') && reviewCalled) return true;
+        return false;
+      });
+
+      codeReview.mockImplementation(async () => {
+        reviewCalled = true;
+        const states = executor.stateManager.getAllTaskStates();
+        expect(states.TASK1.step).toBe('Step 3.1 - Code review');
+      });
+
+      await executor.executeTask('TASK1');
+    });
+
+    it('should update step info when executing step 4', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      let step4Called = false;
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('TODO.md')) return true;
+        if (filepath.includes('CODE_REVIEW.md')) return true;
+        if (filepath.includes('GITHUB_PR.md')) return step4Called;
+        return false;
+      });
+
+      step4.mockImplementation(async () => {
+        step4Called = true;
+        const states = executor.stateManager.getAllTaskStates();
+        expect(states.TASK1.step).toBe('Step 4 - Running tests and creating PR');
+      });
+
+      await executor.executeTask('TASK1');
+    });
+
+    it('should track multiple parallel tasks correctly', async () => {
+      const tasks = {
+        TASK1: { deps: [], status: 'pending' },
+        TASK2: { deps: [], status: 'pending' },
+        TASK3: { deps: [], status: 'pending' }
+      };
+      const executor = new DAGExecutor(tasks, null, 3);
+
+      // Mock executeTask to simulate parallel execution
+      const originalExecuteTask = DAGExecutor.prototype.executeTask;
+      executor.executeTask = jest.fn().mockImplementation(async (taskName) => {
+        executor.stateManager.updateTaskStatus(taskName, 'running');
+        await new Promise(resolve => setTimeout(resolve, 10));
+        executor.stateManager.updateTaskStatus(taskName, 'completed');
+        executor.tasks[taskName].status = 'completed';
+        executor.running.delete(taskName);
+      });
+
+      await executor.run();
+
+      const states = executor.stateManager.getAllTaskStates();
+      expect(states.TASK1.status).toBe('completed');
+      expect(states.TASK2.status).toBe('completed');
+      expect(states.TASK3.status).toBe('completed');
+    });
+
+    it('should update status when step is skipped', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks, [3, 4]); // Skip step 2
+      executor.running.add('TASK1');
+
+      await executor.executeTask('TASK1');
+
+      const states = executor.stateManager.getAllTaskStates();
+      expect(states.TASK1.status).toBe('completed');
+    });
+
+    it('should update status for already completed tasks', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('GITHUB_PR.md')) return true;
+        return false;
+      });
+
+      await executor.executeTask('TASK1');
+
+      const states = executor.stateManager.getAllTaskStates();
+      expect(states.TASK1.status).toBe('completed');
+    });
+  });
+
+  describe('UI Renderer Integration', () => {
+    let mockUIRenderer;
+    let mockTerminalRenderer;
+
+    beforeEach(() => {
+      fs.existsSync.mockReturnValue(true);
+
+      // Create mock instances
+      mockUIRenderer = {
+        start: jest.fn(),
+        stop: jest.fn()
+      };
+      mockTerminalRenderer = {};
+
+      // Mock constructor returns
+      ParallelUIRenderer.mockImplementation(() => mockUIRenderer);
+      TerminalRenderer.mockImplementation(() => mockTerminalRenderer);
+      calculateProgress.calculateProgress = jest.fn().mockReturnValue(50);
+    });
+
+    it('should instantiate TerminalRenderer and ParallelUIRenderer', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+
+      executor.executeTask = jest.fn().mockImplementation(async (taskName) => {
+        executor.tasks[taskName].status = 'completed';
+        executor.running.delete(taskName);
+      });
+
+      await executor.run();
+
+      expect(TerminalRenderer).toHaveBeenCalledTimes(1);
+      expect(ParallelUIRenderer).toHaveBeenCalledTimes(1);
+      expect(ParallelUIRenderer).toHaveBeenCalledWith(mockTerminalRenderer);
+    });
+
+    it('should call uiRenderer.start() before execution with correct parameters', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+
+      executor.executeTask = jest.fn().mockImplementation(async (taskName) => {
+        executor.tasks[taskName].status = 'completed';
+        executor.running.delete(taskName);
+      });
+
+      await executor.run();
+
+      expect(mockUIRenderer.start).toHaveBeenCalledTimes(1);
+      expect(mockUIRenderer.start).toHaveBeenCalledWith(
+        executor.getStateManager(),
+        { calculateProgress }
+      );
+    });
+
+    it('should call uiRenderer.stop() after execution completes', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+
+      executor.executeTask = jest.fn().mockImplementation(async (taskName) => {
+        executor.tasks[taskName].status = 'completed';
+        executor.running.delete(taskName);
+      });
+
+      await executor.run();
+
+      expect(mockUIRenderer.stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('should call start before execution and stop after execution', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      const callOrder = [];
+
+      mockUIRenderer.start.mockImplementation(() => {
+        callOrder.push('start');
+      });
+
+      mockUIRenderer.stop.mockImplementation(() => {
+        callOrder.push('stop');
+      });
+
+      executor.executeTask = jest.fn().mockImplementation(async (taskName) => {
+        callOrder.push('executeTask');
+        executor.tasks[taskName].status = 'completed';
+        executor.running.delete(taskName);
+      });
+
+      await executor.run();
+
+      expect(callOrder).toEqual(['start', 'executeTask', 'stop']);
+    });
+
+    it('should stop UI renderer even when tasks are empty', async () => {
+      const tasks = {};
+      const executor = new DAGExecutor(tasks);
+
+      await executor.run();
+
+      expect(mockUIRenderer.start).toHaveBeenCalledTimes(1);
+      expect(mockUIRenderer.stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('should stop UI renderer even when tasks fail', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+
+      executor.executeTask = jest.fn().mockImplementation(async (taskName) => {
+        executor.tasks[taskName].status = 'failed';
+        executor.running.delete(taskName);
+      });
+
+      await executor.run();
+
+      expect(mockUIRenderer.start).toHaveBeenCalledTimes(1);
+      expect(mockUIRenderer.stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('should pass state manager instance to UI renderer start', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+
+      executor.executeTask = jest.fn().mockImplementation(async (taskName) => {
+        executor.tasks[taskName].status = 'completed';
+        executor.running.delete(taskName);
+      });
+
+      await executor.run();
+
+      const passedStateManager = mockUIRenderer.start.mock.calls[0][0];
+      expect(passedStateManager).toBe(executor.getStateManager());
+      expect(passedStateManager).toBeInstanceOf(ParallelStateManager);
     });
   });
 });

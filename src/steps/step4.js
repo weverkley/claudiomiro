@@ -48,7 +48,7 @@ Examples:
 - \`cargo test module_name\` (Rust)
 
 Focus on the FILES created/modified in THIS task's TODO.md.
-`);
+`, task);
 }
 
 module.exports = { step4 };

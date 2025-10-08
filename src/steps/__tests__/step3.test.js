@@ -49,11 +49,11 @@ describe('step3', () => {
   });
 
   describe('Basic step3 execution flow and prompt generation', () => {
-    it('should call executeClaude with a prompt', async () => {
+    it('should call executeClaude with a prompt and task name', async () => {
       await step3('TASK1');
 
       expect(executeClaude).toHaveBeenCalledTimes(1);
-      expect(executeClaude).toHaveBeenCalledWith(expect.any(String));
+      expect(executeClaude).toHaveBeenCalledWith(expect.any(String), 'TASK1');
     });
 
     it('should include TODO.md path in prompt', async () => {

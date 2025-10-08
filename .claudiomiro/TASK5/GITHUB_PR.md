@@ -1,3 +1,0 @@
-# Task 5: CLI Entry Point Tests
-
-Implemented comprehensive test coverage for the CLI entry point (`src/cli.js`) with 35 test cases covering command-line argument parsing (--prompt, --maxCycles, --fresh, --push, --same-branch, --no-limit, --mode, --steps, --maxConcurrent), folder validation and initialization, step execution flow control, task graph building and validation, DAG executor integration, init function and main loop behavior, and error handling scenarios. All tests pass with 97.9% statement coverage, 92.72% branch coverage, and 100% function coverage, with proper mocking of external dependencies (fs, logger, state, file-manager, steps, DAGExecutor) to ensure isolated unit testing.
