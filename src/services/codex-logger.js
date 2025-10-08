@@ -117,6 +117,16 @@ const processCodexEvent = (line) => {
         return null;
     }
 
+
+    if(json.item){
+        if(json.item.text){
+            return json.item.text;
+        }
+        if(json.item.command){
+            return `> ` + json.item.command;
+        }
+    }
+
     if(json.prompt){
         return json.prompt;
     }
@@ -144,7 +154,7 @@ const processCodexEvent = (line) => {
 
     }
 
-    return JSON.stringify(json).substring(0, 30) + '...';
+    return JSON.stringify(json).substring(0, 160) + '...';
 };
 
 module.exports = { processCodexEvent };
