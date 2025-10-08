@@ -1,3 +1,5 @@
+const readline = require('readline');
+
 /**
  * TerminalRenderer - Handles terminal rendering with cursor control and line management
  */
@@ -87,8 +89,8 @@ class TerminalRenderer {
 
     // Clear previous content if any
     if (this.lastLineCount > 0) {
-      this.moveCursorUp(this.lastLineCount);
-      this.clearLines(this.lastLineCount);
+      readline.moveCursor(process.stdout, 0, -this.lastLineCount);
+      readline.clearScreenDown(process.stdout);
     }
 
     // Render new lines

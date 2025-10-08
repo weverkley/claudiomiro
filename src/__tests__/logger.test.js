@@ -1,4 +1,5 @@
 const logger = require('../../logger');
+const ParallelStateManager = require('../services/parallel-state-manager');
 
 describe('Logger', () => {
   // Mock console.log to prevent output during tests
@@ -170,6 +171,36 @@ describe('Logger', () => {
     });
   });
 
+  describe('Parallel UI suppression', () => {
+    let originalInstance;
+
+    beforeEach(() => {
+      originalInstance = ParallelStateManager.instance;
+    });
+
+    afterEach(() => {
+      ParallelStateManager.instance = originalInstance || null;
+    });
+
+    test('should skip logging when UI renderer is active', () => {
+      ParallelStateManager.instance = {
+        isUIRendererActive: () => true
+      };
+
+      logger.info('Suppressed message');
+      expect(consoleLogSpy).not.toHaveBeenCalled();
+    });
+
+    test('should allow logging when UI renderer is inactive', () => {
+      ParallelStateManager.instance = {
+        isUIRendererActive: () => false
+      };
+
+      logger.info('Visible message');
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Visible message'));
+    });
+  });
+
   describe('Progress bar', () => {
     test('createProgressBar() should create progress bar with correct percentage', () => {
       const bar0 = logger.createProgressBar(0);
@@ -236,7 +267,7 @@ describe('Logger', () => {
       logger.banner();
       expect(consoleLogSpy).toHaveBeenCalled();
       const output = consoleLogSpy.mock.calls[0][0];
-      expect(output).toContain('CLAUDIOMIRO v1.1');
+      expect(output).toContain('CLAUDIOMIRO v1.3');
       expect(output).toContain('AI-Powered Development Agent');
     });
 

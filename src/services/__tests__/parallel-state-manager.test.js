@@ -38,6 +38,7 @@ describe('ParallelStateManager', () => {
       const states = manager.getAllTaskStates();
 
       expect(states).toEqual({});
+      expect(manager.isUIRendererActive()).toBe(false);
     });
 
     test('should initialize with single task', () => {
@@ -70,6 +71,7 @@ describe('ParallelStateManager', () => {
 
       expect(states).not.toHaveProperty('task1');
       expect(states).toHaveProperty('task2');
+      expect(manager.isUIRendererActive()).toBe(false);
     });
 
     test('should throw error for non-array input', () => {
@@ -262,6 +264,23 @@ describe('ParallelStateManager', () => {
       const states = manager.getAllTaskStates();
 
       expect(states.task1.message).toBe('Second message');
+    });
+  });
+
+  describe('UI renderer state', () => {
+    test('should toggle UI renderer active flag', () => {
+      expect(manager.isUIRendererActive()).toBe(false);
+      manager.setUIRendererActive(true);
+      expect(manager.isUIRendererActive()).toBe(true);
+      manager.setUIRendererActive(false);
+      expect(manager.isUIRendererActive()).toBe(false);
+    });
+
+    test('should coerce non-boolean values when toggling', () => {
+      manager.setUIRendererActive('truthy');
+      expect(manager.isUIRendererActive()).toBe(true);
+      manager.setUIRendererActive(0);
+      expect(manager.isUIRendererActive()).toBe(false);
     });
   });
 

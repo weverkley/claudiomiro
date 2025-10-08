@@ -19,6 +19,7 @@ const overwriteBlock = (lines) => {
 const executeCodex = (text, taskName = null) => {
     return new Promise((resolve, reject) => {
         const stateManager = taskName ? ParallelStateManager.getInstance() : null;
+        const suppressStreamingLogs = Boolean(taskName) && stateManager && typeof stateManager.isUIRendererActive === 'function' && stateManager.isUIRendererActive();
         const tmpFile = path.join(os.tmpdir(), `claudiomiro-codex-${Date.now()}.txt`);
         fs.writeFileSync(tmpFile, text, 'utf-8');
 
@@ -46,12 +47,17 @@ const executeCodex = (text, taskName = null) => {
         let overwriteBlockLines = 0;
 
         const logMessage = (content) => {
-            if (overwriteBlockLines > 0) {
+            if (!suppressStreamingLogs && overwriteBlockLines > 0) {
                 overwriteBlock(overwriteBlockLines);
             }
 
             const max = process.stdout.columns || 80;
             let lineCount = 0;
+
+            if (suppressStreamingLogs) {
+                overwriteBlockLines = 0;
+                return;
+            }
 
             console.log('💬 Codex:');
             lineCount++;

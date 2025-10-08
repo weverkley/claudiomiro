@@ -10,6 +10,24 @@ class Logger {
         this.indentLevel = 0;
     }
 
+    shouldSuppressOutput() {
+        try {
+            const managerModule = require('./src/services/parallel-state-manager');
+            const ParallelStateManager = managerModule.ParallelStateManager || managerModule;
+            const instance = ParallelStateManager && ParallelStateManager.instance;
+            return Boolean(instance && typeof instance.isUIRendererActive === 'function' && instance.isUIRendererActive());
+        } catch (error) {
+            return false;
+        }
+    }
+
+    withOutput(action) {
+        if (this.shouldSuppressOutput()) {
+            return;
+        }
+        action();
+    }
+
     getIndent() {
         return '  '.repeat(this.indentLevel);
     }
@@ -24,24 +42,34 @@ class Logger {
             '║                                       ║',
             '╚═══════════════════════════════════════╝'
         ].join('\n'));
-        console.log('\n' + title + '\n');
+        this.withOutput(() => {
+            console.log('\n' + title + '\n');
+        });
     }
 
     // Logs básicos
     info(message) {
-        console.log(`${this.getIndent()}${logSymbols.info} ${chalk.cyan(message)}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}${logSymbols.info} ${chalk.cyan(message)}`);
+        });
     }
 
     success(message) {
-        console.log(`${this.getIndent()}${logSymbols.success} ${chalk.green(message)}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}${logSymbols.success} ${chalk.green(message)}`);
+        });
     }
 
     warning(message) {
-        console.log(`${this.getIndent()}${logSymbols.warning} ${chalk.yellow(message)}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}${logSymbols.warning} ${chalk.yellow(message)}`);
+        });
     }
 
     error(message) {
-        console.log(`${this.getIndent()}${logSymbols.error} ${chalk.red(message)}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}${logSymbols.error} ${chalk.red(message)}`);
+        });
     }
 
     // Log de step/fase
@@ -50,7 +78,9 @@ class Logger {
 
         const stepText = chalk.bold.white(`[STEP ${number}]`);
         const arrow = chalk.gray('→');
-        console.log(`\n${tasksText} ${stepText} ${arrow} ${chalk.cyan(message)}\n`);
+        this.withOutput(() => {
+            console.log(`\n${tasksText} ${stepText} ${arrow} ${chalk.cyan(message)}\n`);
+        });
     }
 
     // Box para mensagens importantes
@@ -62,11 +92,17 @@ class Logger {
             borderColor: 'cyan',
             ...options
         };
-        console.log(boxen(message, boxConfig));
+        this.withOutput(() => {
+            console.log(boxen(message, boxConfig));
+        });
     }
 
     // Spinner para operações em progresso
     startSpinner(text) {
+        if (this.shouldSuppressOutput()) {
+            this.stopSpinner();
+            return;
+        }
         if (this.spinner) {
             this.spinner.stop();
         }
@@ -78,6 +114,9 @@ class Logger {
     }
 
     updateSpinner(text) {
+        if (this.shouldSuppressOutput()) {
+            return;
+        }
         if (this.spinner) {
             this.spinner.text = chalk.cyan(text);
         }
@@ -85,14 +124,22 @@ class Logger {
 
     succeedSpinner(text) {
         if (this.spinner) {
-            this.spinner.succeed(chalk.green(text));
+            if (this.shouldSuppressOutput()) {
+                this.spinner.stop();
+            } else {
+                this.spinner.succeed(chalk.green(text));
+            }
             this.spinner = null;
         }
     }
 
     failSpinner(text) {
         if (this.spinner) {
-            this.spinner.fail(chalk.red(text));
+            if (this.shouldSuppressOutput()) {
+                this.spinner.stop();
+            } else {
+                this.spinner.fail(chalk.red(text));
+            }
             this.spinner = null;
         }
     }
@@ -106,17 +153,23 @@ class Logger {
 
     // Log de diretório/arquivo
     path(message) {
-        console.log(`${this.getIndent()}${chalk.gray('📁')} ${chalk.blue(message)}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}${chalk.gray('📁')} ${chalk.blue(message)}`);
+        });
     }
 
     // Log de comando executado
     command(cmd) {
-        console.log(`${this.getIndent()}${chalk.gray('$')} ${chalk.magenta(cmd)}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}${chalk.gray('$')} ${chalk.magenta(cmd)}`);
+        });
     }
 
     // Separador visual
     separator() {
-        console.log(chalk.gray('─'.repeat(50)));
+        this.withOutput(() => {
+            console.log(chalk.gray('─'.repeat(50)));
+        });
     }
 
     // Aumentar indentação
@@ -136,12 +189,16 @@ class Logger {
 
     // Log de tarefa
     task(message) {
-        console.log(`${this.getIndent()}${chalk.gray('▸')} ${chalk.white(message)}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}${chalk.gray('▸')} ${chalk.white(message)}`);
+        });
     }
 
     // Log de subtarefa
     subtask(message) {
-        console.log(`${this.getIndent()}  ${chalk.gray('•')} ${chalk.gray(message)}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}  ${chalk.gray('•')} ${chalk.gray(message)}`);
+        });
     }
 
     // Log de progresso
@@ -149,7 +206,9 @@ class Logger {
         const percentage = Math.round((current / total) * 100);
         const bar = this.createProgressBar(percentage);
         const msg = message ? ` ${chalk.gray(message)}` : '';
-        console.log(`${this.getIndent()}${bar} ${chalk.cyan(`${percentage}%`)}${msg}`);
+        this.withOutput(() => {
+            console.log(`${this.getIndent()}${bar} ${chalk.cyan(`${percentage}%`)}${msg}`);
+        });
     }
 
     createProgressBar(percentage) {
@@ -161,12 +220,17 @@ class Logger {
 
     // Limpar console
     clear() {
+        if (this.shouldSuppressOutput()) {
+            return;
+        }
         console.clear();
     }
 
     // Nova linha
     newline() {
-        console.log();
+        this.withOutput(() => {
+            console.log();
+        });
     }
 }
 

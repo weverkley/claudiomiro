@@ -9,6 +9,7 @@ class ParallelStateManager {
     }
 
     this.taskStates = new Map();
+    this.uiRendererActive = false;
     ParallelStateManager.instance = this;
   }
 
@@ -33,6 +34,7 @@ class ParallelStateManager {
     }
 
     this.taskStates.clear();
+    this.uiRendererActive = false;
 
     tasks.forEach(taskName => {
       this.taskStates.set(taskName, {
@@ -121,6 +123,22 @@ class ParallelStateManager {
     });
 
     return states;
+  }
+
+  /**
+   * Enable or disable the live UI renderer flag
+   * @param {boolean} isActive
+   */
+  setUIRendererActive(isActive) {
+    this.uiRendererActive = Boolean(isActive);
+  }
+
+  /**
+   * Check if the live UI renderer is currently active
+   * @returns {boolean}
+   */
+  isUIRendererActive() {
+    return this.uiRendererActive;
   }
 
   /**

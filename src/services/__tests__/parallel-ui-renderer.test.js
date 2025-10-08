@@ -1,6 +1,7 @@
 const ParallelUIRenderer = require('../parallel-ui-renderer');
 const chalk = require('chalk');
 const cliSpinners = require('cli-spinners');
+const logger = require('../../../logger');
 
 // Mock TerminalRenderer
 class MockTerminalRenderer {
@@ -169,6 +170,22 @@ describe('ParallelUIRenderer', () => {
       expect(line0).toBeTruthy();
       expect(line1).toBeTruthy();
     });
+
+    test('should sanitize multiline task data into single line', () => {
+      const taskState = {
+        status: 'running',
+        step: 'Step\nWith\nBreaks',
+        message: 'Line one\nLine two\tExtra'
+      };
+
+      const line = renderer.renderTaskLine('Task\nName', taskState, 0);
+      const plainLine = line.replace(/\x1b\[[0-9;]*m/g, '');
+
+      expect(plainLine).not.toMatch(/\n/);
+      expect(plainLine).toContain('Task Name');
+      expect(plainLine).toContain('Step With Breaks');
+      expect(plainLine).toContain('Line one Line two Extra');
+    });
   });
 
   describe('truncateLine', () => {
@@ -216,13 +233,15 @@ describe('ParallelUIRenderer', () => {
       };
       const lines = renderer.renderFrame(taskStates, 33);
 
-      // Header + 3 task lines
-      expect(lines.length).toBe(4);
+      // Header + blank + 3 task lines
+      expect(lines.length).toBe(5);
 
       const plainLines = lines.map(l => l.replace(/\x1b\[[0-9;]*m/g, ''));
-      expect(plainLines[1]).toContain('task1');
-      expect(plainLines[2]).toContain('task2');
-      expect(plainLines[3]).toContain('task3');
+      const taskLines = plainLines.filter(line => line.trim().length && !line.includes('Total Complete:'));
+      expect(taskLines).toHaveLength(3);
+      expect(taskLines.some(line => line.includes('task1'))).toBe(true);
+      expect(taskLines.some(line => line.includes('task2'))).toBe(true);
+      expect(taskLines.some(line => line.includes('task3'))).toBe(true);
     });
 
     test('should handle empty task states', () => {
@@ -262,7 +281,7 @@ describe('ParallelUIRenderer', () => {
       };
 
       const lines = renderer.renderFrame(taskStates, 50);
-      expect(lines.length).toBe(4); // Header + 3 tasks
+      expect(lines.length).toBe(5); // Header + blank + 3 tasks
       // Should not throw errors
     });
   });
@@ -270,16 +289,25 @@ describe('ParallelUIRenderer', () => {
   describe('start', () => {
     let mockStateManager;
     let mockProgressCalculator;
+    let stopSpinnerSpy;
 
     beforeEach(() => {
       mockStateManager = {
         getAllTaskStates: jest.fn().mockReturnValue({
           task1: { status: 'running', step: '1/2', message: 'Test' }
-        })
+        }),
+        setUIRendererActive: jest.fn()
       };
       mockProgressCalculator = {
         calculateProgress: jest.fn().mockReturnValue(50)
       };
+      stopSpinnerSpy = jest.spyOn(logger, 'stopSpinner').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      if (stopSpinnerSpy) {
+        stopSpinnerSpy.mockRestore();
+      }
     });
 
     test('should throw error if stateManager is not provided', () => {
@@ -297,6 +325,16 @@ describe('ParallelUIRenderer', () => {
     test('should hide cursor on start', () => {
       renderer.start(mockStateManager, mockProgressCalculator);
       expect(mockTerminalRenderer.hideCursorCalled).toBe(true);
+    });
+
+    test('should mark UI renderer as active when supported', () => {
+      renderer.start(mockStateManager, mockProgressCalculator);
+      expect(mockStateManager.setUIRendererActive).toHaveBeenCalledWith(true);
+    });
+
+    test('should stop logger spinner when starting', () => {
+      renderer.start(mockStateManager, mockProgressCalculator);
+      expect(stopSpinnerSpy).toHaveBeenCalled();
     });
 
     test('should create interval with 200ms delay', () => {
@@ -336,7 +374,8 @@ describe('ParallelUIRenderer', () => {
       mockStateManager = {
         getAllTaskStates: jest.fn().mockReturnValue({
           task1: { status: 'completed', step: 'done', message: 'Success' }
-        })
+        }),
+        setUIRendererActive: jest.fn()
       };
       mockProgressCalculator = {
         calculateProgress: jest.fn().mockReturnValue(100)
@@ -370,6 +409,13 @@ describe('ParallelUIRenderer', () => {
       expect(mockTerminalRenderer.showCursorCalled).toBe(true);
     });
 
+    test('should mark UI renderer as inactive when stopped', () => {
+      renderer.start(mockStateManager, mockProgressCalculator);
+      renderer.stop();
+
+      expect(mockStateManager.setUIRendererActive).toHaveBeenCalledWith(false);
+    });
+
     test('should handle stop when not started', () => {
       expect(() => renderer.stop()).not.toThrow();
     });
@@ -386,7 +432,8 @@ describe('ParallelUIRenderer', () => {
       };
 
       const lines = renderer.renderFrame(taskStates, 50);
-      expect(lines.length).toBe(2); // Header + 1 task
+      expect(lines.length).toBe(3); // Header + blank + 1 task
+      expect(lines[1]).toBe('');
     });
 
     test('should handle special characters in task names', () => {
@@ -399,7 +446,7 @@ describe('ParallelUIRenderer', () => {
       };
 
       const lines = renderer.renderFrame(taskStates, 50);
-      expect(lines.length).toBe(2);
+      expect(lines.length).toBe(3);
     });
 
     test('should handle rapid start/stop cycles', () => {

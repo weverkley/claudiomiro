@@ -21,6 +21,7 @@ const overwriteBlock = (lines) => {
 const runClaude = (text, taskName = null) => {
     return new Promise((resolve, reject) => {
         const stateManager = taskName ? ParallelStateManager.getInstance() : null;
+        const suppressStreamingLogs = Boolean(taskName) && stateManager && typeof stateManager.isUIRendererActive === 'function' && stateManager.isUIRendererActive();
         // Create temporary file for the prompt
         const tmpFile = path.join(os.tmpdir(), `claudiomiro-prompt-${Date.now()}.txt`);
         fs.writeFileSync(tmpFile, text, 'utf-8');
@@ -65,12 +66,17 @@ const runClaude = (text, taskName = null) => {
 
             const log = (text) => {
                 // Sobrescreve o bloco anterior se existir
-                if(overwriteBlockLines > 0){
+                if (!suppressStreamingLogs && overwriteBlockLines > 0){
                     overwriteBlock(overwriteBlockLines);
                 }
 
                 const max = process.stdout.columns || 80;
                 let lineCount = 0;
+
+                if (suppressStreamingLogs) {
+                    overwriteBlockLines = 0;
+                    return;
+                }
 
                 // Imprime cabeçalho
                 console.log(`💬 Claude:`);

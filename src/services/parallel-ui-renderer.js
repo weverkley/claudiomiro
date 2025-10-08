@@ -1,5 +1,6 @@
 const chalk = require('chalk');
 const cliSpinners = require('cli-spinners');
+const logger = require('../../logger');
 
 /**
  * ParallelUIRenderer - Renders live UI updates for parallel task execution
@@ -16,6 +17,23 @@ class ParallelUIRenderer {
 
     // Spinner types to cycle through
     this.spinnerTypes = ['dots', 'line', 'arrow', 'bouncingBar'];
+  }
+
+  /**
+   * Normalize text for single-line display
+   * @param {string|null|undefined} value - Raw text value
+   * @returns {string} Sanitized single-line text
+   */
+  sanitizeText(value) {
+    if (!value) {
+      return '';
+    }
+
+    return value
+      .toString()
+      .replace(/[\r\n]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   /**
@@ -57,8 +75,8 @@ class ParallelUIRenderer {
    */
   renderTaskLine(taskName, taskState, taskIndex) {
     const status = taskState.status || 'pending';
-    const step = taskState.step || '';
-    const message = taskState.message || '';
+    const step = this.sanitizeText(taskState.step);
+    const message = this.sanitizeText(taskState.message);
 
     // Use different spinner for each task
     const spinnerType = this.spinnerTypes[taskIndex % this.spinnerTypes.length];
@@ -68,7 +86,8 @@ class ParallelUIRenderer {
     const colorFn = this.getColorForStatus(status);
 
     // Format the line
-    let line = `${spinner} ${taskName}`;
+    const displayName = this.sanitizeText(taskName) || 'Task';
+    let line = `${spinner} ${displayName}`;
     if (step) {
       line += `: ${step}`;
     }
@@ -120,7 +139,10 @@ class ParallelUIRenderer {
 
     // Render task lines
     if (taskStates && typeof taskStates === 'object') {
-      const taskNames = Object.keys(taskStates);
+      const taskNames = Object.keys(taskStates).sort();
+      if (taskNames.length > 0) {
+        lines.push('');
+      }
       taskNames.forEach((taskName, index) => {
         const taskState = taskStates[taskName];
         const taskLine = this.renderTaskLine(taskName, taskState, index);
@@ -143,6 +165,13 @@ class ParallelUIRenderer {
 
     this.stateManager = stateManager;
     this.progressCalculator = progressCalculator;
+    if (typeof this.stateManager.setUIRendererActive === 'function') {
+      this.stateManager.setUIRendererActive(true);
+    }
+
+    if (logger && typeof logger.stopSpinner === 'function') {
+      logger.stopSpinner();
+    }
 
     // Hide cursor for cleaner rendering
     this.terminalRenderer.hideCursor();
@@ -175,6 +204,10 @@ class ParallelUIRenderer {
       const totalProgress = this.progressCalculator.calculateProgress(taskStates);
       const lines = this.renderFrame(taskStates, totalProgress);
       this.terminalRenderer.renderBlock(lines);
+    }
+
+    if (this.stateManager && typeof this.stateManager.setUIRendererActive === 'function') {
+      this.stateManager.setUIRendererActive(false);
     }
 
     // Show cursor again

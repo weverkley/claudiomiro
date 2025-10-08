@@ -493,7 +493,8 @@ describe('claude-executor', () => {
     beforeEach(() => {
       // Create mock state manager instance
       mockStateManager = {
-        updateClaudeMessage: jest.fn()
+        updateClaudeMessage: jest.fn(),
+        isUIRendererActive: jest.fn(() => false)
       };
 
       // Mock getInstance to return our mock instance
@@ -559,6 +560,22 @@ describe('claude-executor', () => {
       expect(mockStateManager.updateClaudeMessage).toHaveBeenNthCalledWith(1, 'TASK2', 'Message 1');
       expect(mockStateManager.updateClaudeMessage).toHaveBeenNthCalledWith(2, 'TASK2', 'Message 2');
       expect(mockStateManager.updateClaudeMessage).toHaveBeenNthCalledWith(3, 'TASK2', 'Message 3');
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should suppress console output when UI renderer is active', async () => {
+      mockStateManager.isUIRendererActive.mockReturnValue(true);
+
+      const promise = executeClaude('test prompt', 'TASK_SUPPRESS');
+
+      console.log.mockClear();
+
+      const jsonLine = JSON.stringify({ type: 'text', text: 'Hidden message' });
+      mockChildProcess.stdout.emit('data', Buffer.from(jsonLine + '\n'));
+
+      expect(console.log).not.toHaveBeenCalled();
 
       setTimeout(() => mockChildProcess.emit('close', 0), 10);
       await promise;
