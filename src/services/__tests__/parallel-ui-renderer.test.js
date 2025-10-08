@@ -186,6 +186,21 @@ describe('ParallelUIRenderer', () => {
       expect(plainLine).toContain('Step With Breaks');
       expect(plainLine).toContain('Line one Line two Extra');
     });
+
+    test('should display DONE for completed tasks without Claude message', () => {
+      const taskState = {
+        status: 'completed',
+        step: 'Step 4 - Running tests and creating PR',
+        message: 'Last Claude command'
+      };
+
+      const line = renderer.renderTaskLine('TaskDone', taskState, 0);
+      const plainLine = line.replace(/\x1b\[[0-9;]*m/g, '');
+
+      expect(plainLine).toContain('TaskDone');
+      expect(plainLine).toContain('DONE');
+      expect(plainLine).not.toContain('Claude:');
+    });
   });
 
   describe('truncateLine', () => {

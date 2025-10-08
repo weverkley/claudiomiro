@@ -75,8 +75,14 @@ class ParallelUIRenderer {
    */
   renderTaskLine(taskName, taskState, taskIndex) {
     const status = taskState.status || 'pending';
-    const step = this.sanitizeText(taskState.step);
-    const message = this.sanitizeText(taskState.message);
+    const isCompleted = status === 'completed';
+    let step = this.sanitizeText(taskState.step);
+    let message = this.sanitizeText(taskState.message);
+
+    if (isCompleted) {
+      step = 'DONE';
+      message = '';
+    }
 
     // Use different spinner for each task
     const spinnerType = this.spinnerTypes[taskIndex % this.spinnerTypes.length];

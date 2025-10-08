@@ -1,5 +1,7 @@
 const { calculateProgress } = require('../src/utils/progress-calculator');
 
+const makeState = (status, step = null, message = null) => ({ status, step, message });
+
 describe('calculateProgress', () => {
   describe('Edge Cases', () => {
     test('returns 0 for zero tasks (empty object)', () => {
@@ -21,121 +23,96 @@ describe('calculateProgress', () => {
     });
   });
 
-  describe('Typical Cases', () => {
-    test('returns 0% when no tasks completed', () => {
+  describe('Step-based progress', () => {
+    test('returns 0% when no steps completed', () => {
       const taskStates = {
-        task1: { status: 'pending', step: '0/5', message: 'Waiting...' },
-        task2: { status: 'running', step: '2/5', message: 'Processing...' },
-        task3: { status: 'pending', step: '0/5', message: 'Waiting...' },
-        task4: { status: 'running', step: '1/3', message: 'Running...' }
+        task1: makeState('pending'),
+        task2: makeState('running', 'Step 2 - Research and planning')
       };
+
       expect(calculateProgress(taskStates)).toBe(0);
     });
 
-    test('returns 25% when 1 of 4 tasks completed', () => {
+    test('counts steps completed for running tasks', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' },
-        task2: { status: 'running', step: '2/5', message: 'Processing...' },
-        task3: { status: 'pending', step: '0/5', message: 'Waiting...' },
-        task4: { status: 'pending', step: '0/3', message: 'Waiting...' }
+        task1: makeState('running', 'Step 3 - Implementing tasks'),
+        task2: makeState('running', 'Step 3.1 - Code review')
       };
-      expect(calculateProgress(taskStates)).toBe(25);
+
+      // (1 + 2) completed steps out of (2 tasks × 4 steps) = 37.5% → 38%
+      expect(calculateProgress(taskStates)).toBe(38);
     });
 
-    test('returns 50% when 2 of 4 tasks completed', () => {
+    test('counts completed tasks as all steps finished', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' },
-        task2: { status: 'completed', step: '3/3', message: 'Done!' },
-        task3: { status: 'running', step: '2/5', message: 'Processing...' },
-        task4: { status: 'pending', step: '0/3', message: 'Waiting...' }
+        task1: makeState('completed'),
+        task2: makeState('running', 'Step 4 - Running tests and creating PR'),
+        task3: makeState('pending')
       };
-      expect(calculateProgress(taskStates)).toBe(50);
+
+      // (4 + 3 + 0) / 12 = 58.33% → 58%
+      expect(calculateProgress(taskStates)).toBe(58);
     });
 
-    test('returns 75% when 3 of 4 tasks completed', () => {
+    test('counts failed tasks based on the last recorded step', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' },
-        task2: { status: 'completed', step: '3/3', message: 'Done!' },
-        task3: { status: 'completed', step: '5/5', message: 'Done!' },
-        task4: { status: 'running', step: '1/3', message: 'Running...' }
+        task1: makeState('failed', 'Step 4 - Running tests and creating PR'),
+        task2: makeState('completed'),
+        task3: makeState('pending')
       };
-      expect(calculateProgress(taskStates)).toBe(75);
+
+      // (3 + 4 + 0) / 12 = 58.33% → 58%
+      expect(calculateProgress(taskStates)).toBe(58);
     });
 
-    test('returns 100% when all tasks completed', () => {
+    test('returns 100% when every task is completed', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' },
-        task2: { status: 'completed', step: '3/3', message: 'Done!' },
-        task3: { status: 'completed', step: '5/5', message: 'Done!' },
-        task4: { status: 'completed', step: '3/3', message: 'Done!' }
+        task1: makeState('completed'),
+        task2: makeState('completed'),
+        task3: makeState('completed')
       };
-      expect(calculateProgress(taskStates)).toBe(100);
-    });
-  });
 
-  describe('Mixed States with Failed Tasks', () => {
-    test('counts failed tasks as done (completed)', () => {
-      const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Success!' },
-        task2: { status: 'failed', step: 'error', message: 'Failed' },
-        task3: { status: 'pending', step: '0/5', message: 'Waiting...' },
-        task4: { status: 'running', step: '1/3', message: 'Running...' }
-      };
-      // 2 done (1 completed + 1 failed) out of 4 tasks = 50%
-      expect(calculateProgress(taskStates)).toBe(50);
-    });
-
-    test('returns 100% when all tasks are completed or failed', () => {
-      const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Success!' },
-        task2: { status: 'failed', step: 'error', message: 'Error occurred' },
-        task3: { status: 'completed', step: '5/5', message: 'Done!' },
-        task4: { status: 'failed', step: 'error', message: 'Failed' }
-      };
       expect(calculateProgress(taskStates)).toBe(100);
     });
 
-    test('handles mix of all statuses correctly', () => {
+    test('ignores steps that are not recognised', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Success!' },
-        task2: { status: 'failed', step: 'error', message: 'Failed' },
-        task3: { status: 'running', step: '2/5', message: 'Processing...' },
-        task4: { status: 'pending', step: '0/3', message: 'Waiting...' },
-        task5: { status: 'completed', step: '3/3', message: 'Done!' },
-        task6: { status: 'pending', step: '0/2', message: 'Waiting...' }
+        task1: makeState('running', 'Custom phase'),
+        task2: makeState('pending')
       };
-      // 3 done (2 completed + 1 failed) out of 6 tasks = 50%
-      expect(calculateProgress(taskStates)).toBe(50);
+
+      expect(calculateProgress(taskStates)).toBe(0);
     });
   });
 
-  describe('Rounding Behavior', () => {
-    test('rounds to nearest integer (rounds down)', () => {
+  describe('Rounding behavior', () => {
+    test('rounds down when fractional part is under .5', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' },
-        task2: { status: 'pending', step: '0/5', message: 'Waiting...' },
-        task3: { status: 'pending', step: '0/5', message: 'Waiting...' }
+        task1: makeState('running', 'Step 3 - Implementing tasks'),
+        task2: makeState('pending'),
+        task3: makeState('pending')
       };
-      // 1 of 3 = 33.333...% → rounds to 33%
-      expect(calculateProgress(taskStates)).toBe(33);
+
+      // 1 / 12 = 8.33% → 8%
+      expect(calculateProgress(taskStates)).toBe(8);
     });
 
-    test('rounds to nearest integer (rounds up)', () => {
+    test('rounds up when fractional part is .5 or higher', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' },
-        task2: { status: 'completed', step: '3/3', message: 'Done!' },
-        task3: { status: 'pending', step: '0/5', message: 'Waiting...' }
+        task1: makeState('completed'),
+        task2: makeState('running', 'Step 4 - Running tests and creating PR')
       };
-      // 2 of 3 = 66.666...% → rounds to 67%
-      expect(calculateProgress(taskStates)).toBe(67);
+
+      // (4 + 3) / 8 = 87.5% → 88%
+      expect(calculateProgress(taskStates)).toBe(88);
     });
   });
 
-  describe('Pure Function Behavior', () => {
+  describe('Pure function behaviour', () => {
     test('does not modify input object', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' },
-        task2: { status: 'running', step: '2/5', message: 'Processing...' }
+        task1: makeState('completed'),
+        task2: makeState('running', 'Step 3 - Implementing tasks')
       };
       const originalCopy = JSON.parse(JSON.stringify(taskStates));
 
@@ -144,11 +121,11 @@ describe('calculateProgress', () => {
       expect(taskStates).toEqual(originalCopy);
     });
 
-    test('returns same result for same input (idempotent)', () => {
+    test('returns same result for repeated calls with same input', () => {
       const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' },
-        task2: { status: 'failed', step: 'error', message: 'Failed' },
-        task3: { status: 'running', step: '2/5', message: 'Processing...' }
+        task1: makeState('completed'),
+        task2: makeState('failed', 'Step 3.1 - Code review'),
+        task3: makeState('running', 'Step 3 - Implementing tasks')
       };
 
       const result1 = calculateProgress(taskStates);
@@ -160,32 +137,35 @@ describe('calculateProgress', () => {
     });
   });
 
-  describe('Single Task', () => {
-    test('returns 100% for single completed task', () => {
-      const taskStates = {
-        task1: { status: 'completed', step: '5/5', message: 'Done!' }
-      };
+  describe('Single task scenarios', () => {
+    test('returns 100% for a completed task', () => {
+      const taskStates = { task1: makeState('completed') };
       expect(calculateProgress(taskStates)).toBe(100);
     });
 
-    test('returns 100% for single failed task', () => {
+    test('returns 75% for a task running Step 4', () => {
       const taskStates = {
-        task1: { status: 'failed', step: 'error', message: 'Failed' }
+        task1: makeState('running', 'Step 4 - Running tests and creating PR')
       };
-      expect(calculateProgress(taskStates)).toBe(100);
+      expect(calculateProgress(taskStates)).toBe(75);
     });
 
-    test('returns 0% for single running task', () => {
+    test('returns 50% for a task at Step 3.1', () => {
       const taskStates = {
-        task1: { status: 'running', step: '2/5', message: 'Processing...' }
+        task1: makeState('running', 'Step 3.1 - Code review')
+      };
+      expect(calculateProgress(taskStates)).toBe(50);
+    });
+
+    test('returns 0% for a task at Step 2', () => {
+      const taskStates = {
+        task1: makeState('running', 'Step 2 - Research and planning')
       };
       expect(calculateProgress(taskStates)).toBe(0);
     });
 
-    test('returns 0% for single pending task', () => {
-      const taskStates = {
-        task1: { status: 'pending', step: '0/5', message: 'Waiting...' }
-      };
+    test('returns 0% for a pending task', () => {
+      const taskStates = { task1: makeState('pending') };
       expect(calculateProgress(taskStates)).toBe(0);
     });
   });
