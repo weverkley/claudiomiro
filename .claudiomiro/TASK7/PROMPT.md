@@ -1,41 +1,23 @@
 ## OBJECTIVE
-Create comprehensive unit tests for src/services/claude-executor.js (Claude process execution).
-Done when: executeClaude tested, spawn mocked, temp files handled, stdout/stderr processed, >90% coverage, runs independently.
+Create comprehensive unit tests for src/utils/validation.js module.
+Done when: validation.test.js created, isFullyImplemented tested, edge cases covered, tests pass, coverage > 80%.
 
 ## DEPENDENCIES
-- Requires: TASK1 (Jest setup)
-- Provides for: TASK20 (Integration tests)
+- Requires: TASK1, TASK2
+- Provides for: NONE
 
 ## PARALLELIZATION
-- Layer: 1 (Unit Tests)
-- Parallel with: TASK2-6, TASK8-19 (17 other unit test tasks)
-- Complexity: Medium
+- Layer: 2 (Core Module Tests)
+- Parallel with: TASK3, TASK4, TASK5, TASK6, TASK8-17
+- Complexity: Low
 
 ## CONSTRAINTS
-- Mock all external dependencies (fs, child_process.spawn, logger, state)
+- Include tests with implementation
 - TODO.md first line: "Fully implemented: NO"
-- Test async process execution and event handling
-- Verify temp file creation and cleanup
-- Test error scenarios and edge cases
 - No manual/deployment steps
-
-## IMPLEMENTATION REQUIREMENTS
-1. Create __tests__/services/claude-executor.test.js
-2. Mock child_process.spawn with EventEmitter for stdout/stderr/exit events
-3. Mock fs (writeFileSync, unlinkSync, mkdtempSync)
-4. Mock logger (info, error, debug)
-5. Mock state (getCurrentTask, setTaskState)
-6. Test cases:
-   - Successful execution: spawn → stdout data → exit(0) → resolve
-   - Error handling: spawn error, non-zero exit code
-   - Temp file creation: verify writeFileSync called with correct content
-   - Temp file cleanup: verify unlinkSync called
-   - stdout/stderr processing: verify logger calls
-   - State updates: verify state methods called
-7. Use jest.fn() for event handlers (on, once)
-8. Test processClaudeMessage integration
+- Mock file system reads
+- Test both success and failure paths
 
 ## RISKS
-1. EventEmitter complexity → Use simple mock implementations
-2. Async/event timing → Use setImmediate or nextTick in tests
-3. Temp file paths → Mock mkdtempSync to return predictable paths
+1. File system operations → Mock fs.readFileSync and fs.existsSync
+2. Path handling → Test with various path formats

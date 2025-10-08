@@ -1,40 +1,24 @@
 ## OBJECTIVE
-Create comprehensive unit tests for src/services/file-manager.js (directory and state management).
-Done when: startFresh tested, cleanup verified, folder creation covered, state initialized, >90% coverage, runs independently.
+Create comprehensive unit tests for src/services/claude-executor.js module.
+Done when: claude-executor.test.js created, API execution tested, error handling covered, tests pass, coverage > 80%.
 
 ## DEPENDENCIES
-- Requires: TASK1 (Jest setup)
-- Provides for: TASK20 (Integration tests)
+- Requires: TASK1, TASK2
+- Provides for: NONE
 
 ## PARALLELIZATION
-- Layer: 1 (Unit Tests)
-- Parallel with: TASK2-8, TASK10-19 (17 other unit test tasks)
-- Complexity: Low
+- Layer: 2 (Core Module Tests)
+- Parallel with: TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK10-17
+- Complexity: High
 
 ## CONSTRAINTS
-- Mock all external dependencies (fs, logger, state)
+- Include tests with implementation
 - TODO.md first line: "Fully implemented: NO"
-- Test directory creation and cleanup
-- Verify state initialization
-- Test error scenarios
 - No manual/deployment steps
-
-## IMPLEMENTATION REQUIREMENTS
-1. Create __tests__/services/file-manager.test.js
-2. Mock fs (existsSync, rmSync, mkdirSync)
-3. Mock logger (info, error, warn)
-4. Mock state (initialize, reset)
-5. Test cases:
-   - startFresh: creates .claudiomiro directory structure
-   - Directory cleanup: removes existing folders if present
-   - Folder creation: creates TASK1-N directories
-   - State initialization: calls state.initialize()
-   - Error handling: fs operation failures
-   - Edge case: directory already exists
-   - Edge case: permission denied
-6. Verify fs method call order and arguments
-7. Verify logger calls for each operation
+- Mock child_process spawn
+- Mock all file operations
 
 ## RISKS
-1. File system mocking → Use jest.mock('fs') at module level
-2. Directory structure → Ensure mock matches actual folder patterns
+1. spawn process mocking → Use jest.mock('child_process') with EventEmitter
+2. Async stream processing → Use async/await with proper event handling
+3. File I/O operations → Mock all fs methods

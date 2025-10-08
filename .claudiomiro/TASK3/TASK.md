@@ -1,41 +1,45 @@
+@dependencies [TASK1, TASK2]
 # Task: Unit Tests for logger.js
 
 ## Objective
-Create comprehensive unit tests for the Logger class covering all logging methods, spinner functionality, indentation, progress bars, and formatting.
+Create comprehensive unit tests for logger.js covering all methods, edge cases, and ensuring proper console output formatting.
 
 ## Dependencies
-- **Depends on:** TASK1 (Jest setup)
-- **Blocks:** TASK20 (Integration tests)
-- **Parallel with:** TASK2, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17, TASK18, TASK19
+- **Depends on:** TASK1, TASK2
+- **Blocks:** NONE
+- **Parallel with:** TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17
 
 ## Files Affected
 **CREATE:**
-- __tests__/logger.test.js (unit tests for logger.js)
+- __tests__/logger.test.js
 
 **MODIFY:**
 - NONE
 
 ## Steps
-1. Mock external dependencies (chalk, ora, log-symbols, boxen, gradient-string)
-2. Test all logging methods (info, success, warning, error)
-3. Test spinner lifecycle (start, update, succeed, fail, stop)
-4. Test indentation system (indent, outdent, resetIndent)
-5. Test formatting methods (banner, box, separator, progress bar)
-6. Test utility methods (path, command, task, subtask)
-7. Verify chalk color usage and console output
-8. Test edge cases: multiple spinners, negative indent
+1. Create __tests__/logger.test.js
+2. Import logger module and necessary mocks
+3. Test banner() method output
+4. Test info(), success(), warning(), error() methods
+5. Test step() method with task/step numbering
+6. Test box() method with various options
+7. Test spinner methods (start, update, succeed, fail, stop)
+8. Test indentation methods (indent, outdent, resetIndent)
+9. Test helper methods (path, command, separator, task, subtask)
+10. Test progress bar functionality
+11. Ensure all tests pass with `npm test`
 
 ## Done When
-- [ ] All Logger methods are tested
-- [ ] Spinner state management verified
-- [ ] Console output mocked and verified
-- [ ] Indentation logic tested
-- [ ] Progress bar calculation tested
-- [ ] Coverage > 90% for logger.js
-- [ ] Tests run independently
+- [ ] __tests__/logger.test.js exists
+- [ ] All public methods have test coverage
+- [ ] Edge cases are tested (null inputs, boundary conditions)
+- [ ] Indentation logic is verified
+- [ ] Spinner state management is tested
+- [ ] All tests pass when running `npm test`
+- [ ] Test coverage is > 80% for logger.js
 
 ## Verify
 ```bash
-npm test __tests__/logger.test.js
+npm test -- logger.test.js
 ```
-Expected: All tests pass with >90% coverage for logger.js
+→ Expected: All tests pass, coverage > 80%

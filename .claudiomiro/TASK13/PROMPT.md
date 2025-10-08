@@ -1,45 +1,23 @@
 ## OBJECTIVE
-Create comprehensive unit tests for src/steps/step0.js (task generation and planning).
-Done when: step0 tested, PROMPT.md creation verified, Claude execution mocked, dependencies analyzed, git branch created, >90% coverage, runs independently.
+Create comprehensive unit tests for src/steps/step0.js module.
+Done when: step0.test.js created, execution flow tested, file operations verified, tests pass, coverage > 80%.
 
 ## DEPENDENCIES
-- Requires: TASK1 (Jest setup)
-- Provides for: TASK20 (Integration tests)
+- Requires: TASK1, TASK2
+- Provides for: NONE
 
 ## PARALLELIZATION
-- Layer: 1 (Unit Tests)
-- Parallel with: TASK2-12, TASK14-19 (17 other unit test tasks)
-- Complexity: High
+- Layer: 2 (Core Module Tests)
+- Parallel with: TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK14-17
+- Complexity: Medium
 
 ## CONSTRAINTS
-- Mock all external dependencies (fs, executeClaude, logger, state, prompt-reader)
+- Include tests with implementation
 - TODO.md first line: "Fully implemented: NO"
-- Test complex workflow orchestration
-- Verify task parsing and DAG construction
-- Test git operations
 - No manual/deployment steps
-
-## IMPLEMENTATION REQUIREMENTS
-1. Create __tests__/steps/step0.test.js
-2. Mock fs (writeFileSync, readFileSync, mkdirSync)
-3. Mock executeClaude (returns Promise with task structure)
-4. Mock logger (info, error, warn, spinner methods)
-5. Mock state (setTaskCount, registerTask)
-6. Mock prompt-reader (getMultilineInput returns user input)
-7. Mock child_process for git commands
-8. Test cases:
-   - step0: collects user input via getMultilineInput
-   - PROMPT.md creation: writes user requirements to file
-   - Claude execution: calls executeClaude with planning prompt
-   - Task parsing: parses TASK1/TASK.md files for dependencies
-   - Git branch: creates feature branch
-   - State updates: registers all tasks with dependencies
-   - Error handling: Claude failure, file write errors
-   - Edge case: no dependencies, circular dependencies
-9. Verify executeClaude called with correct prompt structure
-10. Verify fs.writeFileSync call order and content
+- Mock executeClaude function
+- Test state transitions
 
 ## RISKS
-1. Complex orchestration → Break into smaller test scenarios
-2. Git mocking → Use simple spawn mock for git commands
-3. File system operations → Track mock call sequence carefully
+1. Claude execution mocking → Mock executeClaude with resolved promises
+2. File system operations → Mock all fs methods used

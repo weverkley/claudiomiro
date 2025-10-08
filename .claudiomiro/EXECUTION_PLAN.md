@@ -1,83 +1,86 @@
 # Execution Plan
 
 ## Summary
-- Total Tasks: 20
-- Layers: 3
-- Max Parallel: 18 (Layer 1)
-- Parallelism Ratio: 6.67
+- Total Tasks: 17
+- Layers: 4
+- Max Parallel: 13 (Layer 2)
+- Parallelism Ratio: 4.25
 
 ## Layers
 
-### Layer 0: Foundation (1 task)
-- TASK1: Jest setup and configuration - NO DEPS
+### Layer 0: Foundation
+- TASK1: Jest configuration and GitHub Actions setup - NO DEPS
 
-### Layer 1: Unit Tests (18 tasks - PARALLEL)
-- TASK2: Unit tests for index.js - Depends: TASK1
-- TASK3: Unit tests for logger.js - Depends: TASK1
-- TASK4: Unit tests for src/cli.js - Depends: TASK1
-- TASK5: Unit tests for src/config/state.js - Depends: TASK1
-- TASK6: Unit tests for src/utils/validation.js - Depends: TASK1
-- TASK7: Unit tests for src/services/claude-executor.js - Depends: TASK1
-- TASK8: Unit tests for src/services/dag-executor.js - Depends: TASK1
-- TASK9: Unit tests for src/services/file-manager.js - Depends: TASK1
-- TASK10: Unit tests for src/services/claude-logger.js - Depends: TASK1
-- TASK11: Unit tests for src/services/prompt-reader.js - Depends: TASK1
-- TASK12: Unit tests for src/steps/index.js - Depends: TASK1
-- TASK13: Unit tests for src/steps/step0.js - Depends: TASK1
-- TASK14: Unit tests for src/steps/step1.js - Depends: TASK1
-- TASK15: Unit tests for src/steps/step2.js - Depends: TASK1
-- TASK16: Unit tests for src/steps/step3.js - Depends: TASK1
-- TASK17: Unit tests for src/steps/step4.js - Depends: TASK1
-- TASK18: Unit tests for src/steps/step5.js - Depends: TASK1
-- TASK19: Unit tests for src/steps/code-review.js - Depends: TASK1
+### Layer 1: Test Infrastructure (PARALLEL)
+- TASK2: Test utilities and mocks - Depends: TASK1
+⚡ TASK2 runs independently
 
-⚡ TASK2-19 run in PARALLEL (18 concurrent tasks)
+### Layer 2: Core Module Tests (PARALLEL - Maximum Parallelization)
+- TASK3: logger.js unit tests - Depends: TASK1, TASK2
+- TASK4: index.js unit tests - Depends: TASK1, TASK2
+- TASK5: src/cli.js unit tests - Depends: TASK1, TASK2
+- TASK6: src/config/state.js unit tests - Depends: TASK1, TASK2
+- TASK7: src/utils/validation.js unit tests - Depends: TASK1, TASK2
+- TASK8: src/services/claude-logger.js unit tests - Depends: TASK1, TASK2
+- TASK9: src/services/claude-executor.js unit tests - Depends: TASK1, TASK2
+- TASK10: src/services/file-manager.js unit tests - Depends: TASK1, TASK2
+- TASK11: src/services/prompt-reader.js unit tests - Depends: TASK1, TASK2
+- TASK12: src/services/dag-executor.js unit tests - Depends: TASK1, TASK2
+- TASK13: src/steps/step0.js unit tests - Depends: TASK1, TASK2
+- TASK14: src/steps/step1.js unit tests - Depends: TASK1, TASK2
+- TASK15: src/steps/step2.js unit tests - Depends: TASK1, TASK2
+- TASK16: src/steps/step3.js unit tests - Depends: TASK1, TASK2
+- TASK17: src/steps/step4.js unit tests - Depends: TASK1, TASK2
+⚡ TASK3-17 run in PARALLEL (15 concurrent tasks)
 
-### Layer 2: Integration Tests (1 task)
-- TASK20: Integration and E2E tests - Depends: TASK2, TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17, TASK18, TASK19
+### Layer 3: Verification
+(No additional tasks - verification happens in each test task)
 
 ## Dependency Graph
 ```
-TASK1 (Jest Setup)
-  ├─> TASK2 (index.js tests) ──┐
-  ├─> TASK3 (logger.js tests) ─┤
-  ├─> TASK4 (cli.js tests) ─────┤
-  ├─> TASK5 (state.js tests) ───┤
-  ├─> TASK6 (validation.js) ────┤
-  ├─> TASK7 (claude-executor) ──┤
-  ├─> TASK8 (dag-executor) ─────┤
-  ├─> TASK9 (file-manager) ─────┤
-  ├─> TASK10 (claude-logger) ───┤
-  ├─> TASK11 (prompt-reader) ───┤
-  ├─> TASK12 (steps/index) ─────┤
-  ├─> TASK13 (step0) ───────────┤
-  ├─> TASK14 (step1) ───────────┤
-  ├─> TASK15 (step2) ───────────┤
-  ├─> TASK16 (step3) ───────────┤
-  ├─> TASK17 (step4) ───────────┤
-  ├─> TASK18 (step5) ───────────┤
-  └─> TASK19 (code-review) ─────┴─> TASK20 (Integration Tests)
+TASK1 → TASK2 ──┬─→ TASK3
+                ├─→ TASK4
+                ├─→ TASK5
+                ├─→ TASK6
+                ├─→ TASK7
+                ├─→ TASK8
+                ├─→ TASK9
+                ├─→ TASK10
+                ├─→ TASK11
+                ├─→ TASK12
+                ├─→ TASK13
+                ├─→ TASK14
+                ├─→ TASK15
+                ├─→ TASK16
+                └─→ TASK17
 ```
 
 ## Critical Path
-TASK1 → TASK2 (or any unit test) → TASK20
+TASK1 → TASK2 → [Any TASK3-17] (3 sequential steps)
 
-**Note:** Layer 1 is the optimization layer with 18 parallel tasks, achieving maximum concurrency for independent unit test creation.
+## Parallelization Strategy
+- **Layer 0**: Setup Jest + GitHub Actions configuration
+- **Layer 1**: Create shared test utilities (mocks for dependencies)
+- **Layer 2**: Each JavaScript module gets its own test file (15 parallel tasks)
+- All tests are independent - different files, no inter-dependencies
+- Each task includes test creation AND local verification
+- GitHub Actions validates all tests in CI/CD pipeline
 
-## Test Coverage Strategy
-
-### Automated Test Types Included:
-1. **Unit Tests** - Individual function/module testing (Layer 1)
-2. **Integration Tests** - Module interaction testing (Layer 2)
-3. **E2E Tests** - Full workflow testing (Layer 2)
-4. **Snapshot Tests** - Output consistency testing
-5. **Error Handling Tests** - Exception and edge case testing
-6. **Mock Tests** - External dependency mocking
-7. **Coverage Tests** - Code coverage validation
-
-### Test Configuration:
-- Framework: Jest
-- Coverage Target: 90%+
-- Parallel Execution: Enabled
-- Watch Mode: Available
-- Test Reports: JSON, HTML, LCOV
+## Files to be Tested (17 total)
+1. logger.js
+2. index.js
+3. src/cli.js
+4. src/config/state.js
+5. src/utils/validation.js
+6. src/services/claude-logger.js
+7. src/services/claude-executor.js
+8. src/services/file-manager.js
+9. src/services/prompt-reader.js
+10. src/services/dag-executor.js
+11. src/steps/step0.js
+12. src/steps/step1.js
+13. src/steps/step2.js
+14. src/steps/step3.js
+15. src/steps/step4.js
+16. src/steps/step5.js
+17. src/steps/code-review.js

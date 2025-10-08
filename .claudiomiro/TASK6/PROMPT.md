@@ -1,37 +1,23 @@
 ## OBJECTIVE
-Create comprehensive unit tests for validation utilities (src/utils/validation.js).
-Done when: isFullyImplemented tested with all scenarios, edge cases covered, >90% coverage, runs independently.
+Create comprehensive unit tests for src/config/state.js State class.
+Done when: state.test.js created, State class tested, persistence tested, tests pass, coverage > 80%.
 
 ## DEPENDENCIES
-- Requires: TASK1 (Jest setup)
-- Provides for: TASK20 (Integration tests)
+- Requires: TASK1, TASK2
+- Provides for: NONE
 
 ## PARALLELIZATION
-- Layer: 1 (Unit Tests)
-- Parallel with: TASK2, TASK3, TASK4, TASK5, TASK7-TASK19 (17 other unit test tasks)
-- Complexity: Low
+- Layer: 2 (Core Module Tests)
+- Parallel with: TASK3, TASK4, TASK5, TASK7-17
+- Complexity: Medium
 
 ## CONSTRAINTS
-- Mock fs.readFileSync for test file content
+- Include tests with implementation
 - TODO.md first line: "Fully implemented: NO"
-- Test case sensitivity and whitespace handling
-- Verify task item exclusion logic
 - No manual/deployment steps
-
-## IMPLEMENTATION REQUIREMENTS
-1. Create __tests__/utils/validation.test.js
-2. Mock fs.readFileSync to return controlled test content
-3. Test cases:
-   - "Fully implemented: yes\n..." → returns true
-   - "Fully implemented: no\n..." → returns false
-   - "FULLY IMPLEMENTED: YES" (uppercase) → returns true
-   - "- [ ] Fully implemented: yes" (task item) → returns false
-   - "Line1\nLine2\n...\nLine11: Fully implemented: yes" → returns false (after line 10)
-   - Empty file → returns false
-   - No marker found → returns false
-   - "  Fully implemented: yes  " (whitespace) → returns true
-4. Use jest.mock('fs') to control readFileSync output
+- Mock file system operations
+- Test state persistence and retrieval
 
 ## RISKS
-1. File reading errors → Mock should handle all edge cases
-2. Regex complexity → Test exact behavior of trimming and case matching
+1. File system state persistence → Mock fs.writeFileSync and fs.readFileSync
+2. Path resolution → Mock path.join for predictable paths

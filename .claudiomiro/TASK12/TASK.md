@@ -1,38 +1,45 @@
-# Task: Unit Tests for src/steps/index.js
+@dependencies [TASK1, TASK2]
+# Task: Unit Tests for src/services/dag-executor.js
 
 ## Objective
-Create comprehensive unit tests for the steps index module, verifying all step functions are properly exported and module structure is correct.
+Create comprehensive unit tests for src/services/dag-executor.js covering the DAGExecutor class, task graph execution, and dependency management.
 
 ## Dependencies
-- **Depends on:** TASK1 (Jest setup)
-- **Blocks:** TASK20 (Integration tests)
-- **Parallel with:** TASK2, TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK13, TASK14, TASK15, TASK16, TASK17, TASK18, TASK19
+- **Depends on:** TASK1, TASK2
+- **Blocks:** NONE
+- **Parallel with:** TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK13, TASK14, TASK15, TASK16, TASK17
 
 ## Files Affected
 **CREATE:**
-- __tests__/steps/index.test.js (unit tests for steps/index.js)
+- __tests__/services/dag-executor.test.js
 
 **MODIFY:**
 - NONE
 
 ## Steps
-1. Import steps module
-2. Mock individual step modules (step0-step5, codeReview)
-3. Test module exports structure
-4. Verify all step functions are exported
-5. Test that exported functions match imports
-6. Verify function types and presence
-7. Test error handling for missing exports
+1. Create dag-executor.test.js
+2. Mock fs, path, logger, state, isFullyImplemented, and step modules
+3. Test DAGExecutor class instantiation
+4. Test executeTasksInParallel() with independent tasks
+5. Test topological sorting of dependencies
+6. Test task execution with dependencies
+7. Test error handling for failed tasks
+8. Test task completion validation
+9. Test parallel execution limits
+10. Ensure all tests pass with `npm test`
 
 ## Done When
-- [ ] Module exports are tested
-- [ ] All step functions verified
-- [ ] Export structure is validated
-- [ ] Coverage > 90% for steps/index.js
-- [ ] Tests run independently
+- [ ] __tests__/services/dag-executor.test.js exists
+- [ ] DAGExecutor instantiation is tested
+- [ ] Parallel execution is tested
+- [ ] Dependency resolution is tested
+- [ ] Error handling is tested
+- [ ] Task validation is tested
+- [ ] All tests pass when running `npm test`
+- [ ] Test coverage is > 80% for src/services/dag-executor.js
 
 ## Verify
 ```bash
-npm test __tests__/steps/index.test.js
+npm test -- dag-executor.test.js
 ```
-Expected: All tests pass with >90% coverage for src/steps/index.js
+→ Expected: All tests pass, coverage > 80%

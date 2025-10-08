@@ -1,41 +1,43 @@
+@dependencies [TASK1, TASK2]
 # Task: Unit Tests for src/steps/step3.js
 
 ## Objective
-Create comprehensive unit tests for step3 (implementation), including TODO.md processing, Claude execution for code implementation, and completion verification.
+Create comprehensive unit tests for src/steps/step3.js covering step3 execution logic and operations.
 
 ## Dependencies
-- **Depends on:** TASK1 (Jest setup)
-- **Blocks:** TASK20 (Integration tests)
-- **Parallel with:** TASK2, TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK17, TASK18, TASK19
+- **Depends on:** TASK1, TASK2
+- **Blocks:** NONE
+- **Parallel with:** TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK17
 
 ## Files Affected
 **CREATE:**
-- __tests__/steps/step3.test.js (unit tests for step3.js)
+- __tests__/steps/step3.test.js
 
 **MODIFY:**
 - NONE
 
 ## Steps
-1. Import and mock dependencies (fs, executeClaude, logger, state, prompt-reader)
-2. Test step3 function execution flow
-3. Test TODO.md reading and parsing
-4. Test Claude execution for implementation
-5. Test completion verification (TODO.md first line check)
-6. Test user feedback integration
-7. Test state updates for implementation status
-8. Verify error handling and edge cases
+1. Create step3.test.js
+2. Mock all dependencies (executeClaude, logger, state, fs)
+3. Test step3 execution flow
+4. Test verification logic
+5. Test prompt handling
+6. Test error handling
+7. Test state updates
+8. Ensure all tests pass with `npm test`
 
 ## Done When
-- [ ] All step3 functions are tested
-- [ ] TODO.md processing is covered
-- [ ] Claude execution is mocked
-- [ ] Completion check verified
-- [ ] User feedback handled
-- [ ] Coverage > 90% for step3.js
-- [ ] Tests run independently
+- [ ] __tests__/steps/step3.test.js exists
+- [ ] Step3 execution is tested
+- [ ] Verification logic is tested
+- [ ] Prompt handling is verified
+- [ ] Error scenarios are covered
+- [ ] State management is tested
+- [ ] All tests pass when running `npm test`
+- [ ] Test coverage is > 80% for src/steps/step3.js
 
 ## Verify
 ```bash
-npm test __tests__/steps/step3.test.js
+npm test -- step3.test.js
 ```
-Expected: All tests pass with >90% coverage for src/steps/step3.js
+→ Expected: All tests pass, coverage > 80%

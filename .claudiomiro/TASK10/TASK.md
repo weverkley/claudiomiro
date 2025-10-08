@@ -1,42 +1,44 @@
-# Task: Unit Tests for src/services/claude-logger.js
+@dependencies [TASK1, TASK2]
+# Task: Unit Tests for src/services/file-manager.js
 
 ## Objective
-Create comprehensive unit tests for the Claude logger service, including message processing, JSON parsing, tool formatting, and different message types.
+Create comprehensive unit tests for src/services/file-manager.js covering the startFresh function and file cleanup operations.
 
 ## Dependencies
-- **Depends on:** TASK1 (Jest setup)
-- **Blocks:** TASK20 (Integration tests)
-- **Parallel with:** TASK2, TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17, TASK18, TASK19
+- **Depends on:** TASK1, TASK2
+- **Blocks:** NONE
+- **Parallel with:** TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17
 
 ## Files Affected
 **CREATE:**
-- __tests__/services/claude-logger.test.js (unit tests for claude-logger.js)
+- __tests__/services/file-manager.test.js
 
 **MODIFY:**
 - NONE
 
 ## Steps
-1. Import claude-logger functions (pure functions, no mocks needed)
-2. Test processClaudeMessage with various message formats
-3. Test processAssistantMessage with text content
-4. Test processUserMessage with user input
-5. Test processSystemMessage with system notifications
-6. Test processResultMessage with tool results
-7. Test JSON parsing and error handling
-8. Test tool use formatting and display
-9. Verify output formatting and structure
+1. Create file-manager.test.js
+2. Mock fs, logger, and state modules
+3. Test startFresh() function
+4. Test directory cleanup logic
+5. Test file deletion operations
+6. Test state reset functionality
+7. Test error handling for file operations
+8. Verify logger calls for user feedback
+9. Ensure all tests pass with `npm test`
 
 ## Done When
-- [ ] All logger functions are tested
-- [ ] Message type processing is covered
-- [ ] JSON parsing is tested
-- [ ] Tool formatting is verified
-- [ ] Error scenarios are tested
-- [ ] Coverage > 90% for claude-logger.js
-- [ ] Tests run independently
+- [ ] __tests__/services/file-manager.test.js exists
+- [ ] startFresh() is tested
+- [ ] Directory cleanup is verified
+- [ ] File deletion is tested
+- [ ] State reset is tested
+- [ ] Error scenarios are covered
+- [ ] All tests pass when running `npm test`
+- [ ] Test coverage is > 80% for src/services/file-manager.js
 
 ## Verify
 ```bash
-npm test __tests__/services/claude-logger.test.js
+npm test -- file-manager.test.js
 ```
-Expected: All tests pass with >90% coverage for src/services/claude-logger.js
+→ Expected: All tests pass, coverage > 80%

@@ -1,45 +1,23 @@
 ## OBJECTIVE
-Create comprehensive unit tests for src/steps/step3.js (code implementation from TODO).
-Done when: step3 tested, TODO.md processing covered, implementation verified, completion checked, >90% coverage, runs independently.
+Create comprehensive unit tests for src/steps/step3.js module.
+Done when: step3.test.js created, execution flow tested, verification verified, tests pass, coverage > 80%.
 
 ## DEPENDENCIES
-- Requires: TASK1 (Jest setup)
-- Provides for: TASK20 (Integration tests)
+- Requires: TASK1, TASK2
+- Provides for: NONE
 
 ## PARALLELIZATION
-- Layer: 1 (Unit Tests)
-- Parallel with: TASK2-15, TASK17-19 (17 other unit test tasks)
+- Layer: 2 (Core Module Tests)
+- Parallel with: TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK17
 - Complexity: Medium
 
 ## CONSTRAINTS
-- Mock all external dependencies (fs, executeClaude, logger, state, prompt-reader)
+- Include tests with implementation
 - TODO.md first line: "Fully implemented: NO"
-- Test implementation verification
-- Verify completion status updates
-- Test user interaction
 - No manual/deployment steps
-
-## IMPLEMENTATION REQUIREMENTS
-1. Create __tests__/steps/step3.test.js
-2. Mock fs (readFileSync, writeFileSync)
-3. Mock executeClaude (performs implementation)
-4. Mock logger (info, error, spinner methods)
-5. Mock state (setTaskState, getTaskState)
-6. Mock prompt-reader (getMultilineInput for user feedback)
-7. Test cases:
-   - step3: reads TODO.md for implementation tasks
-   - Claude execution: calls executeClaude with TODO content
-   - Completion check: reads TODO.md first line after execution
-   - Success: "Fully implemented: YES" → proceed
-   - Incomplete: "Fully implemented: NO" → report status
-   - User feedback: allows additional context
-   - State updates: marks implementation complete/incomplete
-   - Error handling: file errors, Claude failures
-   - Edge case: TODO.md modified during execution
-8. Verify TODO.md first line parsing logic
-9. Verify state transitions based on completion
+- Mock executeClaude function
+- Test verification steps
 
 ## RISKS
-1. Completion detection → Test both YES and NO scenarios
-2. File modifications → Mock file changes between reads
-3. State management → Verify correct state updates
+1. Claude execution mocking → Mock executeClaude with resolved promises
+2. File system operations → Mock all fs methods used

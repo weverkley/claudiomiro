@@ -1,39 +1,41 @@
-# Task: Unit Tests for index.js
+@dependencies [TASK1]
+# Task: Create Test Utilities and Mocks
 
 ## Objective
-Create comprehensive unit tests for the main entry point (index.js) including error handling, CLI initialization, and process exit scenarios.
+Create shared test utilities, helpers, and mocks that will be reused across all test files to ensure consistent testing patterns and reduce code duplication.
 
 ## Dependencies
-- **Depends on:** TASK1 (Jest setup)
-- **Blocks:** TASK20 (Integration tests)
-- **Parallel with:** TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17, TASK18, TASK19
+- **Depends on:** TASK1
+- **Blocks:** TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17
+- **Parallel with:** NONE
 
 ## Files Affected
 **CREATE:**
-- __tests__/index.test.js (unit tests for index.js)
-
-**MODIFY:**
-- NONE
+- __tests__/helpers/test-utils.js
+- __tests__/mocks/logger.mock.js
+- __tests__/mocks/fs.mock.js
+- __tests__/mocks/state.mock.js
 
 ## Steps
-1. Import and mock dependencies (logger, cli.init)
-2. Test successful CLI initialization
-3. Test error handling and process.exit(1) on failure
-4. Test logger output on errors (newline, failSpinner, error message)
-5. Verify shebang and executable permissions handling
-6. Test module imports and exports
-7. Add edge cases: undefined errors, null responses
+1. Create __tests__/helpers/ directory
+2. Create test-utils.js with common helper functions
+3. Create __tests__/mocks/ directory
+4. Create logger.mock.js to mock logger functionality
+5. Create fs.mock.js to mock file system operations
+6. Create state.mock.js to mock state management
+7. Add documentation comments to all utilities
 
 ## Done When
-- [ ] All index.js functions are tested
-- [ ] Error scenarios are covered
-- [ ] Mocks verify logger calls
-- [ ] Process.exit behavior is tested
-- [ ] Coverage > 90% for index.js
-- [ ] Tests run independently
+- [ ] test-utils.js contains helper functions for common test operations
+- [ ] logger.mock.js provides mock implementation of logger module
+- [ ] fs.mock.js provides mock implementation of fs module
+- [ ] state.mock.js provides mock implementation of state module
+- [ ] All utilities are properly documented
+- [ ] Files can be imported without errors
 
 ## Verify
 ```bash
-npm test __tests__/index.test.js
+node -e "require('./__tests__/helpers/test-utils.js'); console.log('✓ test-utils loaded')"
+node -e "require('./__tests__/mocks/logger.mock.js'); console.log('✓ logger.mock loaded')"
 ```
-Expected: All tests pass with >90% coverage for index.js
+→ Expected: All modules load without errors

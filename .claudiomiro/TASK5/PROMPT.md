@@ -1,35 +1,24 @@
 ## OBJECTIVE
-Create comprehensive unit tests for State class (src/config/state.js).
-Done when: Singleton tested, path resolution verified, getters covered, edge cases tested, >90% coverage, runs independently.
+Create comprehensive unit tests for src/cli.js module.
+Done when: cli.test.js created, all CLI functions tested, error handling covered, tests pass, coverage > 80%.
 
 ## DEPENDENCIES
-- Requires: TASK1 (Jest setup)
-- Provides for: TASK20 (Integration tests)
+- Requires: TASK1, TASK2
+- Provides for: NONE
 
 ## PARALLELIZATION
-- Layer: 1 (Unit Tests)
-- Parallel with: TASK2, TASK3, TASK4, TASK6-TASK19 (17 other unit test tasks)
-- Complexity: Low
+- Layer: 2 (Core Module Tests)
+- Parallel with: TASK3, TASK4, TASK6-17
+- Complexity: High
 
 ## CONSTRAINTS
-- Mock path.resolve and path.join if needed
+- Include tests with implementation
 - TODO.md first line: "Fully implemented: NO"
-- Test singleton pattern behavior
-- Verify absolute path resolution
 - No manual/deployment steps
-
-## IMPLEMENTATION REQUIREMENTS
-1. Create __tests__/config/state.test.js
-2. Import state module (singleton instance)
-3. Test cases:
-   - Initial state: folder and claudiomiroFolder are null
-   - setFolder('/absolute/path') → folder returns '/absolute/path'
-   - setFolder('relative/path') → folder returns resolved absolute path
-   - claudiomiroFolder getter → returns folder + '/.claudiomiro'
-   - Multiple setFolder calls → state updates correctly
-   - Edge case: setFolder('') or setFolder('.') → handles correctly
-4. Test singleton: require state twice → same instance
+- Mock all external dependencies
+- Test async operations properly
 
 ## RISKS
-1. Singleton state pollution → Reset state in beforeEach or afterEach
-2. Path resolution differences → Use path.resolve to normalize expected values
+1. Complex dependency mocking → Use jest.mock() for module-level mocks
+2. File system operations → Mock fs module completely
+3. User input prompts → Mock inquirer/prompts library

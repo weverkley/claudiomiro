@@ -1,49 +1,40 @@
-# Task: Jest Setup and Configuration
+@dependencies []
+# Task: Setup Jest Configuration and GitHub Actions
 
 ## Objective
-Configure Jest testing framework with comprehensive settings for unit, integration, and coverage testing across the entire claudiomiro project.
+Configure Jest testing framework for the project and setup GitHub Actions CI/CD pipeline to automatically run tests on every push and pull request.
 
 ## Dependencies
 - **Depends on:** NONE
-- **Blocks:** TASK2, TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17, TASK18, TASK19
-- **Parallel with:** NONE (Foundation task)
+- **Blocks:** TASK2, TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17
+- **Parallel with:** NONE
 
 ## Files Affected
 **CREATE:**
-- jest.config.js (Jest configuration)
-- __tests__/setup.js (Test setup/teardown utilities)
-- __mocks__/fs.js (Mock file system)
-- __mocks__/child_process.js (Mock spawn/exec)
+- jest.config.js
+- .github/workflows/test.yml
 
 **MODIFY:**
-- package.json (add Jest dependencies and scripts)
+- package.json (add jest dependency and test script)
 
 ## Steps
-1. Install Jest and related dependencies (@types/jest, jest-environment-node, @jest/globals)
-2. Create jest.config.js with comprehensive coverage and test settings
-3. Configure test patterns, coverage thresholds (90%+), and reporters
-4. Create test setup file with global mocks and utilities
-5. Create mock files for Node.js core modules (fs, child_process, path)
-6. Add npm scripts for test, test:watch, test:coverage, test:ci
-7. Configure coverage reports (JSON, HTML, LCOV, text-summary)
-8. Set up parallel test execution configuration
+1. Install Jest as dev dependency: `npm install --save-dev jest`
+2. Create jest.config.js with appropriate configuration for Node.js project
+3. Update package.json test script to run jest
+4. Create .github/workflows/test.yml for CI/CD automation
+5. Configure GitHub Actions to run tests on push and pull requests
+6. Test the configuration locally by running `npm test` (should show no tests found initially)
 
 ## Done When
-- [ ] Jest is installed and configured
-- [ ] package.json has all test scripts
-- [ ] Coverage threshold set to 90%
-- [ ] Mock files created for core dependencies
-- [ ] Test setup file provides utility functions
-- [ ] `npm test` runs successfully (even with no tests yet)
-- [ ] Coverage report directory configured
+- [ ] Jest is installed as dev dependency
+- [ ] jest.config.js exists with proper configuration
+- [ ] package.json has "test": "jest" script
+- [ ] GitHub Actions workflow file exists at .github/workflows/test.yml
+- [ ] Workflow runs on push and pull_request events
+- [ ] Running `npm test` executes successfully (even with 0 tests)
 
 ## Verify
 ```bash
-npm test -- --listTests
+npm test
 ```
-Expected: Shows test pattern configuration
-
-```bash
-npm run test:coverage
-```
-Expected: Generates coverage report structure
+→ Expected: Jest runs successfully (may show "No tests found")

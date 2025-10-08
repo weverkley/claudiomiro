@@ -1,41 +1,23 @@
 ## OBJECTIVE
-Create comprehensive unit tests for src/services/claude-logger.js (message parsing and formatting).
-Done when: All message processors tested, JSON parsing covered, tool formatting verified, >90% coverage, runs independently.
+Create comprehensive unit tests for src/services/file-manager.js module.
+Done when: file-manager.test.js created, startFresh tested, cleanup verified, tests pass, coverage > 80%.
 
 ## DEPENDENCIES
-- Requires: TASK1 (Jest setup)
-- Provides for: TASK20 (Integration tests)
+- Requires: TASK1, TASK2
+- Provides for: NONE
 
 ## PARALLELIZATION
-- Layer: 1 (Unit Tests)
-- Parallel with: TASK2-9, TASK11-19 (17 other unit test tasks)
-- Complexity: Low
+- Layer: 2 (Core Module Tests)
+- Parallel with: TASK3, TASK4, TASK5, TASK6, TASK7, TASK8, TASK9, TASK11-17
+- Complexity: Medium
 
 ## CONSTRAINTS
-- No mocks needed (pure functions)
+- Include tests with implementation
 - TODO.md first line: "Fully implemented: NO"
-- Test all message type variants
-- Verify JSON parsing and error handling
-- Test output formatting
 - No manual/deployment steps
-
-## IMPLEMENTATION REQUIREMENTS
-1. Create __tests__/services/claude-logger.test.js
-2. No mocking required - test pure functions directly
-3. Test cases:
-   - processClaudeMessage: routes to correct processor by type
-   - processAssistantMessage: formats text content blocks
-   - processAssistantMessage: formats tool_use blocks
-   - processUserMessage: formats user input
-   - processSystemMessage: formats system messages
-   - processResultMessage: formats tool results
-   - JSON parsing: valid JSON strings
-   - JSON parsing: invalid JSON → error handling
-   - Tool formatting: displays tool name and parameters
-   - Edge cases: empty messages, null content, malformed data
-4. Test output string structure and content
-5. Verify error messages for invalid inputs
+- Mock all file system operations
+- Test cleanup thoroughly
 
 ## RISKS
-1. Pure function testing → Straightforward, low risk
-2. Output format changes → Tests may need updates if format changes
+1. File deletion safety → Verify mocks prevent actual file deletion
+2. Directory traversal → Mock fs.readdirSync and related methods

@@ -1,10 +1,10 @@
 ## OBJECTIVE
-Configure Jest testing framework for comprehensive automated testing.
-Done when: Jest configured, mocks created, test scripts added, runs successfully, coverage reporting enabled.
+Setup Jest testing framework and GitHub Actions CI/CD pipeline.
+Done when: Jest installed, jest.config.js created, package.json test script updated, GitHub Actions workflow created, npm test runs successfully.
 
 ## DEPENDENCIES
-- Requires: NONE (Foundation task - Layer 0)
-- Provides for: TASK2-TASK19 (all unit test tasks)
+- Requires: NONE
+- Provides for: TASK2, TASK3-17
 
 ## PARALLELIZATION
 - Layer: 0 (Foundation)
@@ -12,31 +12,12 @@ Done when: Jest configured, mocks created, test scripts added, runs successfully
 - Complexity: Low
 
 ## CONSTRAINTS
-- Include all test types: unit, integration, snapshot, error handling
+- Include comprehensive jest.config.js for Node.js
 - TODO.md first line: "Fully implemented: NO"
-- Coverage threshold: 90%+
-- Support parallel test execution
-- Mock external dependencies (fs, child_process, spawn)
 - No manual/deployment steps
-
-## IMPLEMENTATION REQUIREMENTS
-1. Install dependencies: jest, @types/jest, jest-environment-node
-2. Create jest.config.js with:
-   - testEnvironment: 'node'
-   - coverageThreshold: 90%
-   - testMatch patterns for .test.js and .spec.js
-   - collectCoverageFrom (exclude node_modules, coverage, .claudiomiro)
-   - reporters: json, html, lcov, text-summary
-   - maxWorkers: "50%" (parallel execution)
-3. Create __tests__/setup.js with global mocks and utilities
-4. Create __mocks__/fs.js - mock fs.readFileSync, writeFileSync, existsSync, etc.
-5. Create __mocks__/child_process.js - mock spawn with event emitters
-6. Update package.json scripts:
-   - "test": "jest"
-   - "test:watch": "jest --watch"
-   - "test:coverage": "jest --coverage"
-   - "test:ci": "jest --ci --coverage --maxWorkers=2"
+- GitHub Actions must run on push and pull_request
+- Support for coverage reporting
 
 ## RISKS
-1. Mock complexity → Keep mocks simple, only essential behaviors
-2. Coverage too strict → Start at 80%, adjust to 90% after initial tests pass
+1. Jest configuration incompatible with Node.js version → Use standard Node.js preset
+2. GitHub Actions permissions issues → Use standard actions/checkout and actions/setup-node

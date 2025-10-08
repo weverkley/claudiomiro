@@ -1,41 +1,44 @@
-# Task: Unit Tests for src/config/state.js
+@dependencies [TASK1, TASK2]
+# Task: Unit Tests for src/cli.js
 
 ## Objective
-Create comprehensive unit tests for the State class including folder path management, claudiomiro folder resolution, and singleton behavior.
+Create comprehensive unit tests for src/cli.js covering all CLI functions including init, chooseAction, startFresh, and buildTaskGraph.
 
 ## Dependencies
-- **Depends on:** TASK1 (Jest setup)
-- **Blocks:** TASK20 (Integration tests)
-- **Parallel with:** TASK2, TASK3, TASK4, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17, TASK18, TASK19
+- **Depends on:** TASK1, TASK2
+- **Blocks:** NONE
+- **Parallel with:** TASK3, TASK4, TASK6, TASK7, TASK8, TASK9, TASK10, TASK11, TASK12, TASK13, TASK14, TASK15, TASK16, TASK17
 
 ## Files Affected
 **CREATE:**
-- __tests__/config/state.test.js (unit tests for state.js)
+- __tests__/cli.test.js
 
 **MODIFY:**
 - NONE
 
 ## Steps
-1. Test State class instantiation and singleton pattern
-2. Test setFolder with absolute and relative paths
-3. Test folder getter returns resolved absolute path
-4. Test claudiomiroFolder getter returns correct .claudiomiro path
-5. Test path resolution with path.resolve behavior
-6. Test state initialization (null values before setFolder)
-7. Test multiple setFolder calls (state updates correctly)
-8. Test edge cases: empty strings, special characters in paths
+1. Create __tests__/cli.test.js
+2. Mock all dependencies (logger, state, steps, DAGExecutor, fs, path)
+3. Test init() function flow
+4. Test chooseAction() with different user choices
+5. Test startFresh() functionality
+6. Test buildTaskGraph() with valid EXECUTION_PLAN.md
+7. Test error handling for invalid inputs
+8. Test file system operations are properly mocked
+9. Ensure all tests pass with `npm test`
 
 ## Done When
-- [ ] State class fully tested
-- [ ] Singleton behavior verified
-- [ ] Path resolution logic tested
-- [ ] Getters tested for both properties
-- [ ] Edge cases covered
-- [ ] Coverage > 90% for state.js
-- [ ] Tests run independently
+- [ ] __tests__/cli.test.js exists
+- [ ] init() function is tested
+- [ ] chooseAction() covers all menu options
+- [ ] startFresh() is tested
+- [ ] buildTaskGraph() parses execution plan correctly
+- [ ] Error scenarios are covered
+- [ ] All tests pass when running `npm test`
+- [ ] Test coverage is > 80% for src/cli.js
 
 ## Verify
 ```bash
-npm test __tests__/config/state.test.js
+npm test -- cli.test.js
 ```
-Expected: All tests pass with >90% coverage for state.js
+→ Expected: All tests pass, coverage > 80%
