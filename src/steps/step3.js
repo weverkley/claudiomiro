@@ -84,7 +84,7 @@ OBJECTIVE
 
 ### OUTPUT
 - Updated ${folder('TODO.md')} with accurate state and failure notes.
-    `);
+    `, task);
 }
 
 module.exports = { step3 };

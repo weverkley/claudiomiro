@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const logger = require('../../logger');
 const state = require('../config/state');
 const { processClaudeMessage } = require('./claude-logger');
+const { ParallelStateManager } = require('./parallel-state-manager');
 
 const overwriteBlock = (lines) => {
     // Move o cursor para cima N linhas e limpa cada uma
@@ -17,8 +18,9 @@ const overwriteBlock = (lines) => {
     process.stdout.write(`\x1b[${lines}A`);
   }
 
-const executeClaude = (text) => {
+const executeClaude = (text, taskName = null) => {
     return new Promise((resolve, reject) => {
+        const stateManager = taskName ? ParallelStateManager.getInstance() : null;
         // Create temporary file for the prompt
         const tmpFile = path.join(os.tmpdir(), `claudiomiro-prompt-${Date.now()}.txt`);
         fs.writeFileSync(tmpFile, text, 'utf-8');
@@ -97,6 +99,10 @@ const executeClaude = (text) => {
                 const text = processClaudeMessage(line);
                 if(text){
                     log(text);
+                    // Update state manager with Claude message if taskName provided
+                    if (stateManager && taskName) {
+                        stateManager.updateClaudeMessage(taskName, text);
+                    }
                 }
             }
 

@@ -5,6 +5,10 @@ const logger = require('../../logger');
 const state = require('../config/state');
 const { step2, step3, step4, codeReview } = require('../steps');
 const { isFullyImplemented } = require('../utils/validation');
+const ParallelStateManager = require('./parallel-state-manager');
+const ParallelUIRenderer = require('./parallel-ui-renderer');
+const TerminalRenderer = require('../utils/terminal-renderer');
+const { calculateProgress } = require('../utils/progress-calculator');
 
 class DAGExecutor {
   constructor(tasks, allowedSteps = null, maxConcurrent = null) {
@@ -13,6 +17,17 @@ class DAGExecutor {
     // 2 por core, máximo 5, ou valor customizado via --maxConcurrent
     this.maxConcurrent = maxConcurrent || Math.min(5, os.cpus().length * 2);
     this.running = new Set(); // Tasks atualmente em execução
+
+    // Initialize ParallelStateManager
+    this.stateManager = new ParallelStateManager();
+    this.stateManager.initialize(Object.keys(tasks));
+  }
+
+  /**
+   * Returns the state manager instance
+   */
+  getStateManager() {
+    return this.stateManager;
   }
 
   /**
@@ -50,8 +65,6 @@ class DAGExecutor {
       return false;
     }
 
-    logger.info(`🚀 Running ${toExecute.length} task(s) in parallel: ${toExecute.join(', ')}`);
-
     // Marca como running
     toExecute.forEach(task => {
       this.tasks[task].status = 'running';
@@ -71,13 +84,14 @@ class DAGExecutor {
    */
   async executeTask(taskName) {
     try {
-      logger.info(`▶️  Starting ${taskName}...`);
+      // Update status to running
+      this.stateManager.updateTaskStatus(taskName, 'running');
 
       const taskPath = path.join(state.claudiomiroFolder, taskName);
 
       // Verifica se já está completa (tem GITHUB_PR.md)
       if (fs.existsSync(path.join(taskPath, 'GITHUB_PR.md'))) {
-        logger.info(`✅ ${taskName} already completed`);
+        this.stateManager.updateTaskStatus(taskName, 'completed');
         this.tasks[taskName].status = 'completed';
         this.running.delete(taskName);
         return;
@@ -88,18 +102,18 @@ class DAGExecutor {
       // Step 2: Planejamento (PROMPT.md → TODO.md)
       if (!fs.existsSync(path.join(taskPath, 'TODO.md'))) {
         if (!this.shouldRunStep(2)) {
-          logger.info(`  ${taskName}: Step 2 skipped (not in --steps list)`);
+          this.stateManager.updateTaskStatus(taskName, 'completed');
           this.tasks[taskName].status = 'completed';
           this.running.delete(taskName);
           return;
         }
-        logger.info(`  ${taskName}: Step 2 - Research and planning`);
+        this.stateManager.updateTaskStep(taskName, 'Step 2 - Research and planning');
         await step2(taskName);
       }
 
       // Se step 2 foi executado e não devemos executar step 3, para aqui
       if (!this.shouldRunStep(3)) {
-        logger.info(`  ${taskName}: Step 3 skipped (not in --steps list)`);
+        this.stateManager.updateTaskStatus(taskName, 'completed');
         this.tasks[taskName].status = 'completed';
         this.running.delete(taskName);
         return;
@@ -114,21 +128,21 @@ class DAGExecutor {
 
         // Step 3: Implementação
         if (!isFullyImplemented(path.join(taskPath, 'TODO.md'))) {
-          logger.info(`  ${taskName}: Step 3 - Implementing tasks (attempt ${attempts})`);
+          this.stateManager.updateTaskStep(taskName, `Step 3 - Implementing tasks (attempt ${attempts})`);
           await step3(taskName);
           continue; // Volta para verificar se está implementado
         }
 
         // Step 3.1: Code Review
         if (!fs.existsSync(path.join(taskPath, 'CODE_REVIEW.md'))) {
-          logger.info(`  ${taskName}: Step 3.1 - Code review`);
+          this.stateManager.updateTaskStep(taskName, 'Step 3.1 - Code review');
           await codeReview(taskName);
           continue; // Volta para verificar se precisa refazer
         }
 
         // Se step 3 foi executado e não devemos executar step 4, para aqui
         if (!this.shouldRunStep(4)) {
-          logger.info(`  ${taskName}: Step 4 skipped (not in --steps list)`);
+          this.stateManager.updateTaskStatus(taskName, 'completed');
           this.tasks[taskName].status = 'completed';
           this.running.delete(taskName);
           return;
@@ -136,7 +150,7 @@ class DAGExecutor {
 
         // Step 4: Testes finais e PR
         if (!fs.existsSync(path.join(taskPath, 'GITHUB_PR.md'))) {
-          logger.info(`  ${taskName}: Step 4 - Running tests and creating PR`);
+          this.stateManager.updateTaskStep(taskName, 'Step 4 - Running tests and creating PR');
           await step4(taskName);
 
           // Verifica se step4 criou o PR ou voltou para TODO
@@ -152,13 +166,16 @@ class DAGExecutor {
       }
 
       if (attempts >= maxAttempts) {
+        this.stateManager.updateTaskStatus(taskName, 'failed');
         throw new Error(`Maximum attempts (${maxAttempts}) reached for ${taskName}`);
       }
 
+      this.stateManager.updateTaskStatus(taskName, 'completed');
       this.tasks[taskName].status = 'completed';
       this.running.delete(taskName);
       logger.success(`✅ ${taskName} completed successfully`);
     } catch (error) {
+      this.stateManager.updateTaskStatus(taskName, 'failed');
       this.tasks[taskName].status = 'failed';
       this.running.delete(taskName);
       logger.error(`❌ ${taskName} failed: ${error.message}`);
@@ -177,6 +194,11 @@ class DAGExecutor {
     logger.info(`Starting DAG executor with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
     logger.newline();
 
+    // Initialize and start UI renderer
+    const terminalRenderer = new TerminalRenderer();
+    const uiRenderer = new ParallelUIRenderer(terminalRenderer);
+    uiRenderer.start(this.getStateManager(), { calculateProgress });
+
     while (true) {
       const hasMore = await this.executeWave();
 
@@ -190,6 +212,9 @@ class DAGExecutor {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
+
+    // Stop UI renderer
+    uiRenderer.stop();
 
     // Verifica se alguma task falhou
     const failed = Object.entries(this.tasks)

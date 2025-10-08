@@ -1,3 +1,30 @@
+@dependencies []
+
+<!-- DEPENDENCY REASONING -->
+## Dependency Analysis
+- **Dependencies:** None (Foundation Layer - Pure Utility Function)
+- **Reasoning:**
+  - **No File Imports:** Creates standalone utility function that doesn't import from other tasks
+  - **Data Contract Only:** Knows the task state format from TASK1 (expects `{status, step, message}` objects) but doesn't import the file
+  - **Pure Function:** Accepts data structure, returns calculated percentage - no coupling to ParallelStateManager implementation
+  - **Can parallelize with TASK1:** TASK6 doesn't need TASK1's file to exist, just agrees on data format
+- **Assumptions:**
+  - Directory `src/utils/` exists or can be created
+  - Task state format is `{ [taskName]: { status, step, message } }`
+  - Status values are: 'pending', 'running', 'completed', 'failed'
+  - Math.round() is sufficient for integer conversion
+  - Pure function pattern is acceptable (no class needed)
+- **Blocks:** TASK7 (which imports calculateProgress function)
+- **Parallel with:** TASK1 (different files, no imports), TASK2 (different files), TASK3 (different files), TASK4 (different files), TASK5 (different files)
+- **Risks:**
+  - Task state format mismatch if TASK1 uses different structure (mitigated by clear interface contract)
+  - Division by zero if zero tasks (explicitly handled with edge case check)
+  - Rounding errors at edge percentages (acceptable, ±1% difference is negligible)
+- **Files Created:** `src/utils/progress-calculator.js`, `src/utils/__tests__/progress-calculator.test.js`
+- **Files Modified:** None
+- **File Conflicts:** None
+- **Parallelization Opportunity:** Can run simultaneously with TASK1, TASK2, TASK3, TASK4, TASK5 (Wave 1 - truly independent)
+
 # Task: Add Progress Calculation and Total Completion Logic
 
 ## Objective

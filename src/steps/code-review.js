@@ -69,7 +69,7 @@ const codeReview = (task) => {
 
       **Be pragmatic**: If it works and meets requirements, approve it quickly.
       Focus only on blockers, not style preferences.
-    `);
+    `, task);
 }
 
 module.exports = { codeReview };

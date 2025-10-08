@@ -16,11 +16,11 @@ describe('step4', () => {
   });
 
   describe('Create step4.test.js with test setup and basic structure', () => {
-    it('should call executeClaude with a prompt', async () => {
+    it('should call executeClaude with a prompt and task name', async () => {
       await step4('TASK1');
 
       expect(executeClaude).toHaveBeenCalledTimes(1);
-      expect(executeClaude).toHaveBeenCalledWith(expect.any(String));
+      expect(executeClaude).toHaveBeenCalledWith(expect.any(String), 'TASK1');
     });
 
     it('should return a promise that resolves', async () => {
