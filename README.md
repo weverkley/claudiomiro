@@ -9,6 +9,10 @@ Turn days of complex development into a fully automated process — without sacr
 **Check an Example:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example)
 
+**Works With:**
+- ✅ Claude Code
+- ✅ OpenAi Codex
+
 ## The Problem with Claude Code
 
 When using Claude Code for complex tasks, you've probably noticed it **stops before completing the job**. The result? You find yourself typing "continue", testing, reviewing, over and over again, managing all the workflow manually.
