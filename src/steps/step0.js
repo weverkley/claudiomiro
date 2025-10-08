@@ -29,17 +29,21 @@ const step0 = async (sameBranch = false, promptText = null) => {
     const stepNumber = sameBranch ? 1 : 2;
 
     await executeClaude(`
-        ${branchStep} - Step ${stepNumber}: Decompose the user prompt into deeply granular, verifiable JIRA-style tasks with complete planning.
+        ${branchStep} - Step ${stepNumber}: Decompose the user prompt into deeply granular, verifiable JIRA-style tasks optimized for MAXIMUM PARALLELISM.
 
-        You are an autonomous system-design agent specialized in **smart task decomposition** — transforming abstract user goals into **consolidated, efficient, and independently executable tasks**.
+        You are an autonomous system-design agent specialized in **parallel-first task decomposition** — transforming abstract user goals into **independent, self-contained, and simultaneously executable tasks**.
 
-        Your mission is to **create the MINIMUM number of tasks necessary** to deliver the requirement, grouping related work together while maintaining clear boundaries.
+        Your mission is to **maximize parallelism** by creating tasks that can run concurrently without blocking each other.
 
         For each task, you must create TWO files:
         1. ${state.claudiomiroFolder}/TASK1/TASK.md - The detailed task description
         2. ${state.claudiomiroFolder}/TASK1/PROMPT.md - The execution plan and constraints
 
+        You must ALSO create:
+        3. ${state.claudiomiroFolder}/EXECUTION_PLAN.md - Visual map of parallel execution strategy
+
         Example structure:
+        ${state.claudiomiroFolder}/EXECUTION_PLAN.md
         ${state.claudiomiroFolder}/TASK1/TASK.md
         ${state.claudiomiroFolder}/TASK1/PROMPT.md
         ${state.claudiomiroFolder}/TASK2/TASK.md
@@ -47,82 +51,123 @@ const step0 = async (sameBranch = false, promptText = null) => {
         ...
 
         ---
-        ### 🧠 Parallelization-First Methodology
+        ### 🧠 Parallel-First Planning Methodology
 
-            1. **Independent Work Units**
-            - Break down requirements into the MAXIMUM number of independent tasks possible
-            - Each task should modify DIFFERENT files or INDEPENDENT code sections
-            - Default to parallelism: only create dependencies when absolutely necessary
-            - Think: "What can multiple developers work on simultaneously?"
+        **CORE PRINCIPLE: Default to Independence**
+        - Assume tasks are INDEPENDENT unless proven otherwise
+        - Bias towards MORE tasks with FEWER dependencies
+        - Think: "How would a team of developers work on this simultaneously?"
 
-            2. **File-Based Independence Analysis**
-            - If two features touch different files → create separate tasks
-            - If two features touch different modules → create separate tasks
-            - If two features are logically unrelated → create separate tasks
-            - Example: 3 independent API routes = 3 tasks (NOT 1 task)
+        #### 1. **Pre-Analysis: Identify Natural Layers**
+        Before creating tasks, identify logical execution layers:
+        - **Layer 0:** Initialization/setup tasks (foundation)
+        - **Layer 1:** Independent feature implementations (parallel)
+        - **Layer 2:** Integration/testing tasks (depends on Layer 1)
 
-            3. **Dependency Detection (Conservative)**
-            Create dependencies ONLY when:
-            - Task B needs the OUTPUT of Task A (e.g., "Test login" needs "Create login")
-            - Task B modifies the SAME FILE as Task A
-            - Task B extends/builds upon Task A's functionality
+        Each layer can execute in parallel internally, with dependencies only between layers.
 
-            AVOID false dependencies:
-            - Tasks in the same domain but different files = INDEPENDENT
-            - Tasks that "feel related" but don't share code = INDEPENDENT
+        #### 2. **Independence Analysis Checklist**
+        Two tasks are INDEPENDENT if:
+        ✅ They modify DIFFERENT files
+        ✅ They work on DIFFERENT modules/components
+        ✅ They implement DIFFERENT features
+        ✅ Neither uses the OUTPUT of the other
+        ✅ They don't share state or configuration
 
-            4. **Autonomy & Context**
-            Each task MUST include:
-            - Complete description of what to build
-            - Which files will be created/modified
-            - All necessary context (no references to other tasks)
-            - Clear acceptance criteria
+        Two tasks are DEPENDENT if:
+        ❌ Task B needs Task A's OUTPUT to function
+        ❌ Both modify the SAME file (same section)
+        ❌ Task B extends/tests Task A's code
+        ❌ Task B integrates Task A's work
 
-            5. **Examples of Good Decomposition**
+        #### 3. **Granularity Strategy**
+        - **Too Granular:** 1 function = 1 task (overhead > benefit)
+        - **Too Coarse:** Entire module = 1 task (no parallelism)
+        - **Just Right:** Logical component/feature = 1 task (max parallelism)
 
-            ❌ BAD (over-consolidated):
-            - "Create user management system" (1 task)
+        Examples:
+        - ✅ "Create User Model" + "Create Product Model" = 2 parallel tasks
+        - ✅ "Create /login endpoint" + "Create /register endpoint" = 2 parallel tasks
+        - ❌ "Create all CRUD operations" = 1 task (should be 4 parallel tasks)
 
-            ✅ GOOD (parallelizable):
-            - "Create user model and validation" (Task 1)
-            - "Create authentication endpoints" (Task 2)
-            - "Create user profile endpoints" (Task 3)
-            - "Add user-related tests" (Task 4, depends on 1,2,3)
+        #### 4. **Dependency Minimization**
+        When you identify a dependency, ask:
+        - "Can I include foundational code in BOTH tasks to remove dependency?"
+        - "Can I split the base task smaller so dependencies are clearer?"
+        - "Is this a real dependency or just conceptual coupling?"
 
-            ❌ BAD (false dependency):
-            - Task 2 depends on Task 1 just because they're "related"
+        Example:
+        ❌ TASK1: Setup database → TASK2: Create User model (dependency)
+        ✅ TASK1: Create User model (includes db setup in its context)
 
-            ✅ GOOD (true independence):
-            - Task 1: "Create /health endpoint"
-            - Task 2: "Create /users endpoint"
-            - Both can run in parallel (different files, different routes)
+        #### 5. **Self-Contained Tasks**
+        Each task MUST be COMPLETELY autonomous:
+        - Include ALL context needed (no "see TASK1 for details")
+        - Specify ALL files to create/modify
+        - Provide COMPLETE acceptance criteria
+        - Include verification steps that work IN ISOLATION
 
         ---
 
-        ### 🎯 Output Expectation
+        ### 🎯 Output Requirements
 
-        Generate the **MAXIMUM number of independent, parallelizable tasks**.
-        Each task should be a self-contained work unit that can execute simultaneously with others.
-        Use filenames (\`TASK1\`, \`TASK2\`, ...) in logical order.
+        #### A) EXECUTION_PLAN.md
+        Create this file first to visualize the parallel execution strategy:
 
-        **Quantity Guidelines:**
-        - Simple feature: 2-4 tasks
-        - Medium feature: 4-8 tasks
-        - Complex feature: 8-15 tasks
-        - Focus on INDEPENDENCE over QUANTITY
+        "
+            # Execution Plan - [Project Name]
 
-        **Key principle:** If tasks don't share files or logical dependencies, they MUST be separate.
-        
-        ---
+            ## Parallelization Summary
+            - Total Tasks: X
+            - Execution Layers: Y
+            - Maximum Parallel Tasks: Z
 
-        ### 🧩 Output Format for Each TASK.md
+            ## Execution Strategy
 
-        Keep it CONCISE and EXPLICIT about file impacts. Structure:
+            ### Layer 0: Foundation (Sequential)
+            - TASK1: [Task name] - No dependencies
+
+            ### Layer 1: Core Features (Parallel Execution)
+            - TASK2: [Task name] - Depends on: TASK1
+            - TASK3: [Task name] - Depends on: TASK1
+            - TASK4: [Task name] - Depends on: TASK1
+            ⚡ Tasks 2-4 execute in PARALLEL
+
+            ### Layer 2: Integration (Parallel Execution)
+            - TASK5: [Task name] - Depends on: TASK2, TASK3
+            - TASK6: [Task name] - Depends on: TASK4
+            ⚡ Tasks 5-6 execute in PARALLEL
+
+            ## Dependency Graph
+            \`\`\`
+            TASK1 (foundation)
+              ├─> TASK2 ──┐
+              ├─> TASK3 ──┼─> TASK5
+              └─> TASK4 ──┴─> TASK6
+            \`\`\`
+
+            ## Critical Path
+            TASK1 → TASK2 → TASK5 (longest chain)
+            Estimated: [X tasks in sequence]
+
+            ## Parallelism Ratio
+            Sequential steps: X
+            Total tasks: Y
+            Parallelism: Y/X = [ratio]
+        "
+
+        #### B) TASK.md Format (with explicit dependencies)
+
         "
             # Task: [Clear, specific title]
 
             ## Objective
             1-2 sentences: what must be achieved and why.
+
+            ## Dependencies
+            **Depends on:** NONE (or: TASK1, TASK3)
+            **Blocks:** TASK5, TASK7 (tasks that depend on this one)
+            **Can run in parallel with:** TASK2, TASK4
 
             ## Files Affected
             **Will CREATE:**
@@ -130,7 +175,8 @@ const step0 = async (sameBranch = false, promptText = null) => {
             - path/to/new/file2.test.js
 
             **Will MODIFY:**
-            - path/to/existing/file.js (specific changes)
+            - path/to/existing/file.js (add function X)
+            - path/to/config.js (add configuration Y)
 
             ## Implementation Summary
             - Step 1: What to do
@@ -141,27 +187,37 @@ const step0 = async (sameBranch = false, promptText = null) => {
             - [ ] Criterion 1 (specific and testable)
             - [ ] Criterion 2 (specific and testable)
             - [ ] All tests pass
+            - [ ] Runs independently without other tasks
 
             ## Independent Verification
-            How to verify this task works in isolation (without other tasks).
+            How to verify this task works in isolation:
+            - Command to run: \`npm test -- task-specific-test\`
+            - Expected output: [describe]
+            - Verification: [how to confirm it works alone]
         "
 
-        ---
-
-        ### 📋 PROMPT.md Format for Each Task
-
-        Keep it SHORT and ACTIONABLE:
+        #### C) PROMPT.md Format
 
         "
             ## OBJECTIVE
             [1 sentence describing what to build]
             Done when: [3-5 specific acceptance criteria]
 
+            ## DEPENDENCIES
+            - Requires: [list TASK IDs or "NONE"]
+            - Provides for: [list tasks that depend on this]
+
             ## CONSTRAINTS
-            - Include tests with implementation (not separate tasks)
+            - Must be executable independently (if no deps)
+            - Include tests with implementation
             - TODO.md must only contain actions Claude can do
             - No deployment or manual steps
             - First line of TODO.md must be: "Fully implemented: NO"
+
+            ## PARALLELIZATION NOTES
+            - Can execute in parallel with: [TASK IDs]
+            - Expected to be Layer: [0/1/2/etc]
+            - Estimated complexity: [Low/Medium/High]
 
             ## TOP 3 RISKS
             1. [Risk] → [Mitigation]
@@ -171,39 +227,83 @@ const step0 = async (sameBranch = false, promptText = null) => {
 
         ---
 
-        ### 🎯 Your Mission
+        ### ⚡ Practical Examples
 
-        1. **Analyze** the user prompt for independent work units
-        2. **Decompose** into MAXIMUM parallelizable tasks
-        3. **Specify** exact files each task will create/modify
-        4. **Create** TASK.md + PROMPT.md for each task
-        5. **Verify** each task can execute independently
+        **Example 1: "Create Express.js server with 3 endpoints and tests"**
+
+        **✅ OPTIMAL (Maximum Parallelism):**
+
+        EXECUTION_PLAN.md shows:
+        - Layer 0: TASK1 (server setup)
+        - Layer 1: TASK2, TASK3, TASK4 (endpoints - PARALLEL)
+        - Layer 2: TASK5 (integration tests)
+
+        Tasks:
+        - TASK1: Initialize Express server (src/server.js, src/app.js) - NO DEPS
+        - TASK2: Create /health endpoint (src/routes/health.js) - Depends: TASK1
+        - TASK3: Create /users endpoint (src/routes/users.js) - Depends: TASK1
+        - TASK4: Create /products endpoint (src/routes/products.js) - Depends: TASK1
+        - TASK5: Add integration tests (tests/integration.test.js) - Depends: TASK2,TASK3,TASK4
+
+        Result: 3 tasks execute in parallel (TASK2-4), total execution = 3 layers
+
+        **Example 2: "Build authentication system"**
+
+        **❌ BAD (Over-consolidated):**
+        - TASK1: Build complete auth system (1 task, no parallelism)
+
+        **✅ GOOD (Parallelized):**
+        - TASK1: Create User model (models/User.js) - NO DEPS
+        - TASK2: Create Auth middleware (middleware/auth.js) - NO DEPS (independent)
+        - TASK3: Create /login endpoint (routes/auth.js) - Depends: TASK1, TASK2
+        - TASK4: Create /register endpoint (routes/auth.js) - Depends: TASK1
+        - TASK5: Add auth tests (tests/auth.test.js) - Depends: TASK3, TASK4
+
+        Result: TASK1 & TASK2 run in parallel, then TASK3 & TASK4 in parallel
 
         ---
 
-        ### ⚡ Practical Example
+        ### 🎯 Your Mission (Step-by-Step)
 
-        **User Request:** "Create Express.js server with health and users endpoints"
-
-        **❌ BAD Decomposition (1 task):**
-        - TASK1: Create Express server with all endpoints
-
-        **✅ GOOD Decomposition (4 tasks, 3 parallel):**
-        - TASK1: Initialize Express server (src/server.js, src/app.js)
-        - TASK2: Create health endpoint (src/routes/health.js) - depends on TASK1
-        - TASK3: Create users endpoint (src/routes/users.js) - depends on TASK1
-        - TASK4: Add endpoint tests (tests/) - depends on TASK2, TASK3
-
-        Result: TASK2 and TASK3 run in parallel after TASK1 completes.
+        1. **Analyze** the user prompt for natural execution layers
+        2. **Identify** which work units have zero dependencies
+        3. **Map** file/module boundaries to enable parallelism
+        4. **Create** EXECUTION_PLAN.md showing parallel execution strategy
+        5. **Generate** TASK.md + PROMPT.md for each task with:
+           - Explicit dependencies (or "NONE")
+           - Parallel execution notes
+           - Complete autonomy (no cross-references)
+        6. **Verify** each task is truly independent from its parallel peers
 
         ---
 
-        ### 📝 Critical Reminders
+        ### 📝 Critical Rules
 
-        - Each TASK.md MUST list exact file paths in "Files Affected"
-        - Different files = different tasks (when logically possible)
-        - Tests can often be a separate task (parallel or sequential)
-        - Foundation/setup tasks naturally come first, features can be parallel
+        ✅ **DO:**
+        - Maximize tasks in each execution layer
+        - Make dependencies EXPLICIT in every file
+        - Provide COMPLETE context in each task (autonomous)
+        - List exact file paths in "Files Affected"
+        - Show which tasks can run in parallel in EXECUTION_PLAN.md
+        - Aim for parallelism ratio > 2.0 (if possible)
+
+        ❌ **DON'T:**
+        - Create dependencies without strong technical reason
+        - Assume tasks are dependent because they're "related"
+        - Reference other tasks for context (each task is self-contained)
+        - Merge independent work into single task
+        - Create false sequential chains
+
+        ---
+
+        ### 🎯 Success Metrics
+
+        Your decomposition is optimal when:
+        - ✅ Most tasks are in Layer 1+ (parallel execution)
+        - ✅ Each layer has multiple tasks executing concurrently
+        - ✅ Dependencies are minimal and explicit
+        - ✅ EXECUTION_PLAN.md clearly shows parallel opportunities
+        - ✅ Each task is 100% autonomous and self-contained
 
         ---
         ## User Prompt:
