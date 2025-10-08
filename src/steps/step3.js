@@ -17,10 +17,12 @@ CRITICAL RULES:
 - DO NOT create any git commits (commits happen only in the final step)
 - DO NOT run git add, git commit, or git push commands
 - First line of ${folder('TODO.md')} MUST BE "Fully implemented: YES" or "Fully implemented: NO"
+- **MULTI-REPOSITORY SUPPORT:** You can work across multiple repositories and directories simultaneously. Files being in different repositories is NOT a valid reason to block a task.
 
 OBJECTIVE
 - Implement all actionable items in ${folder('TODO.md')}
 - Remove all blockers or manual tasks that Claude cannot perform
+- Do NOT mark items as BLOCKED just because files are in different repositories
 
 ---
 
@@ -61,6 +63,7 @@ OBJECTIVE
 
 ### BLOCKED POLICY
 - Item with "BLOCKED:" → skip, mark checked, note "blocked-skip" result.
+- **IMPORTANT:** Files being in different repositories/directories is NOT a valid blocker. Only mark items as BLOCKED if they require manual intervention or are truly impossible for Claude to perform.
 
 ---
 

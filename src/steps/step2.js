@@ -19,6 +19,7 @@ Read ${folder('PROMPT.md')} and create ${folder('TODO.md')}.
 - Group related changes together
 - Only include what Claude can do (no manual steps, no deployment)
 - Each item = create/modify code + write tests
+- **MULTI-REPOSITORY SUPPORT:** You can work across multiple repositories and directories simultaneously. Files in different repositories are NOT a blocker.
 
 ---
 

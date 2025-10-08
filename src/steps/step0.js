@@ -140,6 +140,8 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         **MODIFY:**
         - path/to/existing.ext (add function X)
 
+        **NOTE:** Files can be in different repositories or directories - this is supported and NOT a blocker.
+
         ## Steps
         1. [Action]
         2. [Action]
@@ -173,6 +175,7 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         - Include tests with implementation
         - TODO.md first line: "Fully implemented: NO"
         - No manual/deployment steps
+        - Multi-repository/directory work is fully supported - NOT a blocker
 
         ## RISKS
         1. [Risk] → [Mitigation]
@@ -261,6 +264,7 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         ❌ "See TASK1 for context" (breaks autonomy)
         ❌ Same file modified by parallel tasks
         ❌ **Missing final cohesion task (final numeric task)**
+        ❌ Blocking tasks because files are in different repositories/directories
         
         ✅ **CORE RULE:** Independent work units = separate tasks (different files/modules/features)
         ✅ Multiple endpoints/routes/handlers = multiple tasks
@@ -415,6 +419,8 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         **MODIFY:**
         - path/to/existing.ext (add function X, line ~Y)
 
+        **NOTE:** Files can be in different repositories or directories - this is supported and NOT a blocker.
+
         ## Steps to Implement
         1. [Step-by-step breakdown]
         2. [...]
@@ -474,6 +480,7 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         - Include tests with implementation
         - TODO.md first line: "Fully implemented: NO"
         - No manual/deployment steps
+        - Multi-repository/directory work is fully supported - NOT a blocker
         - ${state.claudiomiroFolder}/TODO.md CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO
         - Backend: tests for each layer + integration tests
         - Frontend: tests for all components (mock API)
@@ -599,6 +606,7 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         ❌ Same file modified by parallel tasks
         ❌ Vague acceptance criteria
         ❌ **Omitting final numeric task**
+        ❌ Blocking tasks because files are in different repositories/directories
 
         ✅ Independent units per feature
         ✅ Real coupling only
