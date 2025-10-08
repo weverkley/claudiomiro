@@ -28,6 +28,10 @@ const chooseAction = async (i) => {
     // Verifica se --no-limit foi passado
     const noLimit = process.argv.includes('--no-limit');
 
+    // Verifica se --mode foi passado (auto ou hard)
+    const modeArg = process.argv.find(arg => arg.startsWith('--mode='));
+    const mode = modeArg ? modeArg.split('=')[1] : 'auto'; // default: auto
+
     // Verifica se --steps= ou --step= foi passado (quais steps executar)
     const stepsArg = process.argv.find(arg => arg.startsWith('--steps=') || arg.startsWith('--step='));
     const allowedSteps = stepsArg
@@ -54,7 +58,8 @@ const chooseAction = async (i) => {
         !arg.startsWith('--maxConcurrent') &&
         !arg.startsWith('--steps') &&
         !arg.startsWith('--step=') &&
-        arg !== '--no-limit'
+        arg !== '--no-limit' &&
+        !arg.startsWith('--mode')
     );
     const folderArg = args[0] || process.cwd();
 
@@ -85,7 +90,7 @@ const chooseAction = async (i) => {
             logger.info('Step 0 skipped (not in --steps list)');
             return { done: true };
         }
-        return { step: step0(sameBranch, promptText), maxCycles: noLimit ? Infinity : maxCycles };
+        return { step: step0(sameBranch, promptText, mode), maxCycles: noLimit ? Infinity : maxCycles };
     }
 
     const tasks = fs
@@ -120,7 +125,7 @@ const chooseAction = async (i) => {
             return { done: true };
         }
         logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
-        return { step: step1(), maxCycles: noLimit ? Infinity : maxCycles };
+        return { step: step1(mode), maxCycles: noLimit ? Infinity : maxCycles };
     }
 
     // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
@@ -229,7 +234,7 @@ const init = async () => {
     logger.banner();
 
     // Inicializa o state.folder antes de usá-lo
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit');
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit' && !arg.startsWith('--mode'));
     const folderArg = args[0] || process.cwd();
     state.setFolder(folderArg);
 

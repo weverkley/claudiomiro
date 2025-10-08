@@ -63,6 +63,7 @@ No manual intervention. No "continue" prompts. Just complete, production-ready c
 - ⚡ **Parallel Execution**: Runs independent tasks simultaneously (2 per CPU core, max 5)
 - 🧩 **Intelligent Decomposition**: Breaks complex tasks into granular, independent sub-tasks optimized for parallelism
 - 📊 **Smart Dependency Analysis**: Creates execution plan with layers and critical path
+- 🎯 **Dual Planning Modes**: Choose between auto (speed) or hard (maximum criticality + deep reasoning)
 - 🧠 **Deep Analysis**: Understands your codebase patterns and architecture
 - 👨‍💻 **Automated Code Review**: Senior-level review validates quality before testing
 - 🧪 **Quality Enforced**: Never skips tests, always validates
@@ -138,12 +139,16 @@ claudiomiro --prompt="Very complex task" --no-limit
 # Control parallel execution (default: 2 per core, max 5)
 claudiomiro --prompt="Build microservices" --maxConcurrent=10
 
+# Task planning mode (auto or hard)
+claudiomiro --prompt="Build REST API" --mode=hard  # Maximum criticality + reasoning
+claudiomiro --prompt="Add feature" --mode=auto     # Default: parallelism-focused
+
 # Run only specific steps
 claudiomiro --steps=2,3,4  # Skip planning, only implement
 claudiomiro --step=0       # Only create task decomposition
 
 # Combine options
-claudiomiro /path/to/project --prompt="Add GraphQL API" --push=false --maxConcurrent=8
+claudiomiro /path/to/project --prompt="Add GraphQL API" --push=false --maxConcurrent=8 --mode=hard
 ```
 
 ### Example Prompts
@@ -210,6 +215,81 @@ Claudiomiro creates a `.claudiomiro/` folder to organize tasks and track progres
 - **PROMPT.md**: Includes parallelization notes (layer, parallel siblings, complexity)
 
 **Tip:** Review `EXECUTION_PLAN.md` early to validate the parallel execution strategy. Use `--fresh` to start over.
+
+## Planning Modes
+
+Claudiomiro offers two planning modes to balance speed vs. criticality:
+
+### **Auto Mode (Default)** — Optimized for Speed
+```bash
+claudiomiro --prompt="Add new feature" --mode=auto
+```
+
+**Best for:**
+- Standard features and refactorings
+- Projects with good existing test coverage
+- Quick iterations and prototyping
+
+**Characteristics:**
+- ⚡ Maximum parallelization focus
+- 📋 Standard task decomposition
+- ✅ Essential acceptance criteria (3-5 items)
+- 🎯 Streamlined execution
+
+### **Hard Mode** — Maximum Criticality
+```bash
+claudiomiro --prompt="Build payment system" --mode=hard
+```
+
+**Best for:**
+- Critical systems (payments, auth, security)
+- Complex business logic
+- Projects requiring extensive documentation
+- Mission-critical features
+
+**Characteristics:**
+- 🧠 **Deep reasoning traces** for every decision
+- 📝 **Explicit assumptions** documented per task
+- 🔬 **Research summaries** with edge cases
+- ✅ **Rigorous acceptance criteria** (5-10 items per task)
+- 🔄 **Self-verification logic** for each task
+- 🚨 **Escalation protocols** for blockers
+- 📊 **Dependency reasoning** with risk analysis
+- ⚡ **Maintains full parallelization** from auto mode
+
+**Example Hard Mode Output:**
+
+Each task includes:
+```markdown
+## Assumptions
+- Database uses PostgreSQL 14+
+- Payment provider is Stripe API v2023-10-16
+- User sessions last 24 hours
+
+## Reasoning Trace
+- Why this approach? Separates payment intent from confirmation for better error handling
+- What alternatives were rejected? Direct charge API (no retry mechanism)
+- What risks exist? Race conditions on concurrent payments → mitigated with idempotency keys
+
+## Acceptance Criteria (Rigorous)
+- [ ] Payment intent created with idempotency key
+- [ ] Webhook signature verified using Stripe SDK
+- [ ] Failed payments logged with full context
+- [ ] Retry mechanism implemented with exponential backoff
+- [ ] All error cases have specific handling
+- [ ] Database transaction rollback on payment failure
+- [ ] Unit tests cover 95%+ of payment logic
+- [ ] Integration tests mock Stripe API calls
+- [ ] Load tested with 100 concurrent payments
+- [ ] Security audit passes (no secrets in logs)
+```
+
+**When to use Hard Mode:**
+- 💰 Financial/payment systems
+- 🔐 Authentication/authorization
+- 📊 Critical business logic
+- 🏥 Healthcare/compliance-heavy domains
+- ⚠️ Any feature where errors = major issues
 
 ## Requirements
 
