@@ -32,6 +32,8 @@ When using Claude Code / Cursor / Codex for complex tasks, you've probably notic
 - ✅ Implements comprehensive solutions
 - ✅ **Runs autonomously until completion** (up to 100 cycles)
 
+-----
+
 ### The Magic: Autonomous Looping + Parallel Execution
 
 Claudiomiro doesn't just run once. It **loops autonomously** until the entire task is complete, and **executes independent tasks in parallel** to maximize speed:
