@@ -1,0 +1,3 @@
+# Unit Tests for src/steps/step0.js
+
+This task implements comprehensive unit tests for the `step0.js` module, achieving 100% code coverage across all code paths. The test suite includes 48 test cases covering prompt validation, file operations, mode selection (auto/hard), sameBranch parameter behavior, Claude execution integration, logger/spinner interactions, and edge case handling. All tests follow the project's testing patterns with proper mocking of dependencies (fs, logger, executeClaude, state) and clear describe/it block organization, ensuring robust validation of the initial step execution and task planning logic.
