@@ -12,7 +12,7 @@ Turn days of complex development into a fully automated process — without sacr
 
 **Examples:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example) - Claude
-- 💬 [“Create the classic Snake game entirely in JavaScript to run in the browser.”](https://github.com/samuelfaj/claudiomiro-express-example](https://github.com/samuelfaj/claudiomiro-snake-game-example) - Codex
+- 💬 [“Create the classic Snake game entirely in JavaScript to run in the browser.”](https://github.com/samuelfaj/claudiomiro-snake-game-example) - Codex
 
 ------
 
