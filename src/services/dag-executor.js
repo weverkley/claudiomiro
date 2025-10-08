@@ -11,9 +11,11 @@ const TerminalRenderer = require('../utils/terminal-renderer');
 const { calculateProgress } = require('../utils/progress-calculator');
 
 class DAGExecutor {
-  constructor(tasks, allowedSteps = null, maxConcurrent = null) {
+  constructor(tasks, allowedSteps = null, maxConcurrent = null, noLimit = false, maxAttemptsPerTask = 20) {
     this.tasks = tasks; // { TASK1: {deps: [], status: 'pending'}, ... }
     this.allowedSteps = allowedSteps; // null = todos os steps, ou array de números
+    this.noLimit = noLimit; // Se true, remove limite de ciclos por tarefa
+    this.maxAttemptsPerTask = maxAttemptsPerTask; // Limite customizável de ciclos por tarefa (padrão: 20)
     // 2 por core, máximo 5, ou valor customizado via --maxConcurrent
     const defaultMax = Math.min(5, (os.cpus().length || 1) * 2);
     this.maxConcurrent = maxConcurrent || Math.max(1, defaultMax);
@@ -121,7 +123,7 @@ class DAGExecutor {
       }
 
       // Loop até implementação completa
-      let maxAttempts = 15; // Limite de segurança
+      let maxAttempts = this.noLimit ? Infinity : this.maxAttemptsPerTask; // Limite de segurança (customizável via --limit, infinito com --no-limit)
       let attempts = 0;
 
       while (attempts < maxAttempts) {

@@ -12,9 +12,6 @@ const chooseAction = async (i) => {
     const promptArg = process.argv.find(arg => arg.startsWith('--prompt='));
     const promptText = promptArg ? promptArg.split('=').slice(1).join('=').replace(/^["']|["']$/g, '') : null;
 
-    // Verifica se --maxCycles foi passado e extrai o valor
-    const maxCyclesArg = process.argv.find(arg => arg.startsWith('--maxCycles='));
-    const maxCycles = maxCyclesArg ? parseInt(maxCyclesArg.split('=')[1], 10) : 15;
 
     // Verifica se --fresh foi passado (ou se --prompt foi usado, que automaticamente ativa --fresh)
     const shouldStartFresh = process.argv.includes('--fresh') || promptText !== null;
@@ -27,6 +24,10 @@ const chooseAction = async (i) => {
 
     // Verifica se --no-limit foi passado
     const noLimit = process.argv.includes('--no-limit');
+
+    // Verifica se --limit foi passado
+    const limitArg = process.argv.find(arg => arg.startsWith('--limit='));
+    const maxAttemptsPerTask = limitArg ? parseInt(limitArg.split('=')[1], 10) : 20;
 
     // Verifica se --mode foi passado (auto ou hard)
     const modeArg = process.argv.find(arg => arg.startsWith('--mode='));
@@ -66,11 +67,11 @@ const chooseAction = async (i) => {
         !arg.startsWith('--push') &&
         arg !== '--same-branch' &&
         !arg.startsWith('--prompt') &&
-        !arg.startsWith('--maxCycles') &&
         !arg.startsWith('--maxConcurrent') &&
         !arg.startsWith('--steps') &&
         !arg.startsWith('--step=') &&
         arg !== '--no-limit' &&
+        !arg.startsWith('--limit=') &&
         !arg.startsWith('--mode') &&
         arg !== '--codex' &&
         arg !== '--claude'
@@ -107,7 +108,7 @@ const chooseAction = async (i) => {
             logger.info('Step 0 skipped (not in --steps list)');
             return { done: true };
         }
-        return { step: step0(sameBranch, promptText, mode), maxCycles: noLimit ? Infinity : maxCycles };
+        return { step: step0(sameBranch, promptText, mode) };
     }
 
     const tasks = fs
@@ -142,7 +143,7 @@ const chooseAction = async (i) => {
             return { done: true };
         }
         logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
-        return { step: step1(mode), maxCycles: noLimit ? Infinity : maxCycles };
+        return { step: step1(mode) };
     }
 
     // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
@@ -169,7 +170,7 @@ const chooseAction = async (i) => {
         logger.info('Switching to parallel execution mode with DAG executor');
         logger.newline();
 
-        const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent);
+        const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
         await executor.run();
 
         // Após DAG executor, criar PR final
@@ -191,7 +192,7 @@ const chooseAction = async (i) => {
 
         logger.newline();
         logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
-        return { step: step1(mode), maxCycles: noLimit ? Infinity : maxCycles };
+        return { step: step1(mode) };
     }
 }
 
@@ -258,7 +259,7 @@ const init = async () => {
     logger.banner();
 
     // Inicializa o state.folder antes de usá-lo
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit' && !arg.startsWith('--mode'));
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit' && !arg.startsWith('--limit=') && !arg.startsWith('--mode'));
     const folderArg = args[0] || process.cwd();
     state.setFolder(folderArg);
 
@@ -266,37 +267,25 @@ const init = async () => {
         startFresh();
     }
 
-    const noLimit = process.argv.includes('--no-limit');
-
+    // Executa chooseAction até completar
+    // Step 0 → Step 1 → DAGExecutor (com maxAttempts=20 POR TAREFA) → Step 5
+    // Máximo ~3-4 iterações no loop principal
     let i = 0;
-    let maxCycles = noLimit ? Infinity : 100;
-
-    while(i < maxCycles){
+    while(true){
         const result = await chooseAction(i);
 
-        // Se retornou { done: true }, significa que completou via DAG executor
+        // Se retornou { done: true }, terminou
         if (result && result.done) {
             return;
         }
 
-        // Atualiza maxCycles se necessário
-        if (result && result.maxCycles) {
-            maxCycles = result.maxCycles;
-        }
-
-        // Executa step se retornado
+        // Executa step se retornado (step0 ou step1)
         if (result && result.step) {
             await result.step;
         }
 
         i++;
     }
-
-    logger.error(`Maximum iteration limit reached (${maxCycles} cycles)`);
-    logger.box(`The agent has completed ${maxCycles} cycles. Please review the progress and restart if needed.`, {
-        borderColor: 'yellow',
-        title: 'Limit Reached'
-    });
 }
 
 module.exports = { init };

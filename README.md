@@ -30,7 +30,7 @@ When using Claude Code / Cursor / Codex for complex tasks, you've probably notic
 - ✅ Identifies patterns and best practices
 - ✅ **Maximizes parallelism** - executes independent tasks simultaneously
 - ✅ Implements comprehensive solutions
-- ✅ **Runs autonomously until completion** (up to 100 cycles)
+- ✅ **Runs autonomously until completion** (up to 20 cycles per task)
 
 -----
 
@@ -62,7 +62,7 @@ No manual intervention. No "continue" prompts. Just complete, production-ready c
 
 ### Safety Mechanisms
 
-- **Maximum 100 cycles** - Prevents runaway execution (change with `--maxCycles` or disable with `--no-limit`)
+- **Maximum 20 cycles per task** - Prevents runaway execution within each task (customize with `--limit=N` or disable with `--no-limit`)
 - **Progress validation** - Ensures forward progress each cycle
 - **Error detection** - Stops if same error repeats
 - **Manual override** - Use `--push=false` to review before final commit
@@ -146,10 +146,10 @@ claudiomiro --prompt="Fix login bug" --same-branch
 # Start fresh (removes all generated files)
 claudiomiro --fresh
 
-# Change maximum cycles (default: 15)
-claudiomiro --prompt="Complex refactoring" --maxCycles=50
+# Change cycle limit per task (default: 20)
+claudiomiro --prompt="Complex refactoring" --limit=50
 
-# Remove cycle limit (use with caution)
+# Remove cycle limit per task (use with caution)
 claudiomiro --prompt="Very complex task" --no-limit
 
 # Control parallel execution (default: 2 per core, max 5)
@@ -330,7 +330,7 @@ Traditional AI assistants:
 - ❌ No structured approach
 
 **Claudiomiro:**
-- ✅ Runs autonomously until complete (up to 15 cycles)
+- ✅ Runs autonomously until complete (up to 20 cycles per task)
 - ✅ Decomposes complex tasks with parallelism optimization
 - ✅ Executes independent tasks simultaneously (DAG executor)
 - ✅ Smart dependency analysis and execution planning
