@@ -21,26 +21,23 @@ function countCompletedSteps(state) {
     return STEP_SEQUENCE.length;
   }
 
-  if (normalizedStatus === 'failed') {
-    return STEP_SEQUENCE.length;
-  }
-
   const normalizedStep = normalize(state.step);
   if (!normalizedStep) {
-    return 0;
+    return normalizedStatus === 'failed' ? STEP_SEQUENCE.length : 0;
   }
 
   if (normalizedStep.startsWith('done')) {
     return STEP_SEQUENCE.length;
   }
 
-  const stepIndex = STEP_SEQUENCE.findIndex(stepLabel => normalizedStep.startsWith(stepLabel));
-  if (stepIndex === -1) {
-    return 0;
+  for (let i = STEP_SEQUENCE.length - 1; i >= 0; i--) {
+    const prefix = STEP_SEQUENCE[i];
+    if (normalizedStep.startsWith(prefix)) {
+      return i;
+    }
   }
 
-  // Steps prior to the current step are considered completed
-  return stepIndex;
+  return 0;
 }
 
 function calculateProgress(taskStates) {

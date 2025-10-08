@@ -360,18 +360,18 @@ describe('TerminalRenderer', () => {
       expect(mockWrite).toHaveBeenCalledWith('\x1b[?25h'); // show
     });
 
-    test('should handle clearing and re-rendering efficiently', () => {
-      // Initial render
-      renderer.renderBlock(['A', 'B', 'C']);
-      const callsAfterFirst = mockWrite.mock.calls.length;
+  test('should handle clearing and re-rendering efficiently', () => {
+    // Initial render
+    renderer.renderBlock(['A', 'B', 'C']);
 
-      // Update with same number of lines
-      mockWrite.mockClear();
-      renderer.renderBlock(['D', 'E', 'F']);
+    // Update with same number of lines
+    mockWrite.mockClear();
+    renderer.renderBlock(['D', 'E', 'F']);
 
-      // Should have: moveCursorUp, clearLines (3 clears + 2 moves), render
-      expect(mockWrite.mock.calls.length).toBeGreaterThan(1);
-    });
+    expect(moveCursorSpy).toHaveBeenCalledWith(process.stdout, 0, -3);
+    expect(clearScreenDownSpy).toHaveBeenCalledWith(process.stdout);
+    expect(mockWrite).toHaveBeenCalledWith('D\nE\nF\n');
+  });
 
     test('should handle rapid successive renders', () => {
       renderer.renderBlock(['1']);

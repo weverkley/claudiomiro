@@ -52,7 +52,7 @@ describe('DAGExecutor', () => {
 
     it('should calculate default maxConcurrent based on CPU count', () => {
       const cpuCount = os.cpus().length;
-      const expected = Math.min(5, cpuCount * 2);
+      const expected = Math.max(1, Math.min(5, (cpuCount || 1) * 2));
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks);
 

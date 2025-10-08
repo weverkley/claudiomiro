@@ -15,7 +15,8 @@ class DAGExecutor {
     this.tasks = tasks; // { TASK1: {deps: [], status: 'pending'}, ... }
     this.allowedSteps = allowedSteps; // null = todos os steps, ou array de números
     // 2 por core, máximo 5, ou valor customizado via --maxConcurrent
-    this.maxConcurrent = maxConcurrent || Math.min(5, os.cpus().length * 2);
+    const defaultMax = Math.min(5, (os.cpus().length || 1) * 2);
+    this.maxConcurrent = maxConcurrent || Math.max(1, defaultMax);
     this.running = new Set(); // Tasks atualmente em execução
 
     // Initialize ParallelStateManager
@@ -187,7 +188,7 @@ class DAGExecutor {
    * Executa todas as tasks respeitando dependências
    */
   async run() {
-    const coreCount = os.cpus().length;
+    const coreCount = Math.max(1, os.cpus().length);
     const defaultMax = Math.min(5, coreCount * 2);
     const isCustom = this.maxConcurrent !== defaultMax;
 
