@@ -151,7 +151,12 @@ class ParallelUIRenderer {
 
     // Render task lines
     if (taskStates && typeof taskStates === 'object') {
-      const taskNames = Object.keys(taskStates).sort();
+      const taskNames = Object.keys(taskStates).sort((a, b) => {
+        // Extract numbers from task names (e.g., "TASK10" -> 10)
+        const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
+        const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
+        return numA - numB;
+      });
       if (taskNames.length > 0) {
         lines.push('');
       }
