@@ -1,3 +1,0 @@
-# Unit Tests for Claude Executor Service
-
-This PR adds comprehensive unit test coverage for `src/services/claude-executor.js`, achieving 98.86% code coverage with 30 passing tests. The test suite covers the complete execution flow including Claude API command spawning, stdout/stderr streaming with JSON message parsing, temporary file management, error handling scenarios (non-zero exit codes, spawn errors, cleanup failures), edge cases (partial buffers, long text wrapping, non-JSON lines), and end-to-end integration testing. All mocks for child_process, fs, logger, and state modules are properly configured to ensure isolated and reliable testing.
