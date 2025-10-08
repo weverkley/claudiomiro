@@ -7,42 +7,53 @@ const step2 = (task) => {
     const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
     return executeClaude(`
-        PHASE: CONTEXT SELECTION & PLANNING
+PHASE: IMPLEMENTATION PLANNING
 
-Read ${folder('PROMPT.md')} and generate ${folder('TODO.md')} with the first line "Fully implemented: NO".
+Read ${folder('PROMPT.md')} and create ${folder('TODO.md')}.
 
-- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T HAVE ACTIONS THAT CLAUDE CANNOT DO.
-- ULTRA IMPORTANT: ${folder('TODO.md')} CAN'T MANUAL ACTIONS THAT CLAUDE CANNOT DO.
+**CRITICAL RULES:**
+- First line MUST be: "Fully implemented: NO"
+- Create 5-10 actionable items MAX (not 50+)
+- Group related changes together
+- Only include what Claude can do (no manual steps, no deployment)
+- Each item = create/modify code + write tests
 
-### CONTEXT SELECTION
-- Limit to 30 artifacts (files/dirs/URLs) with "why relevant".
-- Explicitly list out-of-scope items.
+---
 
-### PLAN (DAG)
-Each node must have:
-- description
-- prereq: [other nodes]
-- output: expected files/changes
-- proof: commands (lint|build|test)
-- change_fence.allowlist: list of permitted paths/patterns
-- risk_budget: low|medium|high
+## TODO.md Structure
 
-### CONTRACT SURFACE MAP
-List contracts that cannot change without a dedicated BREAKING node:
-- endpoints
-- exported types/functions
-- events/schemas
-- env/config
+\`\`\`
+Fully implemented: NO
 
-### POLICY
-- Do not include deployment tasks.
-- Do not include manual tasks.
-- Do not include tasks for the user to do.
-- No node without proof.
-- At least one root node (no prereqs).
+## Implementation Plan
 
-Output a full ${folder('TODO.md')} including the PLAN and CONTRACT MAP.
-use context7 to build up to date TODO.md
+- [ ] **Item 1**: [Consolidated action - what to build + tests]
+  - Files: [list 2-3 main files]
+  - Tests: [what to test]
+
+- [ ] **Item 2**: [Another consolidated action]
+  - Files: [list 2-3 main files]
+  - Tests: [what to test]
+
+[... 3-8 more items total ...]
+
+## Verification
+- [ ] All tests pass
+- [ ] Code builds without errors
+- [ ] Feature works as expected
+\`\`\`
+
+---
+
+## Your Task
+
+1. Read ${folder('PROMPT.md')}
+2. Identify the 5-10 main implementation steps
+3. Group related work (don't split "create function" and "test function" into separate items)
+4. Write ${folder('TODO.md')} following the structure above
+5. Use context7 if needed to understand current codebase patterns
+
+**IMPORTANT**: Quality over quantity. 5 well-defined items > 20 tiny items.
 `);
 }
 

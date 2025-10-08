@@ -29,163 +29,181 @@ const step0 = async (sameBranch = false, promptText = null) => {
     const stepNumber = sameBranch ? 1 : 2;
 
     await executeClaude(`
-        ${branchStep} - Step ${stepNumber}: Decompose the user prompt into deeply granular, verifiable JIRA-style tasks and sub-tasks.
+        ${branchStep} - Step ${stepNumber}: Decompose the user prompt into deeply granular, verifiable JIRA-style tasks with complete planning.
 
-        You are an autonomous system-design agent specialized in **recursive task decomposition** — transforming abstract user goals into a hierarchy of **atomic, testable, and context-independent tasks**.
-        
-        Your mission is to **expand each main requirement into as many independent TASKs as necessary**, ensuring no ambiguity or missing logical link between them.
-        
-        Each final atomic task must be saved as its own file:
-        ${state.claudiomiroFolder}/TASK1/TASK.md  
-        ${state.claudiomiroFolder}/TASK2/TASK.md  
-        ${state.claudiomiroFolder}/TASK3/TASK.md 
+        You are an autonomous system-design agent specialized in **smart task decomposition** — transforming abstract user goals into **consolidated, efficient, and independently executable tasks**.
+
+        Your mission is to **create the MINIMUM number of tasks necessary** to deliver the requirement, grouping related work together while maintaining clear boundaries.
+
+        For each task, you must create TWO files:
+        1. ${state.claudiomiroFolder}/TASK1/TASK.md - The detailed task description
+        2. ${state.claudiomiroFolder}/TASK1/PROMPT.md - The execution plan and constraints
+
+        Example structure:
+        ${state.claudiomiroFolder}/TASK1/TASK.md
+        ${state.claudiomiroFolder}/TASK1/PROMPT.md
+        ${state.claudiomiroFolder}/TASK2/TASK.md
+        ${state.claudiomiroFolder}/TASK2/PROMPT.md
         ...
 
         ---
-        ### 🧠 Thinking & Methodology
+        ### 🧠 Parallelization-First Methodology
 
-            1. **Recursive Breakdown**
-            - Start by listing all high-level requirements in the user prompt.
-            - For each one, **recursively expand** it into smaller, testable components.
-            - Continue decomposing until each sub-task can be *fully implemented and verified* without additional context.
+            1. **Independent Work Units**
+            - Break down requirements into the MAXIMUM number of independent tasks possible
+            - Each task should modify DIFFERENT files or INDEPENDENT code sections
+            - Default to parallelism: only create dependencies when absolutely necessary
+            - Think: "What can multiple developers work on simultaneously?"
 
-            2. **Autonomous Context Isolation**
-            - Each \`TASK.md\` must be 100% self-contained.
-            - It must include all assumptions, definitions, and relevant context required for another agent or developer to execute it without referring to the parent prompt.
+            2. **File-Based Independence Analysis**
+            - If two features touch different files → create separate tasks
+            - If two features touch different modules → create separate tasks
+            - If two features are logically unrelated → create separate tasks
+            - Example: 3 independent API routes = 3 tasks (NOT 1 task)
 
-            3. **Granularity Guidelines**
-            - Each final task should be **1 action = 1 file**.
-            - Example of decomposition:
-                - “Ensure all filters work” →  
-                - Test filter by period  
-                - Test filter by status  
-                - Test filter by amount  
-                - Test filter interaction when pressing Enter  
-                - Verify UI reflects filtered results correctly
+            3. **Dependency Detection (Conservative)**
+            Create dependencies ONLY when:
+            - Task B needs the OUTPUT of Task A (e.g., "Test login" needs "Create login")
+            - Task B modifies the SAME FILE as Task A
+            - Task B extends/builds upon Task A's functionality
 
-            4. **Deep Reasoning Before Writing**
-            - Analyze not just what is being asked, but *why* — the user’s intent, expected system behavior, and possible edge cases.
-            - Document reasoning under **“Reasoning Trace”** in each task.
+            AVOID false dependencies:
+            - Tasks in the same domain but different files = INDEPENDENT
+            - Tasks that "feel related" but don't share code = INDEPENDENT
 
-            5. **Explicit Unknowns**
-            - When something is ambiguous, don’t invent.  
-                Instead, document it under an **“Assumptions”** section.
+            4. **Autonomy & Context**
+            Each task MUST include:
+            - Complete description of what to build
+            - Which files will be created/modified
+            - All necessary context (no references to other tasks)
+            - Clear acceptance criteria
 
-            6. **Testability & Verification**
-            - Each atomic task must define:
-                - **Acceptance Criteria** → binary pass/fail conditions.  
-                - **Verification Checklist** → concrete validation steps.  
-                - **Testing Logic** → describe how it will be validated (unit, integration, or manual).
+            5. **Examples of Good Decomposition**
 
-            7. **Self-Audit Protocol**
-            - Before finalizing a task:
-                - Confirm it can be executed alone.
-                - Confirm it has measurable success conditions.
-                - Confirm it requires no external state.
+            ❌ BAD (over-consolidated):
+            - "Create user management system" (1 task)
 
-            8. **Research Summary**
-            - For each task, summarize key references, libraries, or methods relevant to implementation.
+            ✅ GOOD (parallelizable):
+            - "Create user model and validation" (Task 1)
+            - "Create authentication endpoints" (Task 2)
+            - "Create user profile endpoints" (Task 3)
+            - "Add user-related tests" (Task 4, depends on 1,2,3)
+
+            ❌ BAD (false dependency):
+            - Task 2 depends on Task 1 just because they're "related"
+
+            ✅ GOOD (true independence):
+            - Task 1: "Create /health endpoint"
+            - Task 2: "Create /users endpoint"
+            - Both can run in parallel (different files, different routes)
 
         ---
 
         ### 🎯 Output Expectation
 
-        Generate a **set of atomic tasks** — not just one per topic.
-        Each one must describe a specific, testable, verifiable action derived from the user's main request.
-        Use the sorting filenames (\`TASK1\`, \`TASK2\`, ...) in order of dependency or logical sequence.
+        Generate the **MAXIMUM number of independent, parallelizable tasks**.
+        Each task should be a self-contained work unit that can execute simultaneously with others.
+        Use filenames (\`TASK1\`, \`TASK2\`, ...) in logical order.
 
-        ---
-        
-        ### 🔧 Rules & Methodology
-        
-        1. **Independent Context**
-           - Each \`TASK.md\` must be fully self-contained.
-           - The task must include every piece of information needed to execute it correctly, without relying on previous memory, context, or external prompts.
-        
-        2. **Deep Reasoning Before Writing**
-           - "Super think" about the user’s goal — understand the *why*, not only the *what*.
-           - If the task implies unknowns or ambiguities, document them explicitly in the task file under a section named **“Assumptions”**.
-        
-        3. **Task Scope & Clarity**
-           - Each task must have a **well-defined start and end**.
-           - Avoid vague or open-ended goals like “improve performance”; instead, specify measurable deliverables (e.g., “reduce response time by profiling and optimizing SQL queries”).
-        
-        4. **Acceptance Criteria**
-           - Define clear, objective **acceptance criteria** for each task.
-           - Use language that makes verification binary (✅ Pass / ❌ Fail).
-           - Example:  
-             - ✅ All tests under \`test/integration/user\` pass.  
-             - ✅ Endpoint \`/api/users\` returns 200 with a valid JSON payload.
-        
-        5. **Testability**
-           - Every task must describe **how its success will be tested** (unit, integration, or manual validation).
-           - Testing steps must not require context outside the \`TASK.md\`.
-        
-        6. **Verifiability**
-           - Include a **Verification Checklist** section for post-implementation validation.
-           - The checklist should allow a reviewer to confirm 100% completion without external inference.
-        
-        7. **Conciseness & Atomicity**
-           - Smaller tasks are better — they increase parallelism and reduce cognitive load.
-           - Split large scopes into several atomic ones when possible.
-        
-        8. **Complementary Research**
-           - Each task must include a brief **Research Summary** describing:
-             - What external information is needed.
-             - What tools, libraries, or concepts are relevant.
-             - Key insights or references found (summarized, not pasted).
+        **Quantity Guidelines:**
+        - Simple feature: 2-4 tasks
+        - Medium feature: 4-8 tasks
+        - Complex feature: 8-15 tasks
+        - Focus on INDEPENDENCE over QUANTITY
+
+        **Key principle:** If tasks don't share files or logical dependencies, they MUST be separate.
         
         ---
 
-        ### 🎯 Goal
-        Deliver a full set of **autonomous, context-independent, testable tasks**, each capable of being executed and verified by another agent or human **without prior context**.
-        
-        ---
-        
         ### 🧩 Output Format for Each TASK.md
 
-        Each file must strictly follow this structure:
+        Keep it CONCISE and EXPLICIT about file impacts. Structure:
         "
-            # Task: [Clear and concise title]
+            # Task: [Clear, specific title]
 
             ## Objective
-            Explain what must be achieved and why it matters.
+            1-2 sentences: what must be achieved and why.
 
-            ## Assumptions
-            List any inferred or assumed conditions that support the execution.
+            ## Files Affected
+            **Will CREATE:**
+            - path/to/new/file1.js
+            - path/to/new/file2.test.js
 
-            ## Steps to Implement
-                1.	Step-by-step breakdown of the implementation.
-                2.	Use imperative verbs (e.g., “Create”, “Configure”, “Refactor”).
+            **Will MODIFY:**
+            - path/to/existing/file.js (specific changes)
 
-            ## Research Summary
-            Summarize findings or references that support implementation.
+            ## Implementation Summary
+            - Step 1: What to do
+            - Step 2: What to do
+            - Step 3: What to do
 
             ## Acceptance Criteria
-                •	Criterion 1 (objective and testable)
-                •	Criterion 2 (objective and testable)
+            - [ ] Criterion 1 (specific and testable)
+            - [ ] Criterion 2 (specific and testable)
+            - [ ] All tests pass
 
-            ## Self-Verification Logic
-                Before marking this task as completed:
-                1. Compare actual outputs with acceptance criteria.
-                2. If any criterion fails → mark as "RETRY REQUIRED".
-                3. If all pass → mark as "SUCCESS".
-
-            ## Reasoning Trace
-                Summarize how the task was interpreted, why each step was chosen, and what trade-offs were considered.
-
-            ## Escalation Protocol
-                If blocked or encountering undefined behavior:
-                1. Stop execution.
-                2. Save state in ${state.claudiomiroFolder}/BLOCKED.md
-                3. Add entry: reason, attempted fix, next suggestion.
-                
-            ## Verification Checklist
-                •	Code compiles without errors
-                •	All tests pass
-                •	Output matches expected result
-                •	Meets performance or UX expectations
+            ## Independent Verification
+            How to verify this task works in isolation (without other tasks).
         "
+
+        ---
+
+        ### 📋 PROMPT.md Format for Each Task
+
+        Keep it SHORT and ACTIONABLE:
+
+        "
+            ## OBJECTIVE
+            [1 sentence describing what to build]
+            Done when: [3-5 specific acceptance criteria]
+
+            ## CONSTRAINTS
+            - Include tests with implementation (not separate tasks)
+            - TODO.md must only contain actions Claude can do
+            - No deployment or manual steps
+            - First line of TODO.md must be: "Fully implemented: NO"
+
+            ## TOP 3 RISKS
+            1. [Risk] → [Mitigation]
+            2. [Risk] → [Mitigation]
+            3. [Risk] → [Mitigation]
+        "
+
+        ---
+
+        ### 🎯 Your Mission
+
+        1. **Analyze** the user prompt for independent work units
+        2. **Decompose** into MAXIMUM parallelizable tasks
+        3. **Specify** exact files each task will create/modify
+        4. **Create** TASK.md + PROMPT.md for each task
+        5. **Verify** each task can execute independently
+
+        ---
+
+        ### ⚡ Practical Example
+
+        **User Request:** "Create Express.js server with health and users endpoints"
+
+        **❌ BAD Decomposition (1 task):**
+        - TASK1: Create Express server with all endpoints
+
+        **✅ GOOD Decomposition (4 tasks, 3 parallel):**
+        - TASK1: Initialize Express server (src/server.js, src/app.js)
+        - TASK2: Create health endpoint (src/routes/health.js) - depends on TASK1
+        - TASK3: Create users endpoint (src/routes/users.js) - depends on TASK1
+        - TASK4: Add endpoint tests (tests/) - depends on TASK2, TASK3
+
+        Result: TASK2 and TASK3 run in parallel after TASK1 completes.
+
+        ---
+
+        ### 📝 Critical Reminders
+
+        - Each TASK.md MUST list exact file paths in "Files Affected"
+        - Different files = different tasks (when logically possible)
+        - Tests can often be a separate task (parallel or sequential)
+        - Foundation/setup tasks naturally come first, features can be parallel
 
         ---
         ## User Prompt:
@@ -195,7 +213,7 @@ const step0 = async (sameBranch = false, promptText = null) => {
     `);
 
     logger.stopSpinner();
-    logger.success('Task initialized successfully');
+    logger.success('Tasks created successfully');
 }
 
 module.exports = { step0 };

@@ -3,8 +3,7 @@ const path = require('path');
 const logger = require('../logger');
 const state = require('./config/state');
 const { startFresh } = require('./services/file-manager');
-const { isFullyImplemented } = require('./utils/validation');
-const { step1, step1_1, step2, step3, step4, step5, codeReview } = require('./steps');
+const { step1, step5 } = require('./steps');
 const { step0 } = require('./steps/step0');
 const { DAGExecutor } = require('./services/dag-executor');
 
@@ -29,8 +28,29 @@ const chooseAction = async (i) => {
     // Verifica se --no-limit foi passado
     const noLimit = process.argv.includes('--no-limit');
 
-    // Filtra os argumentos para pegar apenas o diretório (remove --fresh, --push=false, --same-branch, --prompt, --maxCycles e --no-limit)
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxCycles') && arg !== '--no-limit');
+    // Verifica se --steps= ou --step= foi passado (quais steps executar)
+    const stepsArg = process.argv.find(arg => arg.startsWith('--steps=') || arg.startsWith('--step='));
+    const allowedSteps = stepsArg
+        ? stepsArg.split('=')[1].split(',').map(s => parseInt(s.trim(), 10))
+        : null; // null = executa todos os steps
+
+    // Helper para verificar se um step deve ser executado
+    const shouldRunStep = (stepNumber) => {
+        if (!allowedSteps) return true; // Se --steps não foi passado, executa tudo
+        return allowedSteps.includes(stepNumber);
+    };
+
+    // Filtra os argumentos para pegar apenas o diretório
+    const args = process.argv.slice(2).filter(arg =>
+        arg !== '--fresh' &&
+        !arg.startsWith('--push') &&
+        arg !== '--same-branch' &&
+        !arg.startsWith('--prompt') &&
+        !arg.startsWith('--maxCycles') &&
+        !arg.startsWith('--steps') &&
+        !arg.startsWith('--step=') &&
+        arg !== '--no-limit'
+    );
     const folderArg = args[0] || process.cwd();
 
     // Resolve o caminho absoluto e define a variável global
@@ -44,12 +64,23 @@ const chooseAction = async (i) => {
     logger.path(`Working directory: ${state.folder}`);
     logger.newline();
 
+    // Mostra quais steps serão executados se --steps foi especificado
+    if (allowedSteps && i === 0) {
+        logger.info(`Running only steps: ${allowedSteps.join(', ')}`);
+        logger.newline();
+    }
+
     if(shouldStartFresh && i === 0){
         startFresh();
     }
 
+    // STEP 0: Criar todas as tasks (TASK.md + PROMPT.md)
     if(!fs.existsSync(state.claudiomiroFolder)){
-        return { step: step0(sameBranch), maxCycles: noLimit ? Infinity : maxCycles };
+        if (!shouldRunStep(0)) {
+            logger.info('Step 0 skipped (not in --steps list)');
+            return { done: true };
+        }
+        return { step: step0(sameBranch, promptText), maxCycles: noLimit ? Infinity : maxCycles };
     }
 
     const tasks = fs
@@ -60,7 +91,12 @@ const chooseAction = async (i) => {
     })
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
-    // Verifica se todos os step1 completaram e step1.1 ainda não rodou
+    if (tasks.length === 0) {
+        logger.error('No tasks found in claudiomiro folder');
+        process.exit(1);
+    }
+
+    // STEP 1: Analisar dependências (adiciona @dependencies em cada TASK.md)
     const allHavePrompt = tasks.every(task =>
         fs.existsSync(path.join(state.claudiomiroFolder, task, 'PROMPT.md'))
     );
@@ -72,65 +108,62 @@ const chooseAction = async (i) => {
         return !content.match(/@dependencies/);
     });
 
-    // Se todos têm PROMPT.md mas nenhum tem @dependencies, roda step1.1
-    if (allHavePrompt && noneHaveDependencies && tasks.length > 1) {
-        logger.step(tasks.length, tasks.length, 1.1, 'Analyzing task dependencies');
-        return { step: step1_1(), maxCycles: noLimit ? Infinity : maxCycles };
+    // Se todas têm PROMPT.md mas nenhuma tem @dependencies, roda step1
+    if (allHavePrompt && noneHaveDependencies && tasks.length > 0) {
+        if (!shouldRunStep(1)) {
+            logger.info('Step 1 skipped (not in --steps list)');
+            return { done: true };
+        }
+        logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
+        return { step: step1(), maxCycles: noLimit ? Infinity : maxCycles };
     }
 
-    for(let taskIndex = 0; taskIndex < tasks.length; taskIndex++){
-        const task = tasks[taskIndex];
-        const currentTask = taskIndex + 1;
-        const totalTasks = tasks.length;
+    // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
+    const taskGraph = buildTaskGraph();
 
-        if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'GITHUB_PR.md'))){
-            logger.info(`${task} is done`);
-            continue;
-        }
+    if (taskGraph) {
+        // Verifica se algum dos steps 2, 3 ou 4 deve ser executado
+        const shouldRunDAG = shouldRunStep(2) || shouldRunStep(3) || shouldRunStep(4);
 
-        logger.info(`Working in task ${task}...`);
+        if (!shouldRunDAG) {
+            logger.info('Steps 2-4 skipped (not in --steps list)');
 
-        if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'TODO.md'))){
-            if(!isFullyImplemented(path.join(state.claudiomiroFolder, task, 'TODO.md'))){
-                logger.step(currentTask, totalTasks, 3, 'Implementing tasks');
-                return { step: step3(task), maxCycles: noLimit ? Infinity : maxCycles };
+            // Pula para step 5 se estiver na lista
+            if (!fs.existsSync(path.join(state.folder, 'GITHUB_PR.md')) && shouldRunStep(5)) {
+                logger.newline();
+                logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
+                await step5(tasks, shouldPush);
             }
 
-
-            if(
-                isFullyImplemented(path.join(state.claudiomiroFolder, task, 'TODO.md'))
-            ){
-                if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'CODE_REVIEW.md'))){
-                    logger.step(currentTask, totalTasks, 4, 'Running tests and creating PR');
-                    return { step: step4(task), maxCycles: noLimit ? Infinity : maxCycles };
-                }else{
-                    logger.step(currentTask, totalTasks, 3.1, 'Running code');
-                    return { step: codeReview(task), maxCycles: noLimit ? Infinity : maxCycles };
-                }
-            }
+            return { done: true };
         }
 
+        // Todas as tasks têm dependências definidas, usar DAG executor
+        logger.info('Switching to parallel execution mode with DAG executor');
+        logger.newline();
 
-        if(fs.existsSync(path.join(state.claudiomiroFolder, task, 'PROMPT.md'))){
-            logger.step(currentTask, totalTasks, 2, 'Research and planning');
-            return { step: step2(task), maxCycles: noLimit ? Infinity : maxCycles };
+        const executor = new DAGExecutor(taskGraph, allowedSteps);
+        await executor.run();
+
+        // Após DAG executor, criar PR final
+        if (!fs.existsSync(path.join(state.folder, 'GITHUB_PR.md')) && shouldRunStep(5)) {
+            logger.newline();
+            logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
+            await step5(tasks, shouldPush);
         }
 
-        logger.step(currentTask, totalTasks, 1, 'Initialization');
-        return { step: step1(task), maxCycles: noLimit ? Infinity : maxCycles };
+        logger.success('All tasks completed!');
+        return { done: true };
     }
 
-    logger.info(`All tasks are done...`);
-
-    if(!fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))){
-        logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
-        return { step: step5(tasks, shouldPush), maxCycles: noLimit ? Infinity : maxCycles };
-    }
+    // Fallback: não deveria chegar aqui
+    logger.error('Tasks exist but no dependency graph found. This should not happen.');
+    process.exit(1);
 }
 
 /**
  * Constrói o grafo de tasks lendo as dependências de cada TASK.md
- * @returns {Object} Grafo de tasks { TASK1: {deps: [], status: 'pending'}, ... }
+ * @returns {Object|null} Grafo de tasks { TASK1: {deps: [], status: 'pending'}, ... } ou null se não houver @dependencies
  */
 const buildTaskGraph = () => {
     if (!fs.existsSync(state.claudiomiroFolder)) {
@@ -150,34 +183,30 @@ const buildTaskGraph = () => {
     }
 
     const graph = {};
-    let hasDependencies = false;
+    let hasAnyDependencyTag = false;
 
     for (const task of tasks) {
         const taskMdPath = path.join(state.claudiomiroFolder, task, 'TASK.md');
 
         if (!fs.existsSync(taskMdPath)) {
-            // Task sem TASK.md ainda, assume sem dependências
-            graph[task] = {
-                deps: [],
-                status: fs.existsSync(path.join(state.claudiomiroFolder, task, 'GITHUB_PR.md'))
-                    ? 'completed'
-                    : 'pending'
-            };
-            continue;
+            // Task sem TASK.md ainda, não pode construir grafo
+            return null;
         }
 
         const taskMd = fs.readFileSync(taskMdPath, 'utf-8');
 
-        // Parse @dependencies do arquivo (primeira linha ou primeiras linhas)
+        // Parse @dependencies do arquivo (primeira linha)
         // Formato: @dependencies [TASK1, TASK2] ou @dependencies []
         const depsMatch = taskMd.match(/@dependencies\s*\[(.*?)\]/);
-        const deps = depsMatch
-            ? depsMatch[1].split(',').map(d => d.trim()).filter(Boolean)
-            : [];
 
-        if (deps.length > 0) {
-            hasDependencies = true;
+        if (!depsMatch) {
+            // Se alguma task não tem @dependencies, grafo incompleto
+            return null;
         }
+
+        hasAnyDependencyTag = true;
+
+        const deps = depsMatch[1].split(',').map(d => d.trim()).filter(Boolean);
 
         graph[task] = {
             deps,
@@ -187,8 +216,8 @@ const buildTaskGraph = () => {
         };
     }
 
-    // Se nenhuma task tem dependências, retorna null para usar fluxo sequencial
-    return hasDependencies ? graph : null;
+    // Retorna o grafo se todas as tasks têm @dependencies
+    return hasAnyDependencyTag ? graph : null;
 }
 
 const init = async () => {
@@ -205,46 +234,25 @@ const init = async () => {
 
     const noLimit = process.argv.includes('--no-limit');
 
-    // Verifica se --push=false foi passado
-    const shouldPush = !process.argv.some(arg => arg === '--push=false');
-
     let i = 0;
     let maxCycles = noLimit ? Infinity : 100;
 
     while(i < maxCycles){
         const result = await chooseAction(i);
+
+        // Se retornou { done: true }, significa que completou via DAG executor
+        if (result && result.done) {
+            return;
+        }
+
+        // Atualiza maxCycles se necessário
         if (result && result.maxCycles) {
             maxCycles = result.maxCycles;
         }
+
+        // Executa step se retornado
         if (result && result.step) {
             await result.step;
-        }
-
-        // Após executar uma ação, verifica se deve usar DAG executor
-        // Isso acontece depois que step0 cria as tasks
-        if (fs.existsSync(state.claudiomiroFolder)) {
-            const taskGraph = buildTaskGraph();
-
-            if (taskGraph) {
-                // Há tasks com dependências, usa DAG executor
-                logger.info('Tasks with dependencies detected, switching to parallel execution mode');
-                logger.newline();
-
-                const executor = new DAGExecutor(taskGraph);
-                await executor.run();
-
-                // Após DAG executor, executa step5 para criar o PR final
-                const tasks = Object.keys(taskGraph);
-                if (!fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))) {
-                    logger.newline();
-                    logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
-                    await step5(tasks, shouldPush);
-                }
-
-                // Termina o loop
-                logger.success('All tasks completed!');
-                return;
-            }
         }
 
         i++;

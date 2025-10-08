@@ -3,15 +3,24 @@ const path = require('path');
 const os = require('os');
 const logger = require('../../logger');
 const state = require('../config/state');
-const { step1, step2, step3, step4, codeReview } = require('../steps');
+const { step2, step3, step4, codeReview } = require('../steps');
 const { isFullyImplemented } = require('../utils/validation');
 
 class DAGExecutor {
-  constructor(tasks) {
+  constructor(tasks, allowedSteps = null) {
     this.tasks = tasks; // { TASK1: {deps: [], status: 'pending'}, ... }
+    this.allowedSteps = allowedSteps; // null = todos os steps, ou array de números
     // Usa metade dos cores disponíveis, mínimo 1, máximo 5
     this.maxConcurrent = Math.max(1, Math.min(5, Math.floor(os.cpus().length / 2)));
     this.running = new Set(); // Tasks atualmente em execução
+  }
+
+  /**
+   * Verifica se um step deve ser executado
+   */
+  shouldRunStep(stepNumber) {
+    if (!this.allowedSteps) return true;
+    return this.allowedSteps.includes(stepNumber);
   }
 
   /**
@@ -57,7 +66,8 @@ class DAGExecutor {
   }
 
   /**
-   * Executa o ciclo completo de uma task: step1 → step2 → step3 → codeReview → step4
+   * Executa o ciclo completo de uma task: step2 → step3 → codeReview → step4
+   * (step1 foi incorporado ao step0 e já criou PROMPT.md)
    */
   async executeTask(taskName) {
     try {
@@ -73,16 +83,26 @@ class DAGExecutor {
         return;
       }
 
-      // Step 1: Inicialização (TASK.md → PROMPT.md)
-      if (!fs.existsSync(path.join(taskPath, 'PROMPT.md'))) {
-        logger.info(`  ${taskName}: Step 1 - Initialization`);
-        await step1(taskName);
-      }
+      // PROMPT.md já foi criado pelo step0, então começamos direto no step2
 
       // Step 2: Planejamento (PROMPT.md → TODO.md)
       if (!fs.existsSync(path.join(taskPath, 'TODO.md'))) {
+        if (!this.shouldRunStep(2)) {
+          logger.info(`  ${taskName}: Step 2 skipped (not in --steps list)`);
+          this.tasks[taskName].status = 'completed';
+          this.running.delete(taskName);
+          return;
+        }
         logger.info(`  ${taskName}: Step 2 - Research and planning`);
         await step2(taskName);
+      }
+
+      // Se step 2 foi executado e não devemos executar step 3, para aqui
+      if (!this.shouldRunStep(3)) {
+        logger.info(`  ${taskName}: Step 3 skipped (not in --steps list)`);
+        this.tasks[taskName].status = 'completed';
+        this.running.delete(taskName);
+        return;
       }
 
       // Loop até implementação completa
@@ -104,6 +124,14 @@ class DAGExecutor {
           logger.info(`  ${taskName}: Step 3.1 - Code review`);
           await codeReview(taskName);
           continue; // Volta para verificar se precisa refazer
+        }
+
+        // Se step 3 foi executado e não devemos executar step 4, para aqui
+        if (!this.shouldRunStep(4)) {
+          logger.info(`  ${taskName}: Step 4 skipped (not in --steps list)`);
+          this.tasks[taskName].status = 'completed';
+          this.running.delete(taskName);
+          return;
         }
 
         // Step 4: Testes finais e PR
@@ -174,7 +202,7 @@ class DAGExecutor {
     }
 
     if (pending.length > 0) {
-      logger.warn(`Tasks still pending (check dependencies): ${pending.join(', ')}`);
+      logger.info(`Tasks still pending (check dependencies): ${pending.join(', ')}`);
     }
 
     const completed = Object.entries(this.tasks)
