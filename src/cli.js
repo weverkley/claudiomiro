@@ -183,9 +183,16 @@ const chooseAction = async (i) => {
         return { done: true };
     }
 
-    // Fallback: não deveria chegar aqui
-    logger.error('Tasks exist but no dependency graph found. This should not happen.');
-    process.exit(1);
+    // Fallback: Se o grafo não pode ser construído (dependencies incompletas ou inválidas),
+    // regenerar @dependencies executando step1
+    logger.info('Dependency graph incomplete or invalid. Regenerating dependencies...');
+    if (!shouldRunStep(1)) {
+        logger.info('Step 1 skipped (not in --steps list)');
+        return { done: true };
+    }
+    logger.newline();
+    logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
+    return { step: step1(mode), maxCycles: noLimit ? Infinity : maxCycles };
 }
 
 /**
