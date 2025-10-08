@@ -6,7 +6,7 @@
     "claudiomiro": "./index.js"
   },
   "scripts": {
-    "test": "jest",
+    "test": "npx jest",
     "test:coverage": "jest --coverage"
   },
   "keywords": [

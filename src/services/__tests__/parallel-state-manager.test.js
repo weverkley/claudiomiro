@@ -74,11 +74,23 @@ describe('ParallelStateManager', () => {
       expect(manager.isUIRendererActive()).toBe(false);
     });
 
-    test('should throw error for non-array input', () => {
-      expect(() => manager.initialize(null)).toThrow('Tasks must be an array');
-      expect(() => manager.initialize(undefined)).toThrow('Tasks must be an array');
-      expect(() => manager.initialize('task1')).toThrow('Tasks must be an array');
-      expect(() => manager.initialize({})).toThrow('Tasks must be an array');
+    test('should initialize from object preserving status', () => {
+      manager.initialize({
+        task1: { status: 'completed' },
+        task2: { status: 'failed' },
+        task3: {}
+      });
+
+      const states = manager.getAllTaskStates();
+      expect(states.task1.status).toBe('completed');
+      expect(states.task2.status).toBe('failed');
+      expect(states.task3.status).toBe('pending');
+    });
+
+    test('should throw error for invalid input', () => {
+      expect(() => manager.initialize(null)).toThrow('Tasks must be an array or object');
+      expect(() => manager.initialize(undefined)).toThrow('Tasks must be an array or object');
+      expect(() => manager.initialize('task1')).toThrow('Tasks must be an array or object');
     });
   });
 

@@ -20,7 +20,7 @@ class DAGExecutor {
 
     // Initialize ParallelStateManager
     this.stateManager = new ParallelStateManager();
-    this.stateManager.initialize(Object.keys(tasks));
+    this.stateManager.initialize(tasks);
   }
 
   /**

@@ -29,16 +29,28 @@ class ParallelStateManager {
    * @param {string[]} tasks - Array of task names
    */
   initialize(tasks) {
-    if (!tasks || !Array.isArray(tasks)) {
-      throw new Error('Tasks must be an array');
+    if (!tasks || (typeof tasks !== 'object' && !Array.isArray(tasks))) {
+      throw new Error('Tasks must be an array or object');
     }
 
     this.taskStates.clear();
     this.uiRendererActive = false;
 
-    tasks.forEach(taskName => {
+    const entries = Array.isArray(tasks)
+      ? tasks.map(taskName => [taskName, null])
+      : Object.entries(tasks);
+
+    entries.forEach(([taskName, taskConfig]) => {
+      if (!taskName) {
+        return;
+      }
+      const status =
+        taskConfig && taskConfig.status
+          ? taskConfig.status
+          : 'pending';
+
       this.taskStates.set(taskName, {
-        status: 'pending',
+        status,
         step: null,
         message: null
       });

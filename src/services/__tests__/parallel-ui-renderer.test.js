@@ -187,7 +187,7 @@ describe('ParallelUIRenderer', () => {
       expect(plainLine).toContain('Line one Line two Extra');
     });
 
-    test('should display DONE for completed tasks without Claude message', () => {
+    test('should display Done for completed tasks without Claude message', () => {
       const taskState = {
         status: 'completed',
         step: 'Step 4 - Running tests and creating PR',
@@ -198,7 +198,7 @@ describe('ParallelUIRenderer', () => {
       const plainLine = line.replace(/\x1b\[[0-9;]*m/g, '');
 
       expect(plainLine).toContain('TaskDone');
-      expect(plainLine).toContain('DONE');
+      expect(plainLine).toContain('Done');
       expect(plainLine).not.toContain('Claude:');
     });
   });
@@ -230,20 +230,20 @@ describe('ParallelUIRenderer', () => {
     test('should render header with progress percentage', () => {
       const taskStates = {
         task1: { status: 'completed', step: 'done', message: 'OK' },
-        task2: { status: 'running', step: '2/3', message: 'Working' }
+        task2: { status: 'running', step: 'Step 3 - Implementing tasks', message: 'Working' }
       };
       const lines = renderer.renderFrame(taskStates, 50);
 
       expect(lines.length).toBeGreaterThan(0);
       const plainHeader = lines[0].replace(/\x1b\[[0-9;]*m/g, '');
       expect(plainHeader).toContain('Total Complete:');
-      expect(plainHeader).toContain('50%');
+      expect(plainHeader).toContain('63%');
     });
 
     test('should render all task lines', () => {
       const taskStates = {
         task1: { status: 'completed', step: 'done', message: 'Success' },
-        task2: { status: 'running', step: '1/2', message: 'Processing' },
+        task2: { status: 'running', step: 'Step 2 - Planning', message: 'Processing' },
         task3: { status: 'pending', step: null, message: null }
       };
       const lines = renderer.renderFrame(taskStates, 33);
@@ -295,9 +295,21 @@ describe('ParallelUIRenderer', () => {
         task3: { status: 'completed', step: 'done' }
       };
 
-      const lines = renderer.renderFrame(taskStates, 50);
+      const lines = renderer.renderFrame(taskStates, 0);
       expect(lines.length).toBe(5); // Header + blank + 3 tasks
       // Should not throw errors
+    });
+
+    test('should calculate progress based on step completion', () => {
+      const taskStates = {
+        task1: { status: 'completed', step: 'done', message: '' },
+        task2: { status: 'running', step: 'Step 3 - Implementing tasks', message: 'Working' },
+        task3: { status: 'pending', step: null, message: null }
+      };
+
+      const lines = renderer.renderFrame(taskStates, 0);
+      const plainHeader = lines[0].replace(/\x1b\[[0-9;]*m/g, '');
+      expect(plainHeader).toContain('42%');
     });
   });
 
@@ -440,8 +452,8 @@ describe('ParallelUIRenderer', () => {
     test('should handle very long task names', () => {
       const taskStates = {
         'very-long-task-name-that-exceeds-normal-length': {
-          status: 'running',
-          step: 'step',
+          status: 'completed',
+          step: 'done',
           message: 'msg'
         }
       };
@@ -455,7 +467,7 @@ describe('ParallelUIRenderer', () => {
       const taskStates = {
         'task-with-special-chars-!@#$%': {
           status: 'running',
-          step: 'step',
+          step: 'Step 2 - Planning',
           message: 'msg'
         }
       };

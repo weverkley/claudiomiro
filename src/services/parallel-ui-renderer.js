@@ -17,6 +17,7 @@ class ParallelUIRenderer {
 
     // Spinner types to cycle through
     this.spinnerTypes = ['dots', 'line', 'arrow', 'bouncingBar'];
+    this.stepOrder = ['step 2', 'step 3', 'step 3.1', 'step 4'];
   }
 
   /**
@@ -75,13 +76,17 @@ class ParallelUIRenderer {
    */
   renderTaskLine(taskName, taskState, taskIndex) {
     const status = taskState.status || 'pending';
-    const isCompleted = status === 'completed';
+    const lowerStatus = status.toLowerCase();
+    const isCompleted = lowerStatus === 'completed';
+    const isFailed = lowerStatus === 'failed';
     let step = this.sanitizeText(taskState.step);
     let message = this.sanitizeText(taskState.message);
 
     if (isCompleted) {
-      step = 'DONE';
+      step = 'Done';
       message = '';
+    } else if (isFailed) {
+      step = 'Failed';
     }
 
     // Use different spinner for each task
@@ -138,9 +143,10 @@ class ParallelUIRenderer {
   renderFrame(taskStates, totalProgress) {
     const lines = [];
     const terminalWidth = this.terminalRenderer.getTerminalWidth();
+    const computedProgress = this.calculateTotalProgress(taskStates);
 
     // Render header
-    const header = `${chalk.bold.white('Total Complete:')} ${chalk.cyan(totalProgress + '%')}`;
+    const header = `${chalk.bold.white('Total Complete:')} ${chalk.cyan(computedProgress + '%')}`;
     lines.push(this.truncateLine(header, terminalWidth));
 
     // Render task lines
@@ -157,6 +163,67 @@ class ParallelUIRenderer {
     }
 
     return lines;
+  }
+
+  /**
+   * Determine how many workflow steps are completed for a task
+   * @param {Object} taskState
+   * @returns {number}
+   */
+  getCompletedStepCount(taskState) {
+    if (!taskState) {
+      return 0;
+    }
+
+    const status = this.sanitizeText(taskState.status).toLowerCase();
+    if (status === 'completed') {
+      return this.stepOrder.length;
+    }
+
+    const stepText = this.sanitizeText(taskState.step).toLowerCase();
+    if (!stepText) {
+      return status === 'failed' ? this.stepOrder.length : 0;
+    }
+
+    if (stepText.startsWith('done')) {
+      return this.stepOrder.length;
+    }
+
+    for (let i = this.stepOrder.length - 1; i >= 0; i--) {
+      const prefix = this.stepOrder[i];
+      if (stepText.startsWith(prefix)) {
+        return i;
+      }
+    }
+
+    return 0;
+  }
+
+  /**
+   * Calculate total progress percentage based on completed steps
+   * @param {Object} taskStates
+   * @returns {number}
+   */
+  calculateTotalProgress(taskStates) {
+    if (!taskStates || typeof taskStates !== 'object') {
+      return 0;
+    }
+
+    const taskNames = Object.keys(taskStates);
+    if (taskNames.length === 0) {
+      return 0;
+    }
+
+    const totalSteps = taskNames.length * this.stepOrder.length;
+    const completedSteps = taskNames.reduce((acc, taskName) => {
+      return acc + this.getCompletedStepCount(taskStates[taskName]);
+    }, 0);
+
+    if (totalSteps === 0) {
+      return 0;
+    }
+
+    return Math.round((completedSteps / totalSteps) * 100);
   }
 
   /**

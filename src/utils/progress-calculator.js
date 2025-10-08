@@ -16,13 +16,22 @@ function countCompletedSteps(state) {
     return 0;
   }
 
-  if (state.status === 'completed') {
+  const normalizedStatus = normalize(state.status);
+  if (normalizedStatus === 'completed') {
+    return STEP_SEQUENCE.length;
+  }
+
+  if (normalizedStatus === 'failed') {
     return STEP_SEQUENCE.length;
   }
 
   const normalizedStep = normalize(state.step);
   if (!normalizedStep) {
     return 0;
+  }
+
+  if (normalizedStep.startsWith('done')) {
+    return STEP_SEQUENCE.length;
   }
 
   const stepIndex = STEP_SEQUENCE.findIndex(stepLabel => normalizedStep.startsWith(stepLabel));

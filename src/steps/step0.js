@@ -549,6 +549,77 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
 
         1. **Deep Think** → Understand user's WHY, not just WHAT
         2. **Layer Analysis** → Foundation, features, integration
-        3. **Recursive Decompose
+        3. **Recursive Decompose** → Atomic, parallelizable tasks
+        4. **Document Plan** → EXECUTION_PLAN.md + reasoning
+        5. **Generate Tasks** → TASK.md + PROMPT.md (complete context)
+        6. **Verify Parallelism** → Max tasks per layer, minimal deps
+        7. **Add Final Task** → Always include TASK_FINAL (cohesion & assembly validation)
 
+        ---
+
+        ## ⚡ Example: "Web API with 3 endpoints + tests"
+
+        **Optimal Hard Mode Plan (3 layers + final, 8 tasks):**
+
+        Layer 0:
+        - TASK1 (HTTP server base setup)
+        - TASK2 (Database connection config) ← PARALLEL
+
+        Layer 1:
+        - TASK3 (endpoint A + unit tests) - Depends: TASK1, TASK2
+        - TASK4 (endpoint B + unit tests) - Depends: TASK1, TASK2
+        - TASK5 (endpoint C + unit tests) - Depends: TASK1, TASK2
+        ← TASK3-5 run in PARALLEL
+
+        Layer 2:
+        - TASK6 (integration tests) - Depends: TASK3, TASK4, TASK5
+        - TASK7 (API documentation) - Depends: TASK3, TASK4, TASK5
+        ← TASK6-7 run in PARALLEL
+
+        Final Ω:
+        - TASK_FINAL (system cohesion & assembly validation) - Depends: ALL
+
+        Result: 5 tasks in parallel across layers; Final gate ensures coherence.
+
+        ---
+
+        ## ✅ Success Criteria
+
+        - Most tasks in parallel layers
+        - Minimal & explicit dependencies
+        - Each task 100% autonomous, with deep reasoning
+        - EXECUTION_PLAN.md shows parallel opportunities
+        - Parallelism ratio > 2.0
+        - Every task: reasoning trace, assumptions, research, criteria
+        - **TASK_FINAL present and passing** with reports
+        \n
+        ## 🚨 Anti-Patterns
+
+        ❌ Missing reasoning/assumptions/criteria
+        ❌ Same file modified by parallel tasks
+        ❌ Vague acceptance criteria
+        ❌ **Omitting TASK_FINAL**
+
+        ✅ Independent units per feature
+        ✅ Real coupling only
+        ✅ Full-context tasks
+        ✅ **Final assembly validation is mandatory**
+
+        ---
+
+        ## User Request:
+        \`\`\`
+        ${task}
+        \`\`\`
+
+        Think deeply:
+        - What's the user's real goal?
+        - What's Layer 0? What can run in parallel?
+        - What's the critical path?
+        - What assumptions am I making?
+        - What could go wrong?
+        - How will each task be verified?
+        - **How will TASK_FINAL certify the whole system?**
+    `;
+    
 module.exports = { step0 };
