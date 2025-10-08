@@ -33,6 +33,7 @@ const codeReview = (task) => {
 
       If everything looks **functionally correct**:
       - Confirm first line of \`${folder('TODO.md')}\` is: \`Fully implemented: YES\`
+      - Add in the second line of \`${folder('TODO.md')}\`: "Code review passed"
       - Create \`${folder('CODE_REVIEW.md')}\`:
         \`\`\`markdown
         # Code Review
@@ -50,8 +51,9 @@ const codeReview = (task) => {
         \`\`\`
 
       If **problems found**:
-      - Update \`${folder('TODO.md')}\` with specific fixes needed
+      - Update \`${folder('TODO.md')}\` ADDING IN Implementation Plan the specific fixes needed
       - Set first line of \`${folder('TODO.md')}\` to: \`Fully implemented: NO\`
+      - Add in the second line of \`${folder('TODO.md')}\`: "Why code review failed: "
       - Create \`${folder('CODE_REVIEW.md')}\`:
         \`\`\`markdown
         # Code Review
