@@ -1,6 +1,7 @@
 # Claudiomiro
 
-![Claudiomiro](http://www.samuelfaj.com/files/posts/claudiomiro.png)
+![Claudiomiro](https://github.com/samuelfaj/claudiomiro/blob/main/claudiomiro.png?raw=true)
+
 
 **Send your prompt — get a fully planned, executed, reviewed, tested and committed task.**
 
