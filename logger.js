@@ -19,7 +19,7 @@ class Logger {
         const title = gradient.pastel.multiline([
             '╔═══════════════════════════════════════╗',
             '║                                       ║',
-            '║           CLAUDIOMIRO v1.1            ║',
+            '║           CLAUDIOMIRO v1.3            ║',
             '║     AI-Powered Development Agent      ║',
             '║                                       ║',
             '╚═══════════════════════════════════════╝'

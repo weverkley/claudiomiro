@@ -117,22 +117,34 @@ const processCodexEvent = (line) => {
         return null;
     }
 
-    switch (json.type) {
-        case 'thread.started':
-            return '🚀 Starting Codex...';
-        case 'turn.started':
-            return null;
-        case 'turn.completed':
-            return formatTurnCompleted(json);
-        case 'turn.failed':
-            return formatTurnFailed(json);
-        case 'item.completed':
-            return formatItem(json.item, json.type);
-        case 'item.updated':
-        case 'item.started':
-        default:
-            return null;
+    if(json.prompt){
+        return json.prompt;
     }
+
+    if(json.msg && json.msg.text){
+        return json.msg.tex;
+    }
+
+    if(json.msg && json.msg.type){
+        const type = json.msg.type;
+
+        if(type.includes('token_count')){
+            return null;
+        }
+
+        if(type.includes('exec_command')){
+            return `Executing command...`;
+        }
+
+        if(type.includes('agent_reasoning')){
+            return `Agent reasoning...`;
+        }
+
+        return type;
+
+    }
+
+    return JSON.stringify(json).substring(0, 30) + '...';
 };
 
 module.exports = { processCodexEvent };

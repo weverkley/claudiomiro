@@ -74,6 +74,7 @@ const executeCodex = (text, taskName = null) => {
 
         codex.stdout.on('data', (data) => {
             const output = data.toString();
+            
             buffer += output;
 
             const lines = buffer.split('\n');

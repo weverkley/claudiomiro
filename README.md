@@ -15,7 +15,7 @@ When using Claude Code for complex tasks, you've probably noticed it **stops bef
 
 ## What is Claudiomiro?
 
-**Claudiomiro** is a Node.js CLI that wraps Claude AI in a structured, **autonomous workflow** with **parallel task execution**. Unlike simple code generators, Claudiomiro:
+**Claudiomiro** is a Node.js CLI that wraps Claude AI (and optionally OpenAI Codex) in a structured, **autonomous workflow** with **parallel task execution**. Unlike simple code generators, Claudiomiro:
 
 - ✅ Thinks through complex problems
 - ✅ Analyzes your entire codebase
@@ -105,6 +105,12 @@ claudiomiro
 
 That's it! Claudiomiro will autonomously handle the rest.
 
+### Selecting the Executor
+
+- Claude CLI remains the default executor; pass `--claude` to force it explicitly.
+- To run the workflow with OpenAI Codex, install the Codex CLI and add `--codex` to your command.
+- Both executors share the same prompts and parallel workflow. Pick the one that best matches your environment or credential setup.
+
 ## Usage Examples
 
 ### Basic Usage
@@ -142,6 +148,10 @@ claudiomiro --prompt="Build microservices" --maxConcurrent=10
 # Task planning mode (auto or hard)
 claudiomiro --prompt="Build REST API" --mode=hard  # Maximum criticality + reasoning
 claudiomiro --prompt="Add feature" --mode=auto     # Default: parallelism-focused
+
+# Choose AI executor (default: Claude)
+claudiomiro --prompt="Migrate to microfrontends" --codex
+claudiomiro --prompt="Run security audit" --claude
 
 # Run only specific steps
 claudiomiro --steps=2,3,4  # Skip planning, only implement
@@ -295,6 +305,7 @@ Each task includes:
 
 - **Node.js** (v14+)
 - **Claude CLI** installed and configured ([Setup Guide](https://docs.anthropic.com/claude/docs))
+- **Codex CLI** installed and authenticated (only if you plan to use `--codex`, see [Codex exec docs](https://github.com/openai/codex/blob/main/docs/exec.md))
 - **Git repository** (initialized with at least one commit)
 
 ## What Makes This Different?
