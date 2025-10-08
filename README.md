@@ -7,8 +7,8 @@
 Turn days of complex development into a fully automated process — without sacrificing production-grade code quality.
 
 **Works With:**
-- ✅ Claude Code
-- ✅ OpenAi Codex
+- ✅ Claude Code (Anthropic)
+- ✅ ChatGPT Codex (OpenAI)
 
 **Examples:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example)
