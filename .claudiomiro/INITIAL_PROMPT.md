@@ -1,0 +1,1 @@
+Garanta que cada arquivo tenha testes unitários (jest) e que tudo tenha o maximo de todos os tipos de testes possiveis que sejam automaticos
