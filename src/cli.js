@@ -166,9 +166,24 @@ const chooseAction = async (i) => {
         return { done: true };
     }
 
-    // Fallback: não deveria chegar aqui
-    logger.error('Tasks exist but no dependency graph found. This should not happen.');
-    process.exit(1);
+    // Estado intermediário: tasks existem mas não todas têm @dependencies
+    // Isso pode acontecer se:
+    // 1. Nem todas as tasks têm PROMPT.md
+    // 2. Algumas (mas não todas) as tasks têm @dependencies
+    // Neste caso, rodamos step1 para completar a análise de dependências
+    if (!allHavePrompt) {
+        logger.error('Some tasks are missing PROMPT.md files. Please ensure all tasks have PROMPT.md before running.');
+        process.exit(1);
+    }
+
+    // Se chegamos aqui, todas têm PROMPT.md mas algumas (não todas) têm @dependencies
+    // Rodar step1 para completar a análise
+    if (!shouldRunStep(1)) {
+        logger.info('Step 1 skipped (not in --steps list)');
+        return { done: true };
+    }
+    logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
+    return { step: step1(mode), maxCycles: noLimit ? Infinity : maxCycles };
 }
 
 /**
