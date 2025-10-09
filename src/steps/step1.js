@@ -83,10 +83,49 @@ ${taskContents[taskName].prompt}
         ? getHardModePrompt(tasksDescription, tasks)
         : getAutoModePrompt(tasksDescription, tasks);
 
-    await executeClaude(prompt);
+    try{
+        await executeClaude(prompt);
 
-    logger.stopSpinner();
-    logger.success('Task dependencies analyzed and configured');
+        logger.stopSpinner();
+        logger.success('Task dependencies analyzed and configured');
+    }catch(e){
+        console.error(e);
+    }
+
+   for (let i = 0; i < tasks.length; i++) {
+        const taskName = tasks[i];
+        const taskMd = path.join(state.claudiomiroFolder, taskName, 'TASK.md');
+
+        if (!fs.existsSync(taskMd)) {
+            console.warn(`⚠️ Arquivo não encontrado: ${taskMd}`);
+            continue;
+        }
+
+        const content = fs.readFileSync(taskMd, 'utf-8');
+        const lines = content.split('\n');
+        const firstLine = lines[0].trim();
+
+        // Se já tem @dependencies, pula
+        if (firstLine.startsWith('@dependencies')) {
+            console.log(`✅ ${taskName} já possui dependências. Ignorado.`);
+            continue;
+        }
+
+        // Todas as tasks anteriores no array são dependências
+        const dependencies = tasks.slice(0, i);
+        const dependencyLine =
+            dependencies.length > 0
+                ? `@dependencies [${dependencies.join(', ')}]`
+                : '@dependencies []';
+
+        // Reescreve o arquivo com a nova linha no topo
+        const updated = `${dependencyLine}\n${content}`;
+        fs.writeFileSync(taskMd, updated, 'utf-8');
+
+        console.log(
+            `🧩 Adicionado a ${taskName}: ${dependencies.length > 0 ? dependencies.join(', ') : '(nenhuma)'}`
+        );
+    }
 }
 
 const getAutoModePrompt = (tasksDescription, tasks) => `
