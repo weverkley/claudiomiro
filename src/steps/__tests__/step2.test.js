@@ -75,28 +75,29 @@ describe('step2', () => {
       await step2('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('PHASE: IMPLEMENTATION PLANNING');
+      expect(promptArg).toContain('## Your Task');
     });
 
     it('should include critical rule about not creating commits', async () => {
       await step2('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('DO NOT create any git commits');
+      expect(promptArg).toContain('Do NOT run any git commands');
     });
 
     it('should include critical rule about first line being "Fully implemented: NO"', async () => {
       await step2('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('First line MUST be: "Fully implemented: NO"');
+      expect(promptArg).toContain('First line of');
+      expect(promptArg).toContain('MUST be: `Fully implemented: NO`');
     });
 
     it('should include critical rule about creating 5-10 items MAX', async () => {
       await step2('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('Create 5-10 actionable items MAX');
+      expect(promptArg).toContain('quality over quantity');
     });
 
     it('should include TODO.md structure template', async () => {
@@ -123,23 +124,23 @@ describe('step2', () => {
 
       const promptArg = executeClaude.mock.calls[0][0];
       expect(promptArg).toContain('Your Task');
-      expect(promptArg).toContain('Identify the 5-10 main implementation steps');
-      expect(promptArg).toContain('Group related work');
+      expect(promptArg).toContain('Identify implementation steps');
+      expect(promptArg).toContain('Group work by');
     });
 
     it('should mention context7 usage for understanding codebase', async () => {
       await step2('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
+      expect(promptArg).toContain('codebase knowledge source');
       expect(promptArg).toContain('context7');
-      expect(promptArg).toContain('codebase patterns');
     });
 
     it('should emphasize quality over quantity', async () => {
       await step2('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('Quality over quantity');
+      expect(promptArg).toContain('quality over quantity');
     });
 
     it('should return a promise', () => {
@@ -272,7 +273,7 @@ describe('step2', () => {
       const promptArg = executeClaude.mock.calls[0][0];
       expect(promptArg).toContain('/project/.claudiomiro/TASK5/PROMPT.md');
       expect(promptArg).toContain('/project/.claudiomiro/TASK5/TODO.md');
-      expect(promptArg).toContain('PHASE: IMPLEMENTATION PLANNING');
+      expect(promptArg).toContain('## Your Task');
     });
 
     it('should verify all critical rules are present in prompt', async () => {
@@ -280,12 +281,11 @@ describe('step2', () => {
 
       const promptArg = executeClaude.mock.calls[0][0];
       const criticalRules = [
-        'DO NOT create any git commits',
-        'DO NOT run git add, git commit, or git push',
-        'First line MUST be: "Fully implemented: NO"',
-        'Create 5-10 actionable items MAX',
-        'Group related changes together',
-        'Only include what Claude can do'
+        'Do NOT run any git commands',
+        'First line of',
+        'MUST be: `Fully implemented: NO`',
+        'Only add actions an AI agent can perform',
+        'quality over quantity'
       ];
 
       criticalRules.forEach(rule => {
@@ -300,13 +300,14 @@ describe('step2', () => {
       const structureElements = [
         'Fully implemented: NO',
         '## Implementation Plan',
-        '- [ ] **Item 1**',
-        'Files:',
+        '- [ ] **Item X',
+        'Context (read-only)',
+        'Touched (will modify/create)',
         'Tests:',
         '## Verification',
-        '- [ ] All tests pass',
-        '- [ ] Code builds without errors',
-        '- [ ] Feature works as expected'
+        '- [ ] All automated tests pass',
+        '- [ ] Code builds cleanly',
+        '- [ ] Feature meets **Acceptance Criteria**'
       ];
 
       structureElements.forEach(element => {
@@ -320,10 +321,10 @@ describe('step2', () => {
       const promptArg = executeClaude.mock.calls[0][0];
       const instructions = [
         'Read',
-        'Identify the 5-10 main implementation steps',
-        'Group related work',
+        'Identify implementation steps',
+        'Group work by',
         'Write',
-        'Use context7 if needed'
+        'codebase knowledge source'
       ];
 
       instructions.forEach(instruction => {

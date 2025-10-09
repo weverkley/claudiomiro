@@ -9,29 +9,32 @@ const step2 = (task) => {
     return executeClaude(`
 ## Your Task
 
-1. Read ${folder('PROMPT.md')} and ${folder('TASK.md')}
-2. Read previous TODO.md files (${state.claudiomiroFolder}) **only for related modules** to ensure consistency and avoid duplication.  
-   Do **not** reimplement previous work or modify their scope.
-3. Think about the integration of this task with the other tasks (previous and next).
-4. Identify all implementation steps, and analyze the codebase to locate related files, functions, and data structures.  
-   Capture dependencies, references, and side effects required for a complete implementation.
-5. Group related work (don't split "create function" and "test function" into separate items)
-6. Write ${folder('TODO.md')} following the structure above
-7. Use context7 if needed to understand current codebase patterns
+1) Read ${folder('PROMPT.md')} and ${folder('TASK.md')}.
+2) Read previous TODO.md files under ${state.claudiomiroFolder} **only for directly related modules** to ensure consistency and avoid duplication.
+   - Do NOT reimplement prior work, change their scope, or alter their acceptance criteria.
+3) Map how this task integrates with adjacent tasks (previous and next): inputs, outputs, contracts, and sequencing.
+4) Identify implementation steps and locate all relevant code artifacts (files, functions, types, schemas). Capture dependencies, references, and side effects required for a complete delivery.
+5) Group work by **feature unit** (implementation + tests together). Do not split “create function” and “test function” into separate items.
+6) Write ${folder('TODO.md')} using the agreed structure:
+   - Use **Context (read-only)** vs **Touched (will modify/create)** sections per item.
+   - Include Interfaces/Contracts, Tests, Migrations/Data, Observability, Security & Permissions, Performance, Commands, Risks & Mitigations.
+7) Use the codebase knowledge source **<rename “context7” to the actual provider>** if additional patterns are needed (coding style, error handling, tracing).
+8) Any gap or ambiguity → add a **Follow-ups** section at the end (do not silently change scope).
 
-**IMPORTANT**: Quality over quantity. 5 well-defined items > 20 tiny items.
+**IMPORTANT: quality over quantity.** Prefer 3–6 well-defined items over many tiny steps.
 
-## Testing Guideline:
-**Focus:** Complete functional delivery over verbose testing.  
-Tests must exist only to confirm the correctness of the implemented behavior — not to dominate the plan (unless the task is to build tests)
+## Testing Guideline
 
-RULES:
-- First line MUST be: "Fully implemented: NO"
-- Only add actions that an ai agent can do
-- DO NOT run git commands
-- You can work across multiple repositories and directories simultaneously. Files in different repositories are NOT a blocker.
-- If repositories support tests you MUST CREATE THEM if not they should be hypothetical.
+**Focus:** Prove correctness of implemented behavior with the minimum effective set of tests.
 
+Rules:
+- First line of ${folder('TODO.md')} MUST be: \`Fully implemented: NO\`
+- Only add actions an AI agent can perform deterministically and idempotently.
+- Do NOT run any git commands.
+- Cross-repository work is allowed; different repositories are NOT blockers.
+- If the repository supports tests, you MUST create them (unit/integration/e2e as appropriate).
+- If tests are not supported, specify **hypothetical test cases** and expected assertions.
+- Prefer fast, deterministic tests with clear arrange/act/assert and seed data where needed.
 ---
 
 ## TODO.md Structure
@@ -41,20 +44,49 @@ Fully implemented: NO
 
 ## Implementation Plan
 
-- [ ] **Item 1**: [Consolidated action - what to build + tests]
-  - Files: [list files to have in context]
-  - Tests: [describe what to test and why, only if applicable]
+- [ ] **Item X — [Consolidated action]**
+  - **Context (read-only):** [files/dirs/docs to read]
+  - **Touched (will modify/create):** [files/modules]
+  - **Interfaces / Contracts:** [APIs/events/schemas/types]
+  - **Tests:** [type + key scenarios/edge cases]
+  - **Migrations / Data:** [DDL/backfill/ordering]
+  - **Observability:** [logs/metrics/traces/alerts]
+  - **Security & Permissions:** [authN/Z, PII, rate limits]
+  - **Performance:** [targets/limits/complexity]
+  - **Commands:** [local/CI commands to run]
+  - **Risks & Mitigations:** [risk → mitigation]
 
-- [ ] **Item 2**: [Next consolidated action]
-  - Files: [list files to have in context]
-  - Tests: [test objective, concise]
+- [ ] **Item X — [Consolidated action]**
+  - **Context (read-only):** [files/dirs/docs to read]
+  - **Touched (will modify/create):** [files/modules]
+  - **Interfaces / Contracts:** [APIs/events/schemas/types]
+  - **Tests:** [type + key scenarios/edge cases]
+  - **Migrations / Data:** [DDL/backfill/ordering]
+  - **Observability:** [logs/metrics/traces/alerts]
+  - **Security & Permissions:** [authN/Z, PII, rate limits]
+  - **Performance:** [targets/limits/complexity]
+  - **Commands:** [local/CI commands to run]
+  - **Risks & Mitigations:** [risk → mitigation]
 
 [...]
 
-## Verification
-- [ ] All tests pass
-- [ ] Code builds without errors
-- [ ] Feature works as expected
+## Verification (global)
+- [ ] All automated tests pass (unit/integration/e2e)
+- [ ] Code builds cleanly (local + CI)
+- [ ] Manual QA script executed and green (steps + expected results)
+- [ ] Feature meets **Acceptance Criteria**
+- [ ] Dashboards/alerts configured and healthy
+- [ ] Rollout/rollback path validated (flag/canary)
+- [ ] Documentation updated (README/ADR/changelog)
+
+## Acceptance Criteria
+- [ ] [Measurable criterion #1]
+- [ ] [Measurable criterion #2]
+- [ ] [Measurable criterion #3]
+
+## Impact Analysis
+- **Directly impacted:** [files/modules/functions]
+- **Indirectly impacted:** [consumers/contracts/jobs/caches/infra]
 \`\`\`
 
 `, task);

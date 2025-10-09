@@ -67,8 +67,8 @@ describe('step3', () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('DO NOT create git commits');
-      expect(promptArg).toContain('DO NOT run git add, git commit, or git push commands');
+      expect(promptArg).toContain('Never run git add/commit/push');
+      expect(promptArg).toContain('RULES');
     });
 
     it('should include PHASE identifier in prompt', async () => {
@@ -83,7 +83,7 @@ describe('step3', () => {
 
       const promptArg = executeClaude.mock.calls[0][0];
       expect(promptArg).toContain('Fully implemented: YES');
-      expect(promptArg).toContain('Fully implemented: NO');
+      expect(promptArg).toContain('"Fully implemented: YES" or "NO"');
     });
 
     it('should return the promise from executeClaude', async () => {
@@ -211,78 +211,68 @@ describe('step3', () => {
   });
 
   describe('Prompt content completeness', () => {
-    it('should include OPERATING LOOP section in prompt', async () => {
+    it('should include LOOP section in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### OPERATING LOOP');
-      expect(promptArg).toContain('Identify all uncompleted items');
-      expect(promptArg).toContain('Apply **BLOCKED POLICY**');
+      expect(promptArg).toContain('LOOP:');
+      expect(promptArg).toContain('Read');
+      expect(promptArg).toContain('BLOCKED');
     });
 
-    it('should include TEST STRATEGY section in prompt', async () => {
+    it('should include TESTS section in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### TEST STRATEGY');
-      expect(promptArg).toContain('Run only relevant tests');
-      expect(promptArg).toContain('DO NOT run full-project checks');
+      expect(promptArg).toContain('TESTS:');
+      expect(promptArg).toContain('Run only affected tests');
+      expect(promptArg).toContain('Never run full-project checks');
     });
 
-    it('should include BLOCKED POLICY section in prompt', async () => {
+    it('should include BLOCKED policy in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### BLOCKED POLICY');
-      expect(promptArg).toContain('BLOCKED:');
+      expect(promptArg).toContain('Only mark BLOCKED if external/manual dependency');
     });
 
-    it('should include TEST FAILURE POLICY section in prompt', async () => {
+    it('should include FAILURES section in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### TEST FAILURE POLICY');
-      expect(promptArg).toContain('Identify module and cause');
+      expect(promptArg).toContain('FAILURES:');
+      expect(promptArg).toContain('FAILED: test');
     });
 
-    it('should include EXIT CONDITION section in prompt', async () => {
+    it('should include exit condition in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### EXIT CONDITION');
-      expect(promptArg).toContain('Exit when all items are');
+      expect(promptArg).toContain('Stop only when all items are [X] or BLOCKED/FAILED');
     });
 
     it('should include STOP-DIFF section in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### STOP-DIFF');
-      expect(promptArg).toContain('Never rename TODO items');
+      expect(promptArg).toContain('STOP-DIFF:');
+      expect(promptArg).toContain('Do not rename TODO items');
     });
 
-    it('should include CHANGE ATOMICITY section in prompt', async () => {
+    it('should include STATE section in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### CHANGE ATOMICITY');
-      expect(promptArg).toContain('atomic change');
+      expect(promptArg).toContain('STATE:');
+      expect(promptArg).toContain('Persist updates');
     });
 
-    it('should include MCP USAGE section in prompt', async () => {
+    it('should include MCP section in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### MCP USAGE');
-      expect(promptArg).toContain('external tools');
-    });
-
-    it('should include STATE PERSISTENCE section in prompt', async () => {
-      await step3('TASK1');
-
-      const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### STATE PERSISTENCE');
-      expect(promptArg).toContain('Persist updated');
+      expect(promptArg).toContain('MCP:');
+      expect(promptArg).toContain('Use MCPs only for analysis/testing');
     });
 
     it('should include objective about implementing actionable items', async () => {
@@ -290,16 +280,16 @@ describe('step3', () => {
 
       const promptArg = executeClaude.mock.calls[0][0];
       expect(promptArg).toContain('OBJECTIVE');
-      expect(promptArg).toContain('Implement all actionable items');
-      expect(promptArg).toContain('Remove all blockers');
+      expect(promptArg).toContain('Execute all actionable items');
+      expect(promptArg).toContain('BLOCKED/FAILED');
     });
 
     it('should include critical git safety rules', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('CRITICAL RULES');
-      expect(promptArg).toContain('commits happen only in the final step');
+      expect(promptArg).toContain('RULES');
+      expect(promptArg).toContain('Never run git add/commit/push');
     });
   });
 });

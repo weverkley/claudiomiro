@@ -4,7 +4,7 @@ const os = require('os');
 const { spawn } = require('child_process');
 const logger = require('../../logger');
 const state = require('../config/state');
-const { processClaudeMessage } = require('./claude-logger');
+const { processDeepSeekMessage } = require('./deep-seek-logger');
 const { ParallelStateManager } = require('./parallel-state-manager');
 
 const overwriteBlock = (lines) => {
@@ -18,23 +18,28 @@ const overwriteBlock = (lines) => {
     process.stdout.write(`\x1b[${lines}A`);
   }
 
-const runClaude = (text, taskName = null) => {
+const runDeepSeek = (text, taskName = null) => {
     return new Promise((resolve, reject) => {
         const stateManager = taskName ? ParallelStateManager.getInstance() : null;
         const suppressStreamingLogs = Boolean(taskName) && stateManager && typeof stateManager.isUIRendererActive === 'function' && stateManager.isUIRendererActive();
+
+        if(!text){
+            throw new Error('no prompt');
+        }
+
         // Create temporary file for the prompt
-        const tmpFile = path.join(os.tmpdir(), `claudiomiro-prompt-${Date.now()}.txt`);
+        const tmpFile = path.join(os.tmpdir(), `claudiomiro-codex-${Date.now()}.txt`);
         fs.writeFileSync(tmpFile, text, 'utf-8');
 
         // Use sh to execute command with cat substitution
-        const command = `claude --dangerously-skip-permissions -p "$(cat '${tmpFile}')" --output-format stream-json --verbose`;
+        const command = `deepseek --dangerously-skip-permissions -p "$(cat '${tmpFile}')" --output-format stream-json --verbose`;
 
         logger.stopSpinner();
-        logger.command(`claude --dangerously-skip-permissions ...`);
+        logger.command(command);
         logger.separator();
         logger.newline();
 
-        const claude = spawn('sh', ['-c', command], {
+        const deepSeek = spawn('sh', ['-c', command], {
             cwd: state.folder,
             stdio: ['ignore', 'pipe', 'pipe']
         });
@@ -45,7 +50,7 @@ const runClaude = (text, taskName = null) => {
         // Log separator with timestamp
         const timestamp = new Date().toISOString();
         logStream.write(`\n\n${'='.repeat(80)}\n`);
-        logStream.write(`[${timestamp}] Claude execution started\n`);
+        logStream.write(`[${timestamp}] DeepSeek execution started\n`);
         logStream.write(`${'='.repeat(80)}\n\n`);
 
         let buffer = '';
@@ -53,7 +58,7 @@ const runClaude = (text, taskName = null) => {
         let overwriteBlockLines = 0;
 
         // Captura stdout e processa JSON streaming
-        claude.stdout.on('data', (data) => {
+        deepSeek.stdout.on('data', (data) => {
             const output = data.toString();
             // Adiciona ao buffer
             buffer += output;
@@ -79,7 +84,7 @@ const runClaude = (text, taskName = null) => {
                 }
 
                 // Imprime cabeçalho
-                console.log(`💬 Claude:`);
+                console.log(`💬 DeepSeek:`);
                 lineCount++;
 
                 // Processa e imprime o texto linha por linha
@@ -102,10 +107,10 @@ const runClaude = (text, taskName = null) => {
             }
 
             for (const line of lines) {
-                const text = processClaudeMessage(line);
+                const text = processDeepSeekMessage(line);
                 if(text){
                     log(text);
-                    // Update state manager with Claude message if taskName provided
+                    // Update state manager with DeepSeek message if taskName provided
                     if (stateManager && taskName) {
                         stateManager.updateClaudeMessage(taskName, text);
                     }
@@ -117,14 +122,14 @@ const runClaude = (text, taskName = null) => {
         });
 
         // Captura stderr
-        claude.stderr.on('data', (data) => {
+        deepSeek.stderr.on('data', (data) => {
             const output = data.toString();
             // process.stderr.write(output);
             logStream.write('[STDERR] ' + output);
         });
 
         // Quando o processo terminar
-        claude.on('close', (code) => {
+        deepSeek.on('close', (code) => {
             // Clean up temporary file
             try {
                 if (fs.existsSync(tmpFile)) {
@@ -137,7 +142,7 @@ const runClaude = (text, taskName = null) => {
             logger.newline();
             logger.newline();
             
-            logStream.write(`\n\n[${new Date().toISOString()}] Claude execution completed with code ${code}\n`);
+            logStream.write(`\n\n[${new Date().toISOString()}] DeepSeek execution completed with code ${code}\n`);
             logStream.end();
 
 
@@ -145,16 +150,16 @@ const runClaude = (text, taskName = null) => {
             logger.separator();
 
             if (code !== 0) {
-                logger.error(`Claude exited with code ${code}`);
-                reject(new Error(`Claude exited with code ${code}`));
+                logger.error(`DeepSeek exited with code ${code}`);
+                reject(new Error(`DeepSeek exited with code ${code}`));
             } else {
-                logger.success('Claude execution completed');
+                logger.success('DeepSeek execution completed');
                 resolve();
             }
         });
 
         // Tratamento de erro
-        claude.on('error', (error) => {
+        deepSeek.on('error', (error) => {
             // Clean up temporary file on error
             try {
                 if (fs.existsSync(tmpFile)) {
@@ -166,24 +171,19 @@ const runClaude = (text, taskName = null) => {
 
             logStream.write(`\n\nERROR: ${error.message}\n`);
             logStream.end();
-            logger.error(`Failed to execute Claude: ${error.message}`);
+            logger.error(`Failed to execute DeepSeek: ${error.message}`);
             reject(error);
         });
     });
 };
 
-const executeClaude = (text, taskName = null) => {
+const executeDeepSeek = (text, taskName = null) => {
     if (state.executorType === 'codex') {
         const { executeCodex } = require('./codex-executor');
         return executeCodex(text, taskName);
     }
 
-    if (state.executorType === 'deep-seek') {
-        const { executeDeepSeek } = require('./deep-seek-executor');
-        return executeDeepSeek(text, taskName);
-    }
-
-    return runClaude(text, taskName);
+    return runDeepSeek(text, taskName);
 };
 
-module.exports = { executeClaude };
+module.exports = { executeDeepSeek };

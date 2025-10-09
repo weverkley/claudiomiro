@@ -103,7 +103,7 @@ class ParallelUIRenderer {
       line += `: ${step}`;
     }
     if (message) {
-      line += ` - Claude: ${message}`;
+      line += ` - ${message}`;
     }
 
     return colorFn(line);

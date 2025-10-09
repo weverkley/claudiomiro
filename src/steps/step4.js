@@ -42,6 +42,16 @@ const step4 = (task) => {
       - **Side effects:** Could this break other parts of the system (e.g. shared state, wrong imports, bad mutations)?
       - **Testing adequacy:** Do the tests or validations actually prove the code works (not just exist)?
 
+      ### 🧭 Frontend ↔ Backend Route Consistency
+      If the system has both front-end and back-end implementations:
+      - **Endpoint alignment:** Verify that every API route used in the front-end corresponds exactly to a defined backend route (no typos, casing mismatches, or outdated paths).
+      - **Payload symmetry:** Ensure request and response structures match expectations — identical field names, data types, and status codes.
+      - **Error propagation:** Confirm that backend error responses are properly handled and displayed on the front-end.
+      - **Versioning and namespaces:** Check if both layers are referencing the same API version and consistent base paths.
+      - **Cross-environment coherence:** Validate that dev/staging/prod configurations point to the same route schema.
+
+      ---
+
       For each issue, describe *why* it matters in practice.  
       Ignore cosmetic differences or alternate ways to achieve the same result.
 
@@ -53,6 +63,7 @@ const step4 = (task) => {
       
       - Example:  
         \`npm test ./<changed-folder>\`  
+        \`npm test -- --testPathPattern="example"\`
         \`eslint ./<changed-folder>\`  
         \`tsc --noEmit ./<changed-folder>/index.ts\`
       

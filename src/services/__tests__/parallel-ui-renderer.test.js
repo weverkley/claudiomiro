@@ -129,7 +129,7 @@ describe('ParallelUIRenderer', () => {
       const plainLine = line.replace(/\x1b\[[0-9;]*m/g, '');
       expect(plainLine).toContain('Task1');
       expect(plainLine).toContain('2/5');
-      expect(plainLine).toContain('Claude: Processing files');
+      expect(plainLine).toContain('Processing files');
     });
 
     test('should render task line with only status', () => {

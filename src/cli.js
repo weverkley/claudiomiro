@@ -57,13 +57,18 @@ const chooseAction = async (i) => {
     // Verifica se --codex ou --claude foi passado
     const codexFlag = process.argv.includes('--codex');
     const claudeFlag = process.argv.includes('--claude');
+    const deepSeekFlag = process.argv.includes('--deep-seek');
 
-    if (codexFlag && claudeFlag) {
-        logger.error('Use only one executor flag: --claude or --codex');
-        process.exit(1);
+    let executorType = 'claude';
+
+    if(codexFlag){
+        executorType = 'codex'
     }
 
-    const executorType = codexFlag ? 'codex' : 'claude';
+    if(deepSeekFlag){
+        executorType = 'deep-seek'
+    }
+
     state.setExecutorType(executorType);
 
     // Verifica se --steps= ou --step= foi passado (quais steps executar)
@@ -95,7 +100,8 @@ const chooseAction = async (i) => {
         !arg.startsWith('--limit=') &&
         !arg.startsWith('--mode') &&
         arg !== '--codex' &&
-        arg !== '--claude'
+        arg !== '--claude' &&
+        arg !== '--deep-seek'
     );
     const folderArg = args[0] || process.cwd();
 
@@ -110,7 +116,7 @@ const chooseAction = async (i) => {
     logger.path(`Working directory: ${state.folder}`);
     logger.newline();
 
-    logger.info(`Executor selected: ${executorType === 'codex' ? 'Codex' : 'Claude'}`);
+    logger.info(`Executor selected: ${executorType}`);
     logger.newline();
 
     // Mostra quais steps serão executados se --steps foi especificado
@@ -143,28 +149,6 @@ const chooseAction = async (i) => {
     if (tasks.length === 0) {
         logger.error('No tasks found in claudiomiro folder');
         process.exit(1);
-    }
-
-    // STEP 1: Analisar dependências (adiciona @dependencies em cada TASK.md)
-    const allHavePrompt = tasks.every(task =>
-        fs.existsSync(path.join(state.claudiomiroFolder, task, 'PROMPT.md'))
-    );
-
-    const noneHaveDependencies = tasks.every(task => {
-        const taskMdPath = path.join(state.claudiomiroFolder, task, 'TASK.md');
-        if (!fs.existsSync(taskMdPath)) return true;
-        const content = fs.readFileSync(taskMdPath, 'utf-8');
-        return !content.match(/@dependencies/);
-    });
-
-    // Se todas têm PROMPT.md mas nenhuma tem @dependencies, roda step1
-    if (allHavePrompt && noneHaveDependencies && tasks.length > 0) {
-        if (!shouldRunStep(1)) {
-            logger.info('Step 1 skipped (not in --steps list)');
-            return { done: true };
-        }
-        logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
-        return { step: step1(mode) };
     }
 
     // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
@@ -205,16 +189,16 @@ const chooseAction = async (i) => {
         return { done: true };
     }
 
-    if (!taskGraph) {
-        if (!shouldRunStep(1)) {
-            logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
-            process.exit(1);
-        }
+    // if (!taskGraph) {
+    //     if (!shouldRunStep(1)) {
+    //         logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
+    //         process.exit(1);
+    //     }
 
-        logger.newline();
-        logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
-        return { step: step1(mode) };
-    }
+    //     logger.newline();
+    //     logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
+    //     return { step: step1(mode) };
+    // }
 }
 
 /**
@@ -248,25 +232,41 @@ const buildTaskGraph = () => {
             // Task sem TASK.md ainda, não pode construir grafo
             return null;
         }
-
         const taskMd = fs.readFileSync(taskMdPath, 'utf-8');
 
-        // Parse @dependencies do arquivo (primeira linha)
-        // Formato: @dependencies [TASK1, TASK2] ou @dependencies []
-        const depsMatch = taskMd.match(/@dependencies\s*\[(.*?)\]/);
-
+        // Find the first @dependencies line anywhere in the file.
+        // Matches either:
+        //   @dependencies [TASK1, TASK2, TASK3]
+        // or
+        //   @dependencies TASK1, TASK2, TASK3
+        const depsMatch = taskMd.match(
+          /^\s*@dependencies\s*(?:\[(.*?)\]|(.+))\s*$/mi
+        );
+        
         if (!depsMatch) {
-            // Se alguma task não tem @dependencies, grafo incompleto
-            return null;
+          // No @dependencies line → incomplete graph
+          return null;
         }
-
+        
         hasAnyDependencyTag = true;
+        
+        // Prefer the content inside [...] if present (group 1), otherwise the free-form tail (group 2)
+        const raw = (depsMatch[1] ?? depsMatch[2] ?? '').trim();
+        
+        // Allow empty: "@dependencies []" or "@dependencies" (if you want to permit it)
+        const deps = raw
+          ? raw.split(',').filter( s => (s || '').toLowerCase() != 'none').map(s => s.trim()).filter(Boolean)
+          : [];
 
-        const deps = depsMatch[1].split(',').map(d => d.trim()).filter(Boolean);
-
+        //   console.log(task, deps);
+        //   process.exit(1);
+        
+        // Optional: dedupe and prevent self-dependency
+        const uniqueDeps = Array.from(new Set(deps)).filter(d => d !== task);
+        
         graph[task] = {
-            deps,
-            status: isTaskApproved(task) ? 'completed' : 'pending'
+          deps: uniqueDeps,
+          status: isTaskApproved(task) ? 'completed' : 'pending',
         };
     }
 
