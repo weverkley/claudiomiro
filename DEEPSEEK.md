@@ -23,26 +23,10 @@ Run the following command to create the wrapper script:
 
 ```bash
 cat >/opt/homebrew/bin/deepseek <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic" ANTHROPIC_AUTH_TOKEN="YOUR-DEEPSEEK-API-KEY" API_TIMEOUT_MS=600000 ANTHROPIC_MODEL=deepseek-chat ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 claude "$@"
 
-# Localiza o binário 'claude'
-CLAUDE_BIN="$(which claude || true)"
 
-# Verifica se o binário foi encontrado
-if [[ -z "$CLAUDE_BIN" ]]; then
-    echo "Erro: 'claude' not found in PATH." >&2
-    exit 1
-fi
-
-# Executa o 'claude' com variáveis apenas neste processo
-ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic" \
-ANTHROPIC_AUTH_TOKEN="YOUR-DEEPSEEK-API-KEY" \
-API_TIMEOUT_MS=600000 \
-ANTHROPIC_MODEL="deepseek-chat" \
-ANTHROPIC_SMALL_FAST_MODEL="deepseek-chat" \
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
-exec "$CLAUDE_BIN" "$@"
 EOF
 
 chmod +x /opt/homebrew/bin/deepseek
