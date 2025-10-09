@@ -132,28 +132,21 @@ const getAutoModePrompt = (branchStep, stepNumber, task) => `
         - **Blocks:** [tasks waiting for this]
         - **Parallel with:** [sibling tasks]
 
-        ## Files Affected
-        **CREATE:**
-        - path/to/module.ext
-        - path/to/module_test.ext
-
-        **MODIFY:**
-        - path/to/existing.ext (add function X)
-
-        **NOTE:** Files can be in different repositories or directories - this is supported and NOT a blocker.
-
         ## Steps
         1. [Action]
         2. [Action]
         3. [Action]
+
+        ## Acceptance Criteria
+        - [ ] [Objective and testable criterion 1]
+        - [ ] [Objective and testable criterion 2]
+        - [ ] [Objective and testable criterion 3]
 
         ## Done When
         - [ ] [Testable criterion]
         - [ ] [Testable criterion]
         - [ ] Runs independently (if no deps)
 
-        ## Verify
-        [test command] → [expected output]
         \`\`\`
 
         ### C) ${state.claudiomiroFolder}/TASKX/PROMPT.md
@@ -410,16 +403,6 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         - **Blocks:** [tasks waiting for this]
         - **Parallel with:** [sibling tasks]
 
-        ## Files Affected
-        **CREATE:**
-        - path/to/module.ext
-        - path/to/module_test.ext
-
-        **MODIFY:**
-        - path/to/existing.ext (add function X, line ~Y)
-
-        **NOTE:** Files can be in different repositories or directories - this is supported and NOT a blocker.
-
         ## Steps to Implement
         1. [Step-by-step breakdown]
         2. [...]
@@ -451,13 +434,6 @@ const getHardModePrompt = (branchStep, stepNumber, task) => `
         1. Stop
         2. Save state in ${state.claudiomiroFolder}/BLOCKED.md
         3. Add entry: reason, attempted fix, next suggestion
-
-        ## Verify
-        \`\`\`bash
-        [test command]
-        \`\`\`
-        → Expected output: [describe expected result]
-        \`\`\`
 
         ### C) ${state.claudiomiroFolder}/TASKX/PROMPT.md
         \`\`\`markdown

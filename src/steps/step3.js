@@ -12,109 +12,52 @@ const step3 = (task) => {
 
     return executeClaude(`PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 
-CRITICAL RULES:
-- DO NOT create git commits (commits happen only in the final step)
-- DO NOT run git add, git commit, or git push commands
-- First line of ${folder('TODO.md')} MUST BE "Fully implemented: YES" or "Fully implemented: NO"
-- **MULTI-REPOSITORY SUPPORT:** You can work across multiple repositories and directories simultaneously. Files being in different repositories is NOT a valid reason to block a task.
-- Do NOT mark items as BLOCKED just because files are in different repositories.
+      RULES:
+      - Never run git add/commit/push.
+      - ${folder('TODO.md')} must exist and start with "Fully implemented: YES" or "NO".
+      - Multi-repo tasks are allowed.
+      - Only mark BLOCKED if external/manual dependency.
+      
+---
+
+OBJECTIVE:
+Execute all actionable items in ${folder('TODO.md')} in parallel when possible.  
+Stop only when all items are [X] or BLOCKED/FAILED and the first line is "Fully implemented: YES".
 
 ---
 
-### INIT PHASE
-1. Verify that ${folder('TODO.md')} exists and is readable.
-2. Validate first line syntax ("Fully implemented: YES" or "Fully implemented: NO").
-3. If malformed or missing → halt execution and log ERROR.
-
----
-
-### OBJECTIVE
-- Remove all blockers or manual tasks that Claude cannot perform.
-- Implement all actionable items in ${folder('TODO.md')} (in parallel if possible).
-
----
-
-### OPERATING LOOP
+LOOP:
 1. Read ${folder('TODO.md')}.
-   - Evaluate completion of all items.
-   - Update "Fully implemented:" to **YES** if all items completed and passed tests, otherwise **NO**.
+2. If malformed or unreadable → ERROR.
+3. For each unchecked item:
+   a. Skip if "BLOCKED:" → log reason.
+   b. Try execution.
+   c. If success → mark [X].
+   d. If fail → add "FAILED: <reason>".
+4. After all processed:
+   - Run targeted tests ONLY on modified paths (unit, lint, type) 
+      - NEVER run full-project.
+   - If all pass → set "Fully implemented: YES".
+   - Else → revert to "NO" and reopen failed items.
 
-2. Identify all uncompleted items.
-   - Handle sequentially until reaching time/resource limits, prioritizing accuracy.
+TESTS:
+- Run only affected tests/linters/typechecks.
+- If no tests exist → run static analysis only.
+- Never run full-project checks.
 
-3. Apply **BLOCKED POLICY**:
-   - If "BLOCKED:" found → log reason, skip execution.
+FAILURES:
+- On test failure → add "FAILED: test <module>" and retry loop.
+- On logic/build failure → revert file and log "ROLLBACK: <reason>".
 
-4. For each executable item:
-   - Perform required work.
-   - If successful → mark as \`[X]\`.
-   - If failed → add \`FAILED: <cause>\`.
+STOP-DIFF:
+- Do not rename TODO items or unrelated files.
+- Keep diffs minimal and atomic.
 
-5. Once all items are marked \`[X]\`:
-   - Run **TEST STRATEGY**.
-   - If all tests pass → confirm \`"Fully implemented: YES"\`.  
-     Else revert to \`"NO"\` and document failures.
+STATE:
+- Persist updates to ${folder('TODO.md')} and logs after each loop.
 
----
-
-### TEST STRATEGY
-- Test affected modules and their direct dependents.
-- If no tests found → perform static type/syntax checks.
-- Run only relevant tests/linters/typechecks for modified paths:
-  - e.g. \`npm test ./folder-example\`, \`eslint ./folder-example\`, \`tsc --noEmit ./folder-example/index.ts\`
-- DO NOT run full-project checks (done in final phase).
-- Follow **TEST FAILURE POLICY**.
-
----
-
-### TEST FAILURE POLICY
-- If any test fails:
-  - Identify module and cause.
-  - Reopen related TODO item.
-  - Add "FAILED: test failure in <module>".
-  - Return to step 2.
-
----
-
-### BLOCKED POLICY
-- Items with "BLOCKED:" → skip execution, keep unchecked, log reason.
-- Only mark BLOCKED if human/manual or external dependency required.
-
----
-
-### STOP-DIFF
-- Never rename TODO items or modify unrelated files.
-- Never reformat or rewrite entire files; restrict diffs to minimal scope.
-- Never change contract files unless explicitly allowed by BREAKING node.
-
----
-
-### CHANGE ATOMICITY
-- Each item represents one atomic change.
-- Merge only logically dependent consecutive items.
-
----
-
-### FAILURE RECOVERY
-- If any operation causes unresolvable build or logic failure:
-   - Revert file to last known good state.
-   - Add "ROLLBACK: <reason>" under the failed item.
-
----
-
-### STATE PERSISTENCE
-- Persist updated ${folder('TODO.md')} and logs before restarting loop.
-
----
-
-### MCP USAGE
-- You MAY use external tools (MCPs) for static analysis, testing, or diffing.
-- Never use MCPs to modify TODO.md or unrelated files.
-
----
-
-### EXIT CONDITION
-- Exit when all items are \`[X]\` or BLOCKED/FAILED, and "Fully implemented: YES" is confirmed.
+MCP:
+- Use MCPs only for analysis/testing, never for file modification.
     `, task);
 }
 

@@ -15,44 +15,63 @@ const step4 = (task) => {
     }
 
     return executeClaude(`
-      You are a **fast code reviewer** focused on catching critical issues.
+      You are a **functional code reviewer** — your job is to think like a developer verifying whether the code truly works as intended.
 
-      CRITICAL RULES:
-      - DO NOT create any git commits (commits happen only in the final step)
-      - DO NOT run git add, git commit, or git push commands
+      Review:
+      - ${folder('PROMPT.md')} → what was requested
+      - ${folder('TODO.md')} → what was implemented
 
-      Review these files:
-      - ${folder('PROMPT.md')} — what was requested
-      - ${folder('TODO.md')} — what was done
+      ---
 
-      ## Quick Checklist (90 seconds max)
+      ## 🧠 Review Mindset
 
-      ✅ **Requirements**: Does TODO.md match PROMPT.md scope? Any missing features?
-      ✅ **Critical bugs**: Any obvious errors, regressions, or missing error handling?
-      ✅ **Tests**: Are acceptance criteria actually tested?
+      You are not a style critic. You are an **engineer checking logic, behavior, and completeness**.  
+      Ask yourself:  
+      > “If I ran this code, would it actually produce the expected results without errors or missing pieces?”
 
-      **Skip** deep architecture analysis, performance optimization, and philosophy.
+      Your mission is to **catch anything that breaks, misbehaves, or doesn’t fulfill the goal** — and **ignore** visual polish, naming preferences, or theoretical redesigns.
 
-      ### Testing & Checks Policy
+      ---
 
-      - Run ONLY the unit tests, linters, and typecheckers that cover the files touched by this task (e.g. \`npm test ./pasta-revisando\`, \`eslint ./pasta-revisando\`, \`tsc --noEmit ./pasta-revisando/index.ts\`).
-      - DO NOT trigger full-project commands like \`npm test\`, \`npm run lint\`, \`tsc --noEmit\`, etc. — the final quality gate runs the full suite.
-      - If targeted commands are missing, note that explicitly as a blocker.
+      ## 🔍 Deep Functional Analysis
+
+      Critically inspect the implementation:
+      - **Feature completeness:** Does it cover *every required behavior* in \`${folder('PROMPT.md')} \`? Are any important branches, cases, or integrations missing?
+      - **Logical consistency:** Does the flow make sense? Are variables, conditions, and data paths coherent and reachable?
+      - **Error & edge handling:** Will it fail gracefully for invalid inputs or empty states? Any unhandled promise, null, or exception risk?
+      - **Side effects:** Could this break other parts of the system (e.g. shared state, wrong imports, bad mutations)?
+      - **Testing adequacy:** Do the tests or validations actually prove the code works (not just exist)?
+
+      For each issue, describe *why* it matters in practice.  
+      Ignore cosmetic differences or alternate ways to achieve the same result.
+
+      ---
+
+      ## 🧪 Targeted Testing Policy
+
+      Run **only tests and checks related to the files that were modified by this task.**
+      
+      - Example:  
+        \`npm test ./<changed-folder>\`  
+        \`eslint ./<changed-folder>\`  
+        \`tsc --noEmit ./<changed-folder>/index.ts\`
+      
+      - Do **not** run full-project commands like \`npm test\`, \`npm run lint\`, or \`tsc --noEmit\`.  
+        Those will execute in a separate global verification stage.
+      
+      - If no local test command exists for the modified files, note it as a **QA gap**, but do not block approval unless functionality cannot be verified.
+        
+      ---
 
       ## Decision
 
       If everything looks **functionally correct**:
       - Confirm first line of \`${folder('TODO.md')}\` is: \`Fully implemented: YES\`
       - Add in the second line of \`${folder('TODO.md')}\`: "Code review passed"
-      - Create \`${folder('CODE_REVIEW.md')}\`:
+      - Create a small \`${folder('CODE_REVIEW.md')}\` file:
         \`\`\`markdown
-        # Code Review
-
         ## Status
         ✅ APPROVED
-
-        ## Summary
-        Requirements met, no critical issues found.
 
         ## Checks
         - ✅ Requirements match scope
@@ -61,26 +80,13 @@ const step4 = (task) => {
         \`\`\`
 
       If **problems found**:
-      - Update \`${folder('TODO.md')}\` ADDING IN Implementation Plan the specific fixes needed
+      - Update \`${folder('TODO.md')}\` ADDING a complete implementation plan the specific fixes needed
       - Set first line of \`${folder('TODO.md')}\` to: \`Fully implemented: NO\`
-      - Add in the second line of \`${folder('TODO.md')}\`: "Why code review failed: "
-      - Create \`${folder('CODE_REVIEW.md')}\`:
-        \`\`\`markdown
-        # Code Review
-
-        ## Status
-        ❌ NEEDS WORK
-
-        ## Issues Found
-        - [Specific problem with fix suggestion]
-        - [Specific problem with fix suggestion]
-
-        ## Action Required
-        Review updated TODO.md for corrections.
-        \`\`\`
+      - Add in the second line of \`${folder('TODO.md')}\`: "Why code review failed: " and explain shortly.
 
       **Be pragmatic**: If it works and meets requirements, approve it quickly.
-      Focus only on blockers, not style preferences.
+
+      Focus only on blockers and bugs, not style preferences.
     `, task);
 }
 
