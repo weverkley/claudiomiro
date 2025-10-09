@@ -10,7 +10,7 @@ Turn days of complex development into a fully automated process — without sacr
 **Works With:**
 - ✅ Claude Code
 - ✅ ChatGPT Codex
-- ✅ DeepSeek [“How to”](./DEEPSEEK.md)
+- ✅ DeepSeek [(How to)](./DEEPSEEK.md)
 
 **Examples:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example) - Claude
