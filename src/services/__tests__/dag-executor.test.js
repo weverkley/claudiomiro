@@ -5,7 +5,7 @@ const { DAGExecutor } = require('../dag-executor');
 const logger = require('../../../logger');
 const state = require('../../config/state');
 const { step2, step3, step4 } = require('../../steps');
-const { isFullyImplemented } = require('../../utils/validation');
+const { isFullyImplemented, hasApprovedCodeReview } = require('../../utils/validation');
 const ParallelStateManager = require('../parallel-state-manager');
 const ParallelUIRenderer = require('../parallel-ui-renderer');
 const TerminalRenderer = require('../../utils/terminal-renderer');
@@ -329,16 +329,18 @@ describe('DAGExecutor', () => {
     beforeEach(() => {
       fs.existsSync.mockReturnValue(false);
       isFullyImplemented.mockReturnValue(true);
+      hasApprovedCodeReview.mockReturnValue(true);
       step2.mockResolvedValue();
       step3.mockResolvedValue();
       step4.mockResolvedValue();
     });
 
-    it('should skip task if GITHUB_PR.md already exists', async () => {
+    it('should skip task if TODO is implemented and code review approved', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks);
       executor.running.add('TASK1');
-      fs.existsSync.mockReturnValue(true);
+      fs.existsSync.mockImplementation((filepath) => filepath.includes('TODO.md'));
+      hasApprovedCodeReview.mockReturnValue(true);
 
       await executor.executeTask('TASK1');
 
@@ -354,9 +356,9 @@ describe('DAGExecutor', () => {
 
       let step2Called = false;
       fs.existsSync.mockImplementation((filepath) => {
-        if (filepath.includes('GITHUB_PR.md') && step2Called) return true; // Complete after step2
-        if (filepath.includes('TODO.md')) return step2Called; // False first time, true after step2
-        if (filepath.includes('CODE_REVIEW.md') && step2Called) return true;
+        if (filepath.includes('TODO.md')) {
+          return step2Called;
+        }
         return false;
       });
 
@@ -401,17 +403,20 @@ describe('DAGExecutor', () => {
       const executor = new DAGExecutor(tasks);
       executor.running.add('TASK1');
 
-      let step3Calls = 0;
-      isFullyImplemented.mockImplementation(() => {
-        step3Calls++;
-        return step3Calls > 1; // Not implemented first time, implemented after
-      });
-
+      let implementationReady = false;
+      let reviewApproved = false;
+      isFullyImplemented.mockImplementation(() => implementationReady);
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md') && step3Calls > 1) return true;
-        if (filepath.includes('GITHUB_PR.md') && step3Calls > 1) return true;
         return false;
+      });
+
+      hasApprovedCodeReview.mockImplementation(() => reviewApproved);
+      step3.mockImplementation(async () => {
+        implementationReady = true;
+      });
+      step4.mockImplementation(async () => {
+        reviewApproved = true;
       });
 
       await executor.executeTask('TASK1');
@@ -425,20 +430,15 @@ describe('DAGExecutor', () => {
       const executor = new DAGExecutor(tasks);
       executor.running.add('TASK1');
 
-      let reviewCalled = false;
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md')) {
-          return reviewCalled;
-        }
-        if (filepath.includes('GITHUB_PR.md')) {
-          return reviewCalled;
-        }
         return false;
       });
 
+      let reviewApproved = false;
+      hasApprovedCodeReview.mockImplementation(() => reviewApproved);
       step4.mockImplementation(async () => {
-        reviewCalled = true;
+        reviewApproved = true;
       });
 
       await executor.executeTask('TASK1');
@@ -446,7 +446,7 @@ describe('DAGExecutor', () => {
       expect(step4).toHaveBeenCalledWith('TASK1');
     });
 
-    it('should execute step4 if GITHUB_PR.md does not exist', async () => {
+    it('should execute step4 when code review is pending approval', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks);
       executor.running.add('TASK1');
@@ -454,14 +454,10 @@ describe('DAGExecutor', () => {
       let step4Called = false;
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md')) return true;
-        if (filepath.includes('GITHUB_PR.md')) {
-          if (step4Called) return true;
-          return false;
-        }
         return false;
       });
 
+      hasApprovedCodeReview.mockImplementation(() => step4Called);
       step4.mockImplementation(async () => {
         step4Called = true;
       });
@@ -493,17 +489,18 @@ describe('DAGExecutor', () => {
       const executor = new DAGExecutor(tasks);
       executor.running.add('TASK1');
 
-      let attempts = 0;
-      isFullyImplemented.mockImplementation(() => {
-        attempts++;
-        return attempts > 2; // Not implemented for first 2 checks
-      });
+      let implementationReady = false;
+      let step3Runs = 0;
+      isFullyImplemented.mockImplementation(() => implementationReady);
 
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md') && attempts > 2) return true;
-        if (filepath.includes('GITHUB_PR.md') && attempts > 2) return true;
         return false;
+      });
+
+      step3.mockImplementation(async () => {
+        step3Runs++;
+        implementationReady = step3Runs > 1;
       });
 
       await executor.executeTask('TASK1');
@@ -538,11 +535,10 @@ describe('DAGExecutor', () => {
       let step4Called = false;
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md')) return true;
-        if (filepath.includes('GITHUB_PR.md')) return step4Called;
         return false;
       });
 
+      hasApprovedCodeReview.mockImplementation(() => step4Called);
       step4.mockImplementation(async () => {
         step4Called = true;
       });
@@ -579,18 +575,17 @@ describe('DAGExecutor', () => {
       );
     });
 
-    it('should continue loop if step4 does not create GITHUB_PR.md', async () => {
+    it('should continue loop if code review remains disapproved', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks);
       executor.running.add('TASK1');
 
       let step4Calls = 0;
       let implementedCount = 0;
+      let reviewApproved = false;
 
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md')) return implementedCount > 0;
-        if (filepath.includes('GITHUB_PR.md')) return step4Calls > 1;
         return false;
       });
 
@@ -603,11 +598,15 @@ describe('DAGExecutor', () => {
         implementedCount++;
       });
 
-     step4.mockImplementation(async () => {
-       step4Calls++;
-       // First call doesn't create PR, resets implementation
-       if (step4Calls === 1) {
+      hasApprovedCodeReview.mockImplementation(() => reviewApproved);
+
+      step4.mockImplementation(async () => {
+        step4Calls++;
+        if (step4Calls === 1) {
           implementedCount = 0; // Simulate TODO.md being reset
+          reviewApproved = false;
+        } else {
+          reviewApproved = true;
         }
       });
 
@@ -953,6 +952,7 @@ describe('DAGExecutor', () => {
     beforeEach(() => {
       fs.existsSync.mockReturnValue(false);
       isFullyImplemented.mockReturnValue(true);
+      hasApprovedCodeReview.mockReturnValue(true);
       step2.mockResolvedValue();
       step3.mockResolvedValue();
       step4.mockResolvedValue();
@@ -1005,11 +1005,10 @@ describe('DAGExecutor', () => {
       let step4Called = false;
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md')) return true;
-        if (filepath.includes('GITHUB_PR.md')) return step4Called;
         return false;
       });
 
+      hasApprovedCodeReview.mockImplementation(() => step4Called);
       step4.mockImplementation(async () => {
         step4Called = true;
       });
@@ -1064,9 +1063,7 @@ describe('DAGExecutor', () => {
 
       let step2Called = false;
       fs.existsSync.mockImplementation((filepath) => {
-        if (filepath.includes('GITHUB_PR.md') && step2Called) return true;
         if (filepath.includes('TODO.md')) return step2Called;
-        if (filepath.includes('CODE_REVIEW.md') && step2Called) return true;
         return false;
       });
 
@@ -1092,8 +1089,6 @@ describe('DAGExecutor', () => {
 
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md') && step3Calls > 1) return true;
-        if (filepath.includes('GITHUB_PR.md') && step3Calls > 1) return true;
         return false;
       });
 
@@ -1113,15 +1108,14 @@ describe('DAGExecutor', () => {
       let step4Called = false;
       fs.existsSync.mockImplementation((filepath) => {
         if (filepath.includes('TODO.md')) return true;
-        if (filepath.includes('CODE_REVIEW.md')) return true;
-        if (filepath.includes('GITHUB_PR.md')) return step4Called;
         return false;
       });
 
+      hasApprovedCodeReview.mockImplementation(() => step4Called);
       step4.mockImplementation(async () => {
         step4Called = true;
         const states = executor.stateManager.getAllTaskStates();
-        expect(states.TASK1.step).toBe('Step 4 - Code review and PR');
+        expect(states.TASK1.step).toBe('Step 4 - Code review');
       });
 
       await executor.executeTask('TASK1');
@@ -1170,9 +1164,10 @@ describe('DAGExecutor', () => {
       executor.running.add('TASK1');
 
       fs.existsSync.mockImplementation((filepath) => {
-        if (filepath.includes('GITHUB_PR.md')) return true;
+        if (filepath.includes('TODO.md')) return true;
         return false;
       });
+      hasApprovedCodeReview.mockReturnValue(true);
 
       await executor.executeTask('TASK1');
 

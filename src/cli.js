@@ -6,6 +6,27 @@ const { startFresh } = require('./services/file-manager');
 const { step1, step5 } = require('./steps');
 const { step0 } = require('./steps/step0');
 const { DAGExecutor } = require('./services/dag-executor');
+const { isFullyImplemented, hasApprovedCodeReview } = require('./utils/validation');
+
+const isTaskApproved = (taskName) => {
+    if (!state.claudiomiroFolder) {
+        return false;
+    }
+
+    const taskFolder = path.join(state.claudiomiroFolder, taskName);
+    const todoPath = path.join(taskFolder, 'TODO.md');
+    const codeReviewPath = path.join(taskFolder, 'CODE_REVIEW.md');
+
+    if (!fs.existsSync(todoPath)) {
+        return false;
+    }
+
+    if (!isFullyImplemented(todoPath)) {
+        return false;
+    }
+
+    return hasApprovedCodeReview(codeReviewPath);
+};
 
 const chooseAction = async (i) => {
     // Verifica se --prompt foi passado e extrai o valor
@@ -157,9 +178,9 @@ const chooseAction = async (i) => {
             logger.info('Steps 2-4 skipped (not in --steps list)');
 
             // Pula para step 5 se estiver na lista
-            if (!fs.existsSync(path.join(state.folder, 'GITHUB_PR.md')) && shouldRunStep(5)) {
+            if (shouldRunStep(5) && tasks.every(isTaskApproved)) {
                 logger.newline();
-                logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
+                logger.step(tasks.length, tasks.length, 5, 'Finalizing review and committing');
                 await step5(tasks, shouldPush);
             }
 
@@ -174,9 +195,9 @@ const chooseAction = async (i) => {
         await executor.run();
 
         // Após DAG executor, criar PR final
-        if (!fs.existsSync(path.join(state.folder, 'GITHUB_PR.md')) && shouldRunStep(5)) {
+        if (shouldRunStep(5) && tasks.every(isTaskApproved)) {
             logger.newline();
-            logger.step(tasks.length, tasks.length, 5, 'Creating pull request and committing');
+            logger.step(tasks.length, tasks.length, 5, 'Finalizing review and committing');
             await step5(tasks, shouldPush);
         }
 
@@ -245,9 +266,7 @@ const buildTaskGraph = () => {
 
         graph[task] = {
             deps,
-            status: fs.existsSync(path.join(state.claudiomiroFolder, task, 'GITHUB_PR.md'))
-                ? 'completed'
-                : 'pending'
+            status: isTaskApproved(task) ? 'completed' : 'pending'
         };
     }
 
@@ -262,10 +281,6 @@ const init = async () => {
     const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit' && !arg.startsWith('--limit=') && !arg.startsWith('--mode'));
     const folderArg = args[0] || process.cwd();
     state.setFolder(folderArg);
-
-    if(fs.existsSync(path.join(state.folder, 'GITHUB_PR.md'))){
-        startFresh();
-    }
 
     // Executa chooseAction até completar
     // Step 0 → Step 1 → DAGExecutor (com maxAttempts=20 POR TAREFA) → Step 5

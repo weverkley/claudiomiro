@@ -4,7 +4,7 @@ const os = require('os');
 const logger = require('../../logger');
 const state = require('../config/state');
 const { step2, step3, step4 } = require('../steps');
-const { isFullyImplemented } = require('../utils/validation');
+const { isFullyImplemented, hasApprovedCodeReview } = require('../utils/validation');
 const ParallelStateManager = require('./parallel-state-manager');
 const ParallelUIRenderer = require('./parallel-ui-renderer');
 const TerminalRenderer = require('../utils/terminal-renderer');
@@ -91,9 +91,19 @@ class DAGExecutor {
       this.stateManager.updateTaskStatus(taskName, 'running');
 
       const taskPath = path.join(state.claudiomiroFolder, taskName);
+      const todoPath = path.join(taskPath, 'TODO.md');
+      const codeReviewPath = path.join(taskPath, 'CODE_REVIEW.md');
 
-      // Verifica se já está completa (tem GITHUB_PR.md)
-      if (fs.existsSync(path.join(taskPath, 'GITHUB_PR.md'))) {
+      const isTaskApproved = () => {
+        if (!fs.existsSync(todoPath)) {
+          return false;
+        }
+
+        return isFullyImplemented(todoPath) && hasApprovedCodeReview(codeReviewPath);
+      };
+
+      // Verifica se já está completa
+      if (isTaskApproved()) {
         this.stateManager.updateTaskStatus(taskName, 'completed');
         this.tasks[taskName].status = 'completed';
         this.running.delete(taskName);
@@ -103,7 +113,7 @@ class DAGExecutor {
       // PROMPT.md já foi criado pelo step0, então começamos direto no step2
 
       // Step 2: Planejamento (PROMPT.md → TODO.md)
-      if (!fs.existsSync(path.join(taskPath, 'TODO.md'))) {
+      if (!fs.existsSync(todoPath)) {
         if (!this.shouldRunStep(2)) {
           this.stateManager.updateTaskStatus(taskName, 'completed');
           this.tasks[taskName].status = 'completed';
@@ -130,7 +140,7 @@ class DAGExecutor {
         attempts++;
 
         // Step 3: Implementação
-        if (!isFullyImplemented(path.join(taskPath, 'TODO.md'))) {
+        if (!fs.existsSync(todoPath) || !isFullyImplemented(todoPath)) {
           this.stateManager.updateTaskStep(taskName, `Step 3 - Implementing tasks (attempt ${attempts})`);
           await step3(taskName);
           continue; // Volta para verificar se está implementado
@@ -144,21 +154,18 @@ class DAGExecutor {
           return;
         }
 
-        const codeReviewPath = path.join(taskPath, 'CODE_REVIEW.md');
-        const prPath = path.join(taskPath, 'GITHUB_PR.md');
-
-        // Step 4: Code review e preparação do PR
-        if (!fs.existsSync(codeReviewPath) || !fs.existsSync(prPath)) {
-          this.stateManager.updateTaskStep(taskName, 'Step 4 - Code review and PR');
+        // Step 4: Code review final
+        if (!hasApprovedCodeReview(codeReviewPath)) {
+          this.stateManager.updateTaskStep(taskName, 'Step 4 - Code review');
           await step4(taskName);
 
-          // Se não criou PR (por reprovação), continua o loop
-          if (!fs.existsSync(prPath)) {
+          // Se ainda não foi aprovado, continua o loop
+          if (!isTaskApproved()) {
             continue;
           }
         }
 
-        // Se chegou aqui, tem GITHUB_PR.md, terminou!
+        // Se chegou aqui, task aprovada!
         break;
       }
 

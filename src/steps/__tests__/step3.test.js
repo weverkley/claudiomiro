@@ -67,7 +67,7 @@ describe('step3', () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('DO NOT create any git commits');
+      expect(promptArg).toContain('DO NOT create git commits');
       expect(promptArg).toContain('DO NOT run git add, git commit, or git push commands');
     });
 
@@ -216,8 +216,8 @@ describe('step3', () => {
 
       const promptArg = executeClaude.mock.calls[0][0];
       expect(promptArg).toContain('### OPERATING LOOP');
-      expect(promptArg).toContain('Pick one uncompleted item');
-      expect(promptArg).toContain('Apply BLOCKED POLICY');
+      expect(promptArg).toContain('Identify all uncompleted items');
+      expect(promptArg).toContain('Apply **BLOCKED POLICY**');
     });
 
     it('should include TEST STRATEGY section in prompt', async () => {
@@ -225,8 +225,8 @@ describe('step3', () => {
 
       const promptArg = executeClaude.mock.calls[0][0];
       expect(promptArg).toContain('### TEST STRATEGY');
-      expect(promptArg).toContain('Run smoke tests');
-      expect(promptArg).toContain('Do not run full regression');
+      expect(promptArg).toContain('Run only relevant tests');
+      expect(promptArg).toContain('DO NOT run full-project checks');
     });
 
     it('should include BLOCKED POLICY section in prompt', async () => {
@@ -250,7 +250,7 @@ describe('step3', () => {
 
       const promptArg = executeClaude.mock.calls[0][0];
       expect(promptArg).toContain('### EXIT CONDITION');
-      expect(promptArg).toContain('Stop only when');
+      expect(promptArg).toContain('Exit when all items are');
     });
 
     it('should include STOP-DIFF section in prompt', async () => {
@@ -277,12 +277,12 @@ describe('step3', () => {
       expect(promptArg).toContain('external tools');
     });
 
-    it('should include OUTPUT section in prompt', async () => {
+    it('should include STATE PERSISTENCE section in prompt', async () => {
       await step3('TASK1');
 
       const promptArg = executeClaude.mock.calls[0][0];
-      expect(promptArg).toContain('### OUTPUT');
-      expect(promptArg).toContain('Updated');
+      expect(promptArg).toContain('### STATE PERSISTENCE');
+      expect(promptArg).toContain('Persist updated');
     });
 
     it('should include objective about implementing actionable items', async () => {

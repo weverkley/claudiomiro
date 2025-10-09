@@ -221,8 +221,7 @@ Claudiomiro creates a `.claudiomiro/` folder to organize tasks and track progres
 │   ├── TASK.md              # Self-contained task with dependencies (Depends on: NONE)
 │   ├── PROMPT.md            # Enhanced description with parallelization notes
 │   ├── TODO.md              # Detailed breakdown (`Fully implemented: YES/NO`)
-│   ├── CODE_REVIEW.md       # Automated code review report
-│   └── GITHUB_PR.md         # Generated pull request description
+│   └── CODE_REVIEW.md       # Automated code review report
 ├── TASK2/
 │   ├── TASK.md              # Dependencies: TASK1 | Parallel with: TASK3, TASK4
 │   └── ...
@@ -235,6 +234,8 @@ Claudiomiro creates a `.claudiomiro/` folder to organize tasks and track progres
 - **EXECUTION_PLAN.md**: Visual map showing execution layers, dependency graph, critical path, and parallelism ratio
 - **TASK.md**: Each task is fully self-contained with explicit dependencies (or NONE for parallel tasks)
 - **PROMPT.md**: Includes parallelization notes (layer, parallel siblings, complexity)
+- **TODO.md**: Tracks implementation status; must begin with `Fully implemented: YES/NO`
+- **CODE_REVIEW.md**: Approval status for the task; Claudiomiro waits for an approved review before considering a task done
 
 **Tip:** Review `EXECUTION_PLAN.md` early to validate the parallel execution strategy. Use `--fresh` to start over.
 

@@ -10,6 +10,10 @@ const step4 = (task) => {
       fs.rmSync(folder('CODE_REVIEW.md'));
     }
 
+    if (fs.existsSync(folder('GITHUB_PR.md'))) {
+      fs.rmSync(folder('GITHUB_PR.md'));
+    }
+
     return executeClaude(`
       You are a **fast code reviewer** focused on catching critical issues.
 
@@ -40,7 +44,6 @@ const step4 = (task) => {
       If everything looks **functionally correct**:
       - Confirm first line of \`${folder('TODO.md')}\` is: \`Fully implemented: YES\`
       - Add in the second line of \`${folder('TODO.md')}\`: "Code review passed"
-      - Create ${folder('GITHUB_PR.md')} explaining in one paragraph what was done.
       - Create \`${folder('CODE_REVIEW.md')}\`:
         \`\`\`markdown
         # Code Review

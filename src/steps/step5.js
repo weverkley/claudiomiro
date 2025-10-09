@@ -10,7 +10,7 @@ const step5 = async (tasks, shouldPush = true) => {
 
     for(const task of tasks){
         const folder = (file) => path.join(state.claudiomiroFolder, task, file);
-        PRS.push(folder('GITHUB_PR.md'));
+        PRS.push(folder('CODE_REVIEW.md'));
     }
 
 
