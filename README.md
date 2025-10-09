@@ -10,7 +10,7 @@ Turn days of complex development into a fully automated process — without sacr
 **Works With:**
 - ✅ `claudiomiro --claude`
 - ✅ `claudiomiro --codex`
-- ✅ `claudiomiro --deep-seek` [(See how to install)](./DEEPSEEK.md)
+- ✅ `claudiomiro --deep-seek` [(how to)](./DEEPSEEK.md)
 
 **Examples:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example) - Claude
