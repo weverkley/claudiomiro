@@ -8,9 +8,9 @@
 Turn days of complex development into a fully automated process — without sacrificing production-grade code quality.
 
 **Works With:**
-- ✅ Claude Code
-- ✅ ChatGPT Codex
-- ✅ DeepSeek [(How to)](./DEEPSEEK.md)
+- ✅ Claude Code *claudiomiro --claude*
+- ✅ ChatGPT Codex *claudiomiro --codex*
+- ✅ DeepSeek *claudiomiro --deep-seek* [(See how to install)](./DEEPSEEK.md)
 
 **Examples:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example) - Claude
