@@ -34,6 +34,8 @@ const step0 = async (sameBranch = false, promptText = null, mode = 'auto') => {
 
     logger.stopSpinner();
     logger.success('Tasks created successfully');
+
+    await step1();
 }
 
 module.exports = { step0 };

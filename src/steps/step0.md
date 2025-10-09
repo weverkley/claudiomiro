@@ -90,7 +90,6 @@ IMPORTANT: YOU MUST CREATE THE FILES.
 
 ### A) `{{claudiomiroFolder}}/TASKX/TASK.md`
 ```markdown
-@dependencies [NONE / TASKX, TASKY] // e.g @dependencies [NONE]     //  e.g @dependencies [TASK1, TASK2]
 
 # Task: [Concise title]
 

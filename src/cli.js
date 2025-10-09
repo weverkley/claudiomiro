@@ -189,16 +189,16 @@ const chooseAction = async (i) => {
         return { done: true };
     }
 
-    // if (!taskGraph) {
-    //     if (!shouldRunStep(1)) {
-    //         logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
-    //         process.exit(1);
-    //     }
+    if (!taskGraph) {
+        if (!shouldRunStep(1)) {
+            logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
+            process.exit(1);
+        }
 
-    //     logger.newline();
-    //     logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
-    //     return { step: step1(mode) };
-    // }
+        logger.newline();
+        logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
+        return { step: step1(mode) };
+    }
 }
 
 /**
