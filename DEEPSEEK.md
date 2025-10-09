@@ -31,7 +31,7 @@ CLAUDE_BIN="$(which claude || true)"
 
 # Verifica se o binário foi encontrado
 if [[ -z "$CLAUDE_BIN" ]]; then
-    echo "Erro: comando 'claude' não encontrado no PATH." >&2
+    echo "Erro: 'claude' not found in PATH." >&2
     exit 1
 fi
 
