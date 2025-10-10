@@ -129,13 +129,6 @@ npm install -g claudiomiro
 
 ### Choose Your AI Executor
 
-Claudiomiro supports multiple AI backends. Choose the one that best fits your needs:
-
-- **[Claude](CLAUDE.md)** (Default) - Best reasoning, most stable
-- **[Codex](CODEX.md)** - Fast execution, OpenAI ecosystem
-- **[Gemini](GEMINI.md)** - Google's latest models, multimodal support
-- **[DeepSeek](DEEPSEEK.md)** - Cost-effective alternative
-
 ```bash
 # Use any of these:
 claudiomiro --claude     # or
