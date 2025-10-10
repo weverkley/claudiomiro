@@ -169,6 +169,20 @@ const chooseAction = async (i) => {
         process.exit(1);
     }
 
+    if(!allHasTodo()){
+        const shouldRunDAG = shouldRunStep(2);
+
+        if(!shouldRunDAG){
+            logger.newline();
+            logger.step(tasks.length, tasks.length, 5, 'Finalizing review and committing');
+            await step5(tasks, shouldPush);
+            return { done: true };
+        }
+
+        const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
+        await executor.runStep2();
+    }
+
     // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
     const taskGraph = buildTaskGraph();
 
@@ -215,6 +229,36 @@ const chooseAction = async (i) => {
         logger.startSpinner('Analyzing task dependencies...');
         return { step: step1(mode) };
     }
+}
+
+const allHasTodo = () => {
+    if (!fs.existsSync(state.claudiomiroFolder)) {
+        return null;
+    }
+
+    const tasks = fs
+        .readdirSync(state.claudiomiroFolder)
+        .filter(name => {
+            const fullPath = path.join(state.claudiomiroFolder, name);
+            return fs.statSync(fullPath).isDirectory();
+        })
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+    if (tasks.length === 0) {
+        return null;
+    }
+
+    for (const task of tasks) {
+        if(!fs.existsSync(path.join(state.claudiomiroFolder, task, 'TODO.md'))){
+            return false;
+        }
+
+        if(!fs.existsSync(path.join(state.claudiomiroFolder, task, 'split.txt'))){
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /**
