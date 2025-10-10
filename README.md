@@ -1,6 +1,6 @@
 # Claudiomiro
 
-![Claudiomiro](https://github.com/samuelfaj/claudiomiro/blob/main/claudiomiro.png?raw=true)
+![Claudiomiro](https://github.com/samuelfaj/claudiomiro/blob/main/claudiomiro.png?raw=true&uniq=123)
 
 
 **Send your prompt — it decomposes, codes, reviews, builds, tests, and commits autonomously, in PARALLEL.**
