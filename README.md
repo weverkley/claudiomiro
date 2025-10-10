@@ -10,6 +10,7 @@ Turn days of complex development into a fully automated process — without sacr
 **Works With:**
 - ✅ `claudiomiro --claude`
 - ✅ `claudiomiro --codex`
+- ✅ `claudiomiro --gemini`
 - ✅ `claudiomiro --deep-seek` [(how to)](./DEEPSEEK.md)
 
 **Examples:**
