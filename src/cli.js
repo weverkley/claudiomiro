@@ -58,6 +58,7 @@ const chooseAction = async (i) => {
     const codexFlag = process.argv.includes('--codex');
     const claudeFlag = process.argv.includes('--claude');
     const deepSeekFlag = process.argv.includes('--deep-seek');
+    const gemini = process.argv.includes('--gemini');
 
     let executorType = 'claude';
 
@@ -67,6 +68,10 @@ const chooseAction = async (i) => {
 
     if(deepSeekFlag){
         executorType = 'deep-seek'
+    }
+
+    if(gemini){
+        executorType = 'gemini'
     }
 
     state.setExecutorType(executorType);

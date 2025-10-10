@@ -11,6 +11,9 @@ jest.mock('../../../logger');
 jest.mock('../../config/state');
 jest.mock('../claude-logger');
 jest.mock('../parallel-state-manager');
+jest.mock('../gemini-executor');
+jest.mock('../codex-executor');
+jest.mock('../deep-seek-executor');
 
 const logger = require('../../../logger');
 const state = require('../../config/state');
@@ -618,6 +621,131 @@ describe('claude-executor', () => {
 
       setTimeout(() => mockChildProcess.emit('close', 1), 10);
       await expect(promise).rejects.toThrow();
+    });
+  });
+
+  describe('Gemini executor routing', () => {
+    beforeEach(() => {
+      // Reset all mocks for gemini-executor
+      const { executeGemini } = require('../gemini-executor');
+      executeGemini.mockClear();
+    });
+
+    it('should route to executeGemini when state.executorType is "gemini"', async () => {
+      state.executorType = 'gemini';
+      const { executeGemini } = require('../gemini-executor');
+
+      executeGemini.mockResolvedValue(undefined);
+
+      const result = await executeClaude('test prompt');
+
+      expect(executeGemini).toHaveBeenCalledWith('test prompt', null);
+      expect(result).toBeUndefined();
+    });
+
+    it('should call executeGemini with correct text parameter', async () => {
+      state.executorType = 'gemini';
+      const { executeGemini } = require('../gemini-executor');
+
+      executeGemini.mockResolvedValue(undefined);
+
+      await executeClaude('specific test prompt');
+
+      expect(executeGemini).toHaveBeenCalledWith('specific test prompt', null);
+    });
+
+    it('should call executeGemini with correct taskName parameter when provided', async () => {
+      state.executorType = 'gemini';
+      const { executeGemini } = require('../gemini-executor');
+
+      executeGemini.mockResolvedValue(undefined);
+
+      await executeClaude('test prompt', 'TASK_GEMINI');
+
+      expect(executeGemini).toHaveBeenCalledWith('test prompt', 'TASK_GEMINI');
+    });
+
+    it('should call executeGemini with null taskName when not provided', async () => {
+      state.executorType = 'gemini';
+      const { executeGemini } = require('../gemini-executor');
+
+      executeGemini.mockResolvedValue(undefined);
+
+      await executeClaude('test prompt');
+
+      expect(executeGemini).toHaveBeenCalledWith('test prompt', null);
+    });
+
+    it('should propagate executeGemini return value through executeClaude', async () => {
+      state.executorType = 'gemini';
+      const { executeGemini } = require('../gemini-executor');
+
+      const mockResult = { success: true, data: 'test result' };
+      executeGemini.mockResolvedValue(mockResult);
+
+      const result = await executeClaude('test prompt');
+
+      expect(result).toBe(mockResult);
+    });
+
+    it('should propagate executeGemini rejection through executeClaude', async () => {
+      state.executorType = 'gemini';
+      const { executeGemini } = require('../gemini-executor');
+
+      const mockError = new Error('Gemini execution failed');
+      executeGemini.mockRejectedValue(mockError);
+
+      await expect(executeClaude('test prompt')).rejects.toThrow('Gemini execution failed');
+    });
+
+    it('should not affect other executor types when routing to Gemini', async () => {
+      // Test that codex routing still works
+      state.executorType = 'codex';
+      const { executeCodex } = require('../codex-executor');
+      executeCodex.mockResolvedValue(undefined);
+
+      await executeClaude('test prompt');
+
+      expect(executeCodex).toHaveBeenCalledWith('test prompt', null);
+    });
+
+    it('should not affect deep-seek routing when routing to Gemini', async () => {
+      // Test that deep-seek routing still works
+      state.executorType = 'deep-seek';
+      const { executeDeepSeek } = require('../deep-seek-executor');
+      executeDeepSeek.mockResolvedValue(undefined);
+
+      await executeClaude('test prompt');
+
+      expect(executeDeepSeek).toHaveBeenCalledWith('test prompt', null);
+    });
+
+    it('should fall back to default Claude when executorType is "claude"', async () => {
+      state.executorType = 'claude';
+
+      const promise = executeClaude('test prompt');
+
+      // Should spawn Claude process, not call any executor
+      expect(spawn).toHaveBeenCalledWith(
+        'sh',
+        ['-c', expect.stringContaining('claude --dangerously-skip-permissions')],
+        expect.any(Object)
+      );
+
+      setTimeout(() => mockChildProcess.emit('close', 0), 10);
+      await promise;
+    });
+
+    it('should handle full integration flow with state change and Gemini execution', async () => {
+      state.executorType = 'gemini';
+      const { executeGemini } = require('../gemini-executor');
+
+      executeGemini.mockResolvedValue(undefined);
+
+      // Change state and execute
+      await executeClaude('integration test prompt', 'INTEGRATION_TASK');
+
+      expect(executeGemini).toHaveBeenCalledWith('integration test prompt', 'INTEGRATION_TASK');
     });
   });
 });
