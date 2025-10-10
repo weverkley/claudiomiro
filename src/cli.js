@@ -106,7 +106,8 @@ const chooseAction = async (i) => {
         !arg.startsWith('--mode') &&
         arg !== '--codex' &&
         arg !== '--claude' &&
-        arg !== '--deep-seek'
+        arg !== '--deep-seek' &&
+        arg !== '--gemini'
     );
     const folderArg = args[0] || process.cwd();
 

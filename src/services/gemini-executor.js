@@ -64,7 +64,7 @@ const runGemini = (text, taskName = null) => {
         fs.writeFileSync(tmpFile, text, { encoding: 'utf-8', mode: 0o600 });
 
         // Use sh to execute command with cat substitution
-        const command = `cat '${tmpFile}' | gemini`;
+        const command = `gemini -p "$(cat '${tmpFile}')"`;
 
         logger.stopSpinner();
         logger.info("Executing Gemini CLI");
