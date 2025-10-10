@@ -3,9 +3,9 @@
 ![Claudiomiro](https://github.com/samuelfaj/claudiomiro/blob/main/claudiomiro.png?raw=true)
 
 
-**Send your prompt — it decomposes, codes, reviews, builds, tests, and commits autonomously, in parallel.**
+**Send your prompt — it decomposes, codes, reviews, builds, tests, and commits autonomously, in PARALLEL.**
 
-Turn days of complex development into a fully automated process — without sacrificing production-grade code quality.
+With an army of AI agents, turn days of complex development into a fully automated process — without sacrificing production-grade code quality.
 
 **Works With:**
 - ✅ `claudiomiro --claude`
@@ -16,32 +16,51 @@ Turn days of complex development into a fully automated process — without sacr
 **Examples:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example) - Claude
 - 💬 [“Create the classic Snake game entirely in JavaScript to run in the browser.”](https://github.com/samuelfaj/claudiomiro-snake-game-example) - Codex
-- 💬 [“Implement support for Claudiomiro to use the Gemini CLI.”](https://github.com/samuelfaj/claudiomiro/pull/8) - DeepSeek
+- 💬 [“Refactor Claudiomiro to typescript.”](https://github.com/samuelfaj/claudiomiro/pull/10) - DeepSeek
 
 ------
 
 ## The Problem with Agents
 
-When using Claude Code / Cursor / Codex for complex tasks, you've probably noticed it **stops before completing the job**. The result? You find yourself typing "continue", testing, reviewing, over and over again, managing all the workflow manually.
+Today's AI coding assistants are powerful but fundamentally **incomplete**. They give you great starting points, but then stop, leaving you to:
+
+- 🔄 Manually type "continue" over and over
+- 🧪 Run tests and fix failures yourself
+- 🔍 Review code quality manually
+- 📝 Manage the entire development workflow
+- ⏱️ Spend hours on what should be automated
+
+This creates a **productivity paradox**: AI tools that save time on writing code but waste time on managing the process.
 
 ------
 
 ## What is Claudiomiro?
 
-**Claudiomiro** is a Node.js CLI that wraps Claude AI or OpenAI Codex in a structured, **autonomous workflow** with **parallel task execution**. Unlike simple code generators, Claudiomiro:
+**Claudiomiro** solves this by creating a **truly autonomous development workflow** that handles complex tasks from start to finish. It's not just another code generator — it's a complete development automation system that:
 
-- ✅ Thinks through complex problems
-- ✅ Analyzes your entire codebase
-- ✅ Identifies patterns and best practices
-- ✅ **Maximizes parallelism** - executes independent tasks simultaneously
-- ✅ Implements comprehensive solutions
-- ✅ **Runs autonomously until completion** (up to 20 cycles per task)
+- 🧠 **Decomposes complex problems** into manageable, parallelizable tasks
+- 🔄 **Loops autonomously** until everything is complete (no more "continue" prompts)
+- ⚡ **Executes tasks in parallel** for maximum speed
+- 🧪 **Automatically tests and fixes** failures
+- 👨‍💻 **Performs code reviews** with senior-level scrutiny
+- 📊 **Creates production-ready commits** with proper documentation
+
+Unlike traditional AI assistants that stop after one response, Claudiomiro **owns the entire development lifecycle** — from analysis to deployment-ready code.
 
 -----
 
-### The Magic: Autonomous Looping + Parallel Execution
+### How Claudiomiro Solves the Problem
 
-Claudiomiro doesn't just run once. It **loops autonomously** until the entire task is complete, and **executes independent tasks in parallel** to maximize speed:
+Claudiomiro eliminates the manual workflow management by combining **autonomous looping** with **parallel execution**:
+
+**Autonomous Looping** - Instead of stopping after one response, Claudiomiro continuously:
+- Analyzes what's been completed
+- Identifies what's still needed
+- Executes the next necessary steps
+- Validates progress through tests and reviews
+- Repeats until everything is production-ready
+
+**Parallel Execution** - Claudiomiro intelligently breaks down complex tasks into independent sub-tasks that can run simultaneously, dramatically reducing completion time:
 
 ```
 Cycle 1: [Step 0] Decomposing complex task into 5 parallelizable sub-tasks
@@ -96,9 +115,9 @@ For best results, your project should have:
 
 **Optimal:**
 - Comprehensive linting with strict rules
-- High test coverage (>80%)
+- High test coverage of any kind
 - Integration tests for critical paths
-- MCPs configured (gives Claude/Codex superpowers)
+- MCPs configured
 
 **Why?** Linting and tests create a **feedback loop** that enables Claudiomiro to validate its work and iterate autonomously until everything is perfect.
 
@@ -108,23 +127,22 @@ For best results, your project should have:
 npm install -g claudiomiro
 ```
 
-## Quick Start
+### Choose Your AI Executor
+
+Claudiomiro supports multiple AI backends. Choose the one that best fits your needs:
+
+- **[Claude](CLAUDE.md)** (Default) - Best reasoning, most stable
+- **[Codex](CODEX.md)** - Fast execution, OpenAI ecosystem
+- **[Gemini](GEMINI.md)** - Google's latest models, multimodal support
+- **[DeepSeek](DEEPSEEK.md)** - Cost-effective alternative
 
 ```bash
-# Run with a complex task
-claudiomiro --prompt="Your complex task description here"
-
-# Or run interactively
-claudiomiro
+# Use any of these:
+claudiomiro --claude     # or
+claudiomiro --codex      # or
+claudiomiro --gemini     # or
+claudiomiro --deep-seek  # or
 ```
-
-That's it! Claudiomiro will autonomously handle the rest.
-
-### Selecting the Executor
-
-- Claude CLI remains the default executor; pass `--claude` to force it explicitly.
-- To run the workflow with OpenAI Codex, install the Codex CLI and add `--codex` to your command.
-- Both executors share the same prompts and parallel workflow. Pick the one that best matches your environment or credential setup.
 
 ## Usage Examples
 
@@ -188,7 +206,7 @@ Unify them into shared components to eliminate duplication."
 
 **Feature Implementation:**
 ```bash
-claudiomiro --prompt="Create a user onboarding system with:
+claudiomiro  --mode=hard --prompt="Create a user onboarding system with:
 - Multi-step form (profile, company, preferences)
 - Email verification
 - Progress saving
@@ -198,7 +216,7 @@ claudiomiro --prompt="Create a user onboarding system with:
 
 **Large Refactoring:**
 ```bash
-claudiomiro --prompt="Migrate from REST to GraphQL:
+claudiomiro --mode=hard --prompt="Migrate from REST to GraphQL:
 - Convert all API endpoints
 - Update all frontend calls
 - Maintain backward compatibility during transition
@@ -212,145 +230,6 @@ Investigate root cause in /services/FinancialService.js
 and fix with proper tests to prevent regression."
 ```
 
-
-## Generated Files
-
-Claudiomiro creates a `.claudiomiro/` folder to organize tasks and track progress:
-
-```
-.claudiomiro/
-├── EXECUTION_PLAN.md        # Parallel execution strategy with dependency graph
-├── TASK1/
-│   ├── TASK.md              # Self-contained task with dependencies (Depends on: NONE)
-│   ├── PROMPT.md            # Enhanced description with parallelization notes
-│   ├── TODO.md              # Detailed breakdown (`Fully implemented: YES/NO`)
-│   └── CODE_REVIEW.md       # Automated code review report
-├── TASK2/
-│   ├── TASK.md              # Dependencies: TASK1 | Parallel with: TASK3, TASK4
-│   └── ...
-├── TASK3/
-│   └── ...
-└── log.txt                  # Complete execution log with timestamps
-```
-
-**Key Files:**
-- **EXECUTION_PLAN.md**: Visual map showing execution layers, dependency graph, critical path, and parallelism ratio
-- **TASK.md**: Each task is fully self-contained with explicit dependencies (or NONE for parallel tasks)
-- **PROMPT.md**: Includes parallelization notes (layer, parallel siblings, complexity)
-- **TODO.md**: Tracks implementation status; must begin with `Fully implemented: YES/NO`
-- **CODE_REVIEW.md**: Approval status for the task; Claudiomiro waits for an approved review before considering a task done
-
-**Tip:** Review `EXECUTION_PLAN.md` early to validate the parallel execution strategy. Use `--fresh` to start over.
-
-## Planning Modes
-
-Claudiomiro offers two planning modes to balance speed vs. criticality:
-
-### **Auto Mode (Default)** — Optimized for Speed
-```bash
-claudiomiro --prompt="Add new feature" --mode=auto
-```
-
-**Best for:**
-- Standard features and refactorings
-- Projects with good existing test coverage
-- Quick iterations and prototyping
-
-**Characteristics:**
-- ⚡ Maximum parallelization focus
-- 📋 Standard task decomposition
-- ✅ Essential acceptance criteria (3-5 items)
-- 🎯 Streamlined execution
-
-### **Hard Mode** — Maximum Criticality
-```bash
-claudiomiro --prompt="Build payment system" --mode=hard
-```
-
-**Best for:**
-- Critical systems (payments, auth, security)
-- Complex business logic
-- Projects requiring extensive documentation
-- Mission-critical features
-
-**Characteristics:**
-- 🧠 **Deep reasoning traces** for every decision
-- 📝 **Explicit assumptions** documented per task
-- 🔬 **Research summaries** with edge cases
-- ✅ **Rigorous acceptance criteria** (5-10 items per task)
-- 🔄 **Self-verification logic** for each task
-- 🚨 **Escalation protocols** for blockers
-- 📊 **Dependency reasoning** with risk analysis
-- ⚡ **Maintains full parallelization** from auto mode
-
-**Example Hard Mode Output:**
-
-Each task includes:
-```markdown
-## Assumptions
-- Database uses PostgreSQL 14+
-- Payment provider is Stripe API v2023-10-16
-- User sessions last 24 hours
-
-## Reasoning Trace
-- Why this approach? Separates payment intent from confirmation for better error handling
-- What alternatives were rejected? Direct charge API (no retry mechanism)
-- What risks exist? Race conditions on concurrent payments → mitigated with idempotency keys
-
-## Acceptance Criteria (Rigorous)
-- [ ] Payment intent created with idempotency key
-- [ ] Webhook signature verified using Stripe SDK
-- [ ] Failed payments logged with full context
-- [ ] Retry mechanism implemented with exponential backoff
-- [ ] All error cases have specific handling
-- [ ] Database transaction rollback on payment failure
-- [ ] Unit tests cover 95%+ of payment logic
-- [ ] Integration tests mock Stripe API calls
-- [ ] Load tested with 100 concurrent payments
-- [ ] Security audit passes (no secrets in logs)
-```
-
-**When to use Hard Mode:**
-- 💰 Financial/payment systems
-- 🔐 Authentication/authorization
-- 📊 Critical business logic
-- 🏥 Healthcare/compliance-heavy domains
-- ⚠️ Any feature where errors = major issues
-
-## Requirements
-
-- **Node.js** (v14+)
-- **Git repository** (initialized with at least one commit)
-- **Claude CLI** installed and configured ([Setup Guide](https://docs.anthropic.com/claude/docs)) or 
-- **Codex CLI** installed and authenticated (only if you plan to use `--codex`, see [Codex exec docs](https://github.com/openai/codex/blob/main/docs/exec.md))
-
-## What Makes This Different?
-
-Traditional AI assistants:
-- ❌ Stop after one response
-- ❌ Handle one monolithic task
-- ❌ No code quality validation
-- ❌ You manually run tests
-- ❌ You manually fix failures
-- ❌ You create commits/PRs
-- ❌ No structured approach
-
-**Claudiomiro:**
-- ✅ Runs autonomously until complete (up to 20 cycles per task)
-- ✅ Decomposes complex tasks with parallelism optimization
-- ✅ Executes independent tasks simultaneously (DAG executor)
-- ✅ Smart dependency analysis and execution planning
-- ✅ Built-in senior-level code review
-- ✅ Automatically runs tests
-- ✅ Automatically fixes test failures
-- ✅ Creates commits and PRs
-- ✅ Structured 6-step workflow with quality gates
-- ✅ Production-ready output — faster with parallel execution
-
 ## Contributing
 
 Issues and PRs welcome! Please check the [issues page](https://github.com/yourusername/claudiomiro/issues).
-
-## License
-
-ISC
