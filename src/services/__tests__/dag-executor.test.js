@@ -4,7 +4,7 @@ const os = require('os');
 const { DAGExecutor } = require('../dag-executor');
 const logger = require('../../../logger');
 const state = require('../../config/state');
-const { step1, step2, step3, step4 } = require('../../steps');
+const { step2, step3, step4 } = require('../../steps');
 const { isFullyImplemented, hasApprovedCodeReview } = require('../../utils/validation');
 const ParallelStateManager = require('../parallel-state-manager');
 const ParallelUIRenderer = require('../parallel-ui-renderer');
@@ -221,102 +221,6 @@ describe('DAGExecutor', () => {
     });
   });
 
-  describe('runPlanningPhase', () => {
-    beforeEach(() => {
-      step2.mockReset();
-      step2.mockResolvedValue();
-      fs.existsSync.mockReturnValue(false);
-      isFullyImplemented.mockReturnValue(false);
-      hasApprovedCodeReview.mockReturnValue(false);
-    });
-
-    it('should execute step2 for all pending tasks without TODO', async () => {
-      const tasks = {
-        TASK1: { deps: [], status: 'pending' },
-        TASK2: { deps: [], status: 'pending' }
-      };
-      const executor = new DAGExecutor(tasks);
-
-      const plannedCount = await executor.runPlanningPhase();
-
-      expect(step2).toHaveBeenCalledTimes(2);
-      expect(step2).toHaveBeenCalledWith('TASK1');
-      expect(step2).toHaveBeenCalledWith('TASK2');
-      expect(tasks.TASK1.status).toBe('pending');
-      expect(tasks.TASK2.status).toBe('pending');
-      expect(plannedCount).toBe(2);
-    });
-
-    it('should skip step2 when TODO already exists', async () => {
-      fs.existsSync.mockImplementation(filepath => filepath.includes('TODO.md'));
-      const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks);
-
-      const plannedCount = await executor.runPlanningPhase();
-
-      expect(step2).not.toHaveBeenCalled();
-      expect(tasks.TASK1.status).toBe('pending');
-      expect(plannedCount).toBe(0);
-    });
-
-    it('should mark task as completed when code review already approved', async () => {
-      fs.existsSync.mockImplementation(filepath => filepath.includes('TODO.md'));
-      isFullyImplemented.mockReturnValue(true);
-      hasApprovedCodeReview.mockReturnValue(true);
-      const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks);
-
-      const plannedCount = await executor.runPlanningPhase();
-
-      expect(step2).not.toHaveBeenCalled();
-      expect(tasks.TASK1.status).toBe('completed');
-      expect(plannedCount).toBe(0);
-    });
-
-    it('should mark task as completed when step2 is not allowed', async () => {
-      const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks, [3, 4]);
-
-      const plannedCount = await executor.runPlanningPhase();
-
-      expect(step2).not.toHaveBeenCalled();
-      expect(tasks.TASK1.status).toBe('completed');
-      expect(plannedCount).toBe(0);
-    });
-
-    it('should mark task as failed when step2 rejects', async () => {
-      const error = new Error('planning failed');
-      step2.mockRejectedValue(error);
-      const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks);
-
-      const plannedCount = await executor.runPlanningPhase();
-
-      expect(tasks.TASK1.status).toBe('failed');
-      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('planning failed'));
-      expect(plannedCount).toBe(1);
-    });
-
-    it('should update state manager step while executing step2', async () => {
-      const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks);
-      let step2Observed = false;
-
-      step2.mockImplementation(async () => {
-        const states = executor.stateManager.getAllTaskStates();
-        expect(states.TASK1.step).toBe('Step 2 - Research and planning');
-        step2Observed = true;
-      });
-
-      const plannedCount = await executor.runPlanningPhase();
-
-      expect(step2Observed).toBe(true);
-      const states = executor.stateManager.getAllTaskStates();
-      expect(states.TASK1.step).toBeNull();
-      expect(plannedCount).toBe(1);
-    });
-  });
-
   describe('executeWave', () => {
     it('should execute ready tasks up to maxConcurrent limit', async () => {
       const tasks = {
@@ -423,7 +327,7 @@ describe('DAGExecutor', () => {
 
   describe('executeTask', () => {
     beforeEach(() => {
-      fs.existsSync.mockImplementation(filepath => filepath.includes('TODO.md'));
+      fs.existsSync.mockReturnValue(false);
       isFullyImplemented.mockReturnValue(true);
       hasApprovedCodeReview.mockReturnValue(true);
       step2.mockResolvedValue();
@@ -445,22 +349,32 @@ describe('DAGExecutor', () => {
       expect(step2).not.toHaveBeenCalled();
     });
 
-    it('should throw if TODO.md does not exist when step2 is allowed', async () => {
+    it('should execute step2 if TODO.md does not exist', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks);
       executor.running.add('TASK1');
 
-      fs.existsSync.mockReturnValue(false);
+      let step2Called = false;
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('TODO.md')) {
+          return step2Called;
+        }
+        return false;
+      });
 
-      await expect(executor.executeTask('TASK1')).rejects.toThrow('TODO.md not found');
+      step2.mockImplementation(async () => {
+        step2Called = true;
+      });
+
+      await executor.executeTask('TASK1');
+
+      expect(step2).toHaveBeenCalledWith('TASK1');
     });
 
     it('should skip step2 if not in allowedSteps', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks, [3, 4]);
       executor.running.add('TASK1');
-
-      fs.existsSync.mockReturnValue(false);
 
       await executor.executeTask('TASK1');
 
@@ -704,17 +618,8 @@ describe('DAGExecutor', () => {
   });
 
   describe('run', () => {
-    let runPlanningPhaseSpy;
-
     beforeEach(() => {
       fs.existsSync.mockReturnValue(true); // All tasks already completed
-      runPlanningPhaseSpy = jest.spyOn(DAGExecutor.prototype, 'runPlanningPhase').mockResolvedValue(0);
-    });
-
-    afterEach(() => {
-      if (runPlanningPhaseSpy) {
-        runPlanningPhaseSpy.mockRestore();
-      }
     });
 
     it('should execute simple task graph', async () => {
@@ -728,26 +633,6 @@ describe('DAGExecutor', () => {
 
       expect(tasks.TASK1.status).toBe('completed');
       expect(tasks.TASK2.status).toBe('completed');
-      expect(step1).toHaveBeenCalledTimes(1);
-    });
-
-    it('should execute step1 after planning when step2 is allowed', async () => {
-      const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks);
-      runPlanningPhaseSpy.mockResolvedValue(2);
-
-      await executor.run();
-
-      expect(step1).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not execute step1 when step2 is filtered out', async () => {
-      const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks, [3, 4]);
-
-      await executor.run();
-
-      expect(step1).not.toHaveBeenCalled();
     });
 
     it('should execute tasks respecting dependencies', async () => {
@@ -920,17 +805,8 @@ describe('DAGExecutor', () => {
   });
 
   describe('Edge cases and integration scenarios', () => {
-    let runPlanningPhaseSpy;
-
     beforeEach(() => {
       fs.existsSync.mockReturnValue(true);
-      runPlanningPhaseSpy = jest.spyOn(DAGExecutor.prototype, 'runPlanningPhase').mockResolvedValue();
-    });
-
-    afterEach(() => {
-      if (runPlanningPhaseSpy) {
-        runPlanningPhaseSpy.mockRestore();
-      }
     });
 
     it('should handle empty task list', async () => {
@@ -1180,6 +1056,26 @@ describe('DAGExecutor', () => {
       expect(states.TASK1.status).toBe('failed');
     });
 
+    it('should update step info when executing step 2', async () => {
+      const tasks = { TASK1: { deps: [], status: 'pending' } };
+      const executor = new DAGExecutor(tasks);
+      executor.running.add('TASK1');
+
+      let step2Called = false;
+      fs.existsSync.mockImplementation((filepath) => {
+        if (filepath.includes('TODO.md')) return step2Called;
+        return false;
+      });
+
+      step2.mockImplementation(async () => {
+        step2Called = true;
+        const states = executor.stateManager.getAllTaskStates();
+        expect(states.TASK1.step).toBe('Step 2 - Research and planning');
+      });
+
+      await executor.executeTask('TASK1');
+    });
+
     it('should update step info when executing step 3', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
       const executor = new DAGExecutor(tasks);
@@ -1361,13 +1257,6 @@ describe('DAGExecutor', () => {
         callOrder.push('stop');
       });
 
-      executor.runPlanningPhase = jest.fn().mockImplementation(async () => {
-        callOrder.push('runPlanningPhase');
-        return 0;
-      });
-      step1.mockImplementation(async () => {
-        callOrder.push('step1');
-      });
       executor.executeTask = jest.fn().mockImplementation(async (taskName) => {
         callOrder.push('executeTask');
         executor.tasks[taskName].status = 'completed';
@@ -1376,7 +1265,7 @@ describe('DAGExecutor', () => {
 
       await executor.run();
 
-      expect(callOrder).toEqual(['start', 'runPlanningPhase', 'step1', 'executeTask', 'stop']);
+      expect(callOrder).toEqual(['start', 'executeTask', 'stop']);
     });
 
     it('should stop UI renderer even when tasks are empty', async () => {

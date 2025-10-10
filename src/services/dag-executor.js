@@ -3,7 +3,7 @@ const path = require('path');
 const os = require('os');
 const logger = require('../../logger');
 const state = require('../config/state');
-const { step1, step2, step3, step4 } = require('../steps');
+const { step2, step3, step4 } = require('../steps');
 const { isFullyImplemented, hasApprovedCodeReview } = require('../utils/validation');
 const ParallelStateManager = require('./parallel-state-manager');
 const ParallelUIRenderer = require('./parallel-ui-renderer');
@@ -39,111 +39,6 @@ class DAGExecutor {
   shouldRunStep(stepNumber) {
     if (!this.allowedSteps) return true;
     return this.allowedSteps.includes(stepNumber);
-  }
-
-  /**
-   * Retorna os caminhos relevantes de uma task
-   */
-  getTaskPaths(taskName) {
-    const taskPath = path.join(state.claudiomiroFolder, taskName);
-    return {
-      taskPath,
-      todoPath: path.join(taskPath, 'TODO.md'),
-      codeReviewPath: path.join(taskPath, 'CODE_REVIEW.md')
-    };
-  }
-
-  /**
-   * Verifica se a task já está aprovada (TODO implementado + code review aprovado)
-   */
-  isTaskApproved(taskName) {
-    const { todoPath, codeReviewPath } = this.getTaskPaths(taskName);
-
-    if (!fs.existsSync(todoPath)) {
-      return false;
-    }
-
-    return isFullyImplemented(todoPath) && hasApprovedCodeReview(codeReviewPath);
-  }
-
-  /**
-   * Executa o passo 2 (planejamento) para todas as tasks em paralelo antes da execução principal
-   */
-  async runPlanningPhase() {
-    const taskNames = Object.keys(this.tasks || {});
-
-    if (taskNames.length === 0) {
-      return 0;
-    }
-
-    const tasksToPlan = [];
-
-    taskNames.forEach(taskName => {
-      const taskConfig = this.tasks[taskName];
-      if (!taskConfig) {
-        return;
-      }
-
-      // Se já está completa ou falhou antes, não tenta novamente
-      if (taskConfig.status === 'completed' || taskConfig.status === 'failed') {
-        return;
-      }
-
-      if (this.isTaskApproved(taskName)) {
-        taskConfig.status = 'completed';
-        this.stateManager.updateTaskStatus(taskName, 'completed');
-        return;
-      }
-
-      const { todoPath } = this.getTaskPaths(taskName);
-
-      // Se TODO já existe, nada a fazer aqui
-      if (fs.existsSync(todoPath)) {
-        return;
-      }
-
-      // Se não devemos rodar o step2, consideramos completo para fins de DAG
-      if (!this.shouldRunStep(2)) {
-        taskConfig.status = 'completed';
-        this.stateManager.updateTaskStatus(taskName, 'completed');
-        return;
-      }
-
-      tasksToPlan.push(taskName);
-    });
-
-    if (tasksToPlan.length === 0) {
-      return 0;
-    }
-
-    const planningPromises = tasksToPlan.map(taskName => this.executePlanningStep(taskName));
-    await Promise.allSettled(planningPromises);
-
-    return tasksToPlan.length;
-  }
-
-  /**
-   * Executa o step2 para uma task específica, atualizando o estado da UI
-   */
-  async executePlanningStep(taskName) {
-    this.stateManager.updateTaskStatus(taskName, 'running');
-    this.stateManager.updateTaskStep(taskName, 'Step 2 - Research and planning');
-
-    try {
-      await step2(taskName);
-      this.stateManager.updateTaskStatus(taskName, 'pending');
-      if (this.tasks[taskName]) {
-        this.tasks[taskName].status = 'pending';
-      }
-    } catch (error) {
-      this.stateManager.updateTaskStatus(taskName, 'failed');
-      if (this.tasks[taskName]) {
-        this.tasks[taskName].status = 'failed';
-      }
-      logger.error(`❌ ${taskName} failed: ${error.message}`);
-    } finally {
-      this.stateManager.updateTaskStep(taskName, null);
-    }
   }
 
   /**
@@ -195,16 +90,29 @@ class DAGExecutor {
       // Update status to running
       this.stateManager.updateTaskStatus(taskName, 'running');
 
-      const { todoPath, codeReviewPath } = this.getTaskPaths(taskName);
+      const taskPath = path.join(state.claudiomiroFolder, taskName);
+      const todoPath = path.join(taskPath, 'TODO.md');
+      const codeReviewPath = path.join(taskPath, 'CODE_REVIEW.md');
+
+      const isTaskApproved = () => {
+        if (!fs.existsSync(todoPath)) {
+          return false;
+        }
+
+        return isFullyImplemented(todoPath) && hasApprovedCodeReview(codeReviewPath);
+      };
 
       // Verifica se já está completa
-      if (this.isTaskApproved(taskName)) {
+      if (isTaskApproved()) {
         this.stateManager.updateTaskStatus(taskName, 'completed');
         this.tasks[taskName].status = 'completed';
         this.running.delete(taskName);
         return;
       }
 
+      // PROMPT.md já foi criado pelo step0, então começamos direto no step2
+
+      // Step 2: Planejamento (PROMPT.md → TODO.md)
       if (!fs.existsSync(todoPath)) {
         if (!this.shouldRunStep(2)) {
           this.stateManager.updateTaskStatus(taskName, 'completed');
@@ -212,8 +120,8 @@ class DAGExecutor {
           this.running.delete(taskName);
           return;
         }
-
-        throw new Error(`TODO.md not found for ${taskName}`);
+        this.stateManager.updateTaskStep(taskName, 'Step 2 - Research and planning');
+        await step2(taskName);
       }
 
       // Se step 2 foi executado e não devemos executar step 3, para aqui
@@ -252,7 +160,7 @@ class DAGExecutor {
           await step4(taskName);
 
           // Se ainda não foi aprovado, continua o loop
-          if (!this.isTaskApproved(taskName)) {
+          if (!isTaskApproved()) {
             continue;
           }
         }
@@ -290,36 +198,27 @@ class DAGExecutor {
     logger.info(`Starting DAG executor with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
     logger.newline();
 
+    // Initialize and start UI renderer
     const terminalRenderer = new TerminalRenderer();
     const uiRenderer = new ParallelUIRenderer(terminalRenderer);
     uiRenderer.start(this.getStateManager(), { calculateProgress });
 
-    try {
-      // Step 2: planejamento para todas as tasks antes da execução principal
-      await this.runPlanningPhase();
+    while (true) {
+      const hasMore = await this.executeWave();
 
-      if (this.shouldRunStep(2)) {
-        await step1();
-        this.stateManager.initialize(this.tasks);
+      if (!hasMore && this.running.size === 0) {
+        // Não há mais tasks prontas e nenhuma está rodando
+        break;
       }
 
-      while (true) {
-        const hasMore = await this.executeWave();
-
-        if (!hasMore && this.running.size === 0) {
-          // Não há mais tasks prontas e nenhuma está rodando
-          break;
-        }
-
-        if (!hasMore && this.running.size > 0) {
-          // Aguarda tasks em execução completarem
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      if (!hasMore && this.running.size > 0) {
+        // Aguarda tasks em execução completarem
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
-    } finally {
-      // Stop UI renderer
-      uiRenderer.stop();
     }
+
+    // Stop UI renderer
+    uiRenderer.stop();
 
     // Verifica se alguma task falhou
     const failed = Object.entries(this.tasks)
