@@ -122,17 +122,17 @@ const step2_2 = async (task) => {
   }
 
 
-// ## Split Decision (only if it truly helps)
-// - If this task is **small, straightforward, or fast to implement**, **do NOT split**. Keep it as a single unit.
-// - Split **only** when it enables **meaningful parallelism** or clarifies complex, interdependent work.
-
-// If you choose **NOT** to split:
-// - Make **no** changes to the folder structure.
-
    const execution = await executeClaude(`Carefully analyze the task located at: ${path.join(state.claudiomiroFolder, task)}   
 1. Evaluate complexity and parallelism
 	•	If this task can be divided into independent and asynchronous subtasks, perform this division in a logical and cohesive manner.
 	•	Each subtask should represent a clear functional unit, with a well-defined beginning and end.
+
+## Split Decision (only if it truly helps)
+- If this task is **small, straightforward, or fast to implement**, **do NOT split**. Keep it as a single unit.
+- Split **only** when it enables **meaningful parallelism** or clarifies complex, interdependent work.
+
+If you choose **NOT** to split:
+- Make **no** changes to the folder structure.
 
 ## 2) When splitting is justified
   If you determine splitting is beneficial:
