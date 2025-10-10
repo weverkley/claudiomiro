@@ -169,6 +169,12 @@ const chooseAction = async (i) => {
         process.exit(1);
     }
 
+    // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
+    const taskGraph = buildTaskGraph();
+
+
+    console.log('allHasTodo   ->', allHasTodo());
+
     if(!allHasTodo()){
         const shouldRunDAG = shouldRunStep(2);
 
@@ -179,12 +185,15 @@ const chooseAction = async (i) => {
             return { done: true };
         }
 
+        if (!taskGraph) {
+            logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
+            process.exit(1);
+        }
+
         const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
         await executor.runStep2();
+        return { done: true };
     }
-
-    // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
-    const taskGraph = buildTaskGraph();
 
     if (taskGraph) {
         // Verifica se algum dos steps 2, 3 ou 4 deve ser executado
@@ -232,6 +241,12 @@ const chooseAction = async (i) => {
 }
 
 const allHasTodo = () => {
+    console.log('allHasTodo');
+    console.log('allHasTodo');
+    console.log('allHasTodo');
+    console.log('allHasTodo');
+    console.log('allHasTodo');
+
     if (!fs.existsSync(state.claudiomiroFolder)) {
         return null;
     }
