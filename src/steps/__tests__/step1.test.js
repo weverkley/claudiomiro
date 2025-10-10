@@ -26,6 +26,13 @@ describe('step1', () => {
         logger.success = jest.fn();
 
         executeClaude.mockResolvedValue();
+
+        // Reset filesystem mocks to default behavior
+        fs.readdirSync.mockReturnValue([]);
+        fs.statSync.mockReturnValue({ isDirectory: () => true });
+        fs.existsSync.mockReturnValue(true);
+        fs.readFileSync.mockReturnValue('');
+        fs.writeFileSync.mockImplementation(() => {});
     });
 
     describe('Test infrastructure and mock setup', () => {

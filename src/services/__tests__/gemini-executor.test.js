@@ -115,7 +115,7 @@ describe('gemini-executor', () => {
 
       executeGemini(testText);
 
-      expect(spawn).toHaveBeenCalledWith('sh', ['-c', expect.stringContaining('gemini --prompt')], {
+      expect(spawn).toHaveBeenCalledWith('sh', ['-c', expect.stringContaining('cat')], {
         cwd: state.folder,
         stdio: ['ignore', 'pipe', 'pipe']
       });
@@ -149,8 +149,8 @@ describe('gemini-executor', () => {
       executeGemini(testText);
 
       expect(logger.stopSpinner).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith('Executing Gemini CLI with JSON output format');
-      expect(logger.command).toHaveBeenCalledWith('gemini --prompt ... --output-format json');
+      expect(logger.info).toHaveBeenCalledWith('Executing Gemini CLI');
+      expect(logger.command).toHaveBeenCalledWith('gemini ...');
     });
 
     it('should create log file with correct path', async () => {
