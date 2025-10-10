@@ -48,6 +48,11 @@ const step5 = async (tasks, shouldPush = true) => {
     
     await executeClaude(`Read "${PRS.join('" , "')}" and generate a 3 phrase resume of what was done and save in ${path.join(state.claudiomiroFolder, 'resume.txt')}`);
 
+
+    if(!fs.existsSync(path.join(state.claudiomiroFolder, 'resume.txt'))){
+        throw new Error('resume.txt not found')
+    }
+
     const resume = fs.readFileSync(path.join(state.claudiomiroFolder, 'resume.txt'), 'utf-8');
 
     const noLimit = process.argv.includes('--no-limit');
