@@ -1376,7 +1376,7 @@ describe('DAGExecutor', () => {
 
       await executor.run();
 
-      expect(callOrder).toEqual(['runPlanningPhase', 'step1', 'start', 'executeTask', 'stop']);
+      expect(callOrder).toEqual(['start', 'runPlanningPhase', 'step1', 'executeTask', 'stop']);
     });
 
     it('should stop UI renderer even when tasks are empty', async () => {

@@ -205,16 +205,14 @@ const chooseAction = async (i) => {
 
         logger.success('All tasks completed!');
         return { done: true };
-    }
-
-    if (!taskGraph) {
+    } else {
         if (!shouldRunStep(1)) {
             logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
             process.exit(1);
         }
 
         logger.newline();
-        logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
+        logger.startSpinner('Analyzing task dependencies...');
         return { step: step1(mode) };
     }
 }
@@ -275,9 +273,6 @@ const buildTaskGraph = () => {
         const deps = raw
           ? raw.split(',').filter( s => (s || '').toLowerCase() != 'none').map(s => s.trim()).filter(Boolean)
           : [];
-
-        //   console.log(task, deps);
-        //   process.exit(1);
         
         // Optional: dedupe and prevent self-dependency
         const uniqueDeps = Array.from(new Set(deps)).filter(d => d !== task);

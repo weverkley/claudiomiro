@@ -290,34 +290,36 @@ class DAGExecutor {
     logger.info(`Starting DAG executor with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
     logger.newline();
 
-    // Step 2: planejamento para todas as tasks antes da UI
-    await this.runPlanningPhase();
-
-    if (this.shouldRunStep(2)) {
-      await step1();
-      this.stateManager.initialize(this.tasks);
-    }
-
     const terminalRenderer = new TerminalRenderer();
     const uiRenderer = new ParallelUIRenderer(terminalRenderer);
     uiRenderer.start(this.getStateManager(), { calculateProgress });
 
-    while (true) {
-      const hasMore = await this.executeWave();
+    try {
+      // Step 2: planejamento para todas as tasks antes da execução principal
+      await this.runPlanningPhase();
 
-      if (!hasMore && this.running.size === 0) {
-        // Não há mais tasks prontas e nenhuma está rodando
-        break;
+      if (this.shouldRunStep(2)) {
+        await step1();
+        this.stateManager.initialize(this.tasks);
       }
 
-      if (!hasMore && this.running.size > 0) {
-        // Aguarda tasks em execução completarem
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      while (true) {
+        const hasMore = await this.executeWave();
+
+        if (!hasMore && this.running.size === 0) {
+          // Não há mais tasks prontas e nenhuma está rodando
+          break;
+        }
+
+        if (!hasMore && this.running.size > 0) {
+          // Aguarda tasks em execução completarem
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
+    } finally {
+      // Stop UI renderer
+      uiRenderer.stop();
     }
-
-    // Stop UI renderer
-    uiRenderer.stop();
 
     // Verifica se alguma task falhou
     const failed = Object.entries(this.tasks)
