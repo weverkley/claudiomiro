@@ -15,6 +15,7 @@ Turn days of complex development into a fully automated process — without sacr
 **Examples:**
 - 💬 [“Implement Express.js with some basic routes and JWT.”](https://github.com/samuelfaj/claudiomiro-express-example) - Claude
 - 💬 [“Create the classic Snake game entirely in JavaScript to run in the browser.”](https://github.com/samuelfaj/claudiomiro-snake-game-example) - Codex
+- 💬 [“Implement support for Claudiomiro to use the Gemini CLI.”](https://github.com/samuelfaj/claudiomiro/pull/8) - DeepSeek
 
 ------
 
