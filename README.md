@@ -3,7 +3,7 @@
 ![Claudiomiro](https://github.com/samuelfaj/claudiomiro/blob/main/claudiomiro.png?raw=true)
 
 
-**Send your prompt — get a fully planned, executed, reviewed, tested and committed task.**
+**Send your prompt — it decomposes, codes, reviews, builds, tests, and commits autonomously, in parallel.**
 
 Turn days of complex development into a fully automated process — without sacrificing production-grade code quality.
 
