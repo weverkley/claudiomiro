@@ -183,6 +183,11 @@ const executeClaude = (text, taskName = null) => {
         return executeDeepSeek(text, taskName);
     }
 
+    if (state.executorType === 'gemini') {
+        const { executeGemini } = require('./gemini-executor');
+        return executeGemini(text, taskName);
+    }
+
     return runClaude(text, taskName);
 };
 
