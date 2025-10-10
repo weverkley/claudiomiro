@@ -308,7 +308,11 @@ class DAGExecutor {
    * @returns {boolean} true se executou pelo menos uma task
    */
   async executeStep2Wave() {
-    const ready = this.getReadyTasks();
+    // Step 2: ignora dependências - todas as tarefas podem planejar em paralelo
+    const ready = Object.entries(this.tasks)
+      .filter(([name, task]) => task.status === 'pending')
+      .map(([name]) => name);
+    
     const availableSlots = this.maxConcurrent - this.running.size;
     const toExecute = ready.slice(0, availableSlots);
 
