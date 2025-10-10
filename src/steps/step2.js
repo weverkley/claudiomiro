@@ -113,7 +113,7 @@ const step2_1 = (task) => {
 const step2_2 = async (task) => {
   const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
-  if(task.contains('.')){
+  if (typeof task === 'string' && task.includes('.')) {
     return;
   }
 
@@ -184,7 +184,6 @@ Example:
         fs.writeFileSync(taskFile, filteredLines.join('\n'), 'utf8');
       }
 
-      await step1();
     }else{
       fs.writeFileSync(folder('split.txt'), '1');
     }
@@ -195,7 +194,7 @@ Example:
 
 const step2 = async (task) => {
   await step2_1(task);
-  await step2_2(task);
-}
+  return step2_2(task);
+};
 
 module.exports = { step2 };
