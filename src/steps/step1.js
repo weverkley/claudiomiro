@@ -89,7 +89,8 @@ ${taskContents[taskName].prompt}
         logger.stopSpinner();
         logger.success('Task dependencies analyzed and configured');
     }catch(e){
-        console.error(e);
+        logger.stopSpinner();
+        throw e;
     }
 
    for (let i = 0; i < tasks.length; i++) {
@@ -97,7 +98,6 @@ ${taskContents[taskName].prompt}
         const taskMd = path.join(state.claudiomiroFolder, taskName, 'TASK.md');
 
         if (!fs.existsSync(taskMd)) {
-            console.warn(`⚠️ Arquivo não encontrado: ${taskMd}`);
             continue;
         }
 
@@ -107,7 +107,6 @@ ${taskContents[taskName].prompt}
 
         // Se já tem @dependencies, pula
         if (firstLine.startsWith('@dependencies')) {
-            console.log(`✅ ${taskName} já possui dependências. Ignorado.`);
             continue;
         }
 
@@ -121,10 +120,6 @@ ${taskContents[taskName].prompt}
         // Reescreve o arquivo com a nova linha no topo
         const updated = `${dependencyLine}\n${content}`;
         fs.writeFileSync(taskMd, updated, 'utf-8');
-
-        console.log(
-            `🧩 Adicionado a ${taskName}: ${dependencies.length > 0 ? dependencies.join(', ') : '(nenhuma)'}`
-        );
     }
 }
 

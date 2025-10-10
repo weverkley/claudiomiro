@@ -241,6 +241,18 @@ Final Ω
             }
             return '';
         });
+
+        // Mock filesystem for step1
+        fs.readdirSync.mockImplementation((path) => {
+            if (path === state.claudiomiroFolder) {
+                return []; // Return empty array for step1
+            }
+            return [];
+        });
+        fs.statSync.mockImplementation(() => ({
+            isDirectory: () => true
+        }));
+        fs.existsSync.mockReturnValue(false);
     });
 
     afterEach(() => {
