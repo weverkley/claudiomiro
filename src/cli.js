@@ -170,10 +170,7 @@ const chooseAction = async (i) => {
     }
 
     // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
-    const taskGraph = buildTaskGraph();
-
-
-    console.log('allHasTodo   ->', allHasTodo());
+    let taskGraph = buildTaskGraph();
 
     if(!allHasTodo()){
         const shouldRunDAG = shouldRunStep(2);
@@ -192,8 +189,9 @@ const chooseAction = async (i) => {
 
         const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
         await executor.runStep2();
-        return { done: true };
     }
+
+    taskGraph = buildTaskGraph();
 
     if (taskGraph) {
         // Verifica se algum dos steps 2, 3 ou 4 deve ser executado
@@ -241,12 +239,6 @@ const chooseAction = async (i) => {
 }
 
 const allHasTodo = () => {
-    console.log('allHasTodo');
-    console.log('allHasTodo');
-    console.log('allHasTodo');
-    console.log('allHasTodo');
-    console.log('allHasTodo');
-
     if (!fs.existsSync(state.claudiomiroFolder)) {
         return null;
     }
