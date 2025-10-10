@@ -43,11 +43,13 @@ describe('step2', () => {
   });
 
   describe('step2 function execution flow', () => {
-    it('should call executeClaude with a prompt and task name', async () => {
+    it('should call executeClaude twice with task context', async () => {
       await step2('TASK1');
 
-      expect(executeClaude).toHaveBeenCalledTimes(1);
-      expect(executeClaude).toHaveBeenCalledWith(expect.any(String), 'TASK1');
+      expect(executeClaude).toHaveBeenCalledTimes(2);
+      const [firstCall, secondCall] = executeClaude.mock.calls;
+      expect(firstCall[1]).toBe('TASK1');
+      expect(secondCall[1]).toBe('TASK1');
     });
 
     it('should generate correct folder paths for task files', async () => {
@@ -332,14 +334,14 @@ describe('step2', () => {
       });
     });
 
-    it('should call executeClaude only once per invocation', async () => {
+    it('should call executeClaude twice per invocation', async () => {
       await step2('TASK1');
-      expect(executeClaude).toHaveBeenCalledTimes(1);
+      expect(executeClaude).toHaveBeenCalledTimes(2);
 
       jest.clearAllMocks();
 
       await step2('TASK2');
-      expect(executeClaude).toHaveBeenCalledTimes(1);
+      expect(executeClaude).toHaveBeenCalledTimes(2);
     });
 
     it('should create unique prompts for different tasks', async () => {

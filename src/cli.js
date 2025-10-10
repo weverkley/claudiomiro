@@ -170,7 +170,28 @@ const chooseAction = async (i) => {
     }
 
     // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
-    const taskGraph = buildTaskGraph();
+    let taskGraph = buildTaskGraph();
+
+    if(!allHasTodo()){
+        const shouldRunDAG = shouldRunStep(2);
+
+        if(!shouldRunDAG){
+            logger.newline();
+            logger.step(tasks.length, tasks.length, 5, 'Finalizing review and committing');
+            await step5(tasks, shouldPush);
+            return { done: true };
+        }
+
+        if (!taskGraph) {
+            logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
+            process.exit(1);
+        }
+
+        const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
+        await executor.runStep2();
+    }
+
+    taskGraph = buildTaskGraph();
 
     if (taskGraph) {
         // Verifica se algum dos steps 2, 3 ou 4 deve ser executado
@@ -205,18 +226,46 @@ const chooseAction = async (i) => {
 
         logger.success('All tasks completed!');
         return { done: true };
-    }
-
-    if (!taskGraph) {
+    } else {
         if (!shouldRunStep(1)) {
             logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
             process.exit(1);
         }
 
         logger.newline();
-        logger.step(tasks.length, tasks.length, 1, 'Analyzing task dependencies');
+        logger.startSpinner('Analyzing task dependencies...');
         return { step: step1(mode) };
     }
+}
+
+const allHasTodo = () => {
+    if (!fs.existsSync(state.claudiomiroFolder)) {
+        return null;
+    }
+
+    const tasks = fs
+        .readdirSync(state.claudiomiroFolder)
+        .filter(name => {
+            const fullPath = path.join(state.claudiomiroFolder, name);
+            return fs.statSync(fullPath).isDirectory();
+        })
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+    if (tasks.length === 0) {
+        return null;
+    }
+
+    for (const task of tasks) {
+        if(!fs.existsSync(path.join(state.claudiomiroFolder, task, 'TODO.md'))){
+            return false;
+        }
+
+        if(!fs.existsSync(path.join(state.claudiomiroFolder, task, 'split.txt'))){
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /**
@@ -275,9 +324,6 @@ const buildTaskGraph = () => {
         const deps = raw
           ? raw.split(',').filter( s => (s || '').toLowerCase() != 'none').map(s => s.trim()).filter(Boolean)
           : [];
-
-        //   console.log(task, deps);
-        //   process.exit(1);
         
         // Optional: dedupe and prevent self-dependency
         const uniqueDeps = Array.from(new Set(deps)).filter(d => d !== task);

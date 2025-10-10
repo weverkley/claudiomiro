@@ -244,6 +244,133 @@ class DAGExecutor {
 
     logger.success(`Completed ${completed.length}/${Object.keys(this.tasks).length} tasks`);
   }
+
+  /**
+   * Executa apenas o step2 (planejamento) para todas as tasks em paralelo
+   */
+  async runStep2() {
+    const coreCount = Math.max(1, os.cpus().length);
+    const defaultMax = Math.min(5, coreCount * 2);
+    const isCustom = this.maxConcurrent !== defaultMax;
+
+    logger.info(`Starting step 2 (planning) with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
+    logger.newline();
+
+    // Initialize and start UI renderer
+    const terminalRenderer = new TerminalRenderer();
+    const uiRenderer = new ParallelUIRenderer(terminalRenderer);
+    uiRenderer.start(this.getStateManager(), { calculateProgress });
+
+    while (true) {
+      const hasMore = await this.executeStep2Wave();
+
+      if (!hasMore && this.running.size === 0) {
+        // Não há mais tasks prontas e nenhuma está rodando
+        break;
+      }
+
+      if (!hasMore && this.running.size > 0) {
+        // Aguarda tasks em execução completarem
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    // Stop UI renderer
+    uiRenderer.stop();
+
+    // Verifica se alguma task falhou
+    const failed = Object.entries(this.tasks)
+      .filter(([, task]) => task.status === 'failed')
+      .map(([name]) => name);
+
+    const pending = Object.entries(this.tasks)
+      .filter(([, task]) => task.status === 'pending')
+      .map(([name]) => name);
+
+    logger.newline();
+    if (failed.length > 0) {
+      logger.error(`Failed tasks: ${failed.join(', ')}`);
+    }
+
+    if (pending.length > 0) {
+      logger.info(`Tasks still pending (check dependencies): ${pending.join(', ')}`);
+    }
+
+    const completed = Object.entries(this.tasks)
+      .filter(([, task]) => task.status === 'completed')
+      .map(([name]) => name);
+
+    logger.success(`Completed ${completed.length}/${Object.keys(this.tasks).length} tasks`);
+  }
+
+  /**
+   * Executa uma "onda" de tasks para step2 em paralelo
+   * @returns {boolean} true se executou pelo menos uma task
+   */
+  async executeStep2Wave() {
+    const ready = this.getReadyTasks();
+    const availableSlots = this.maxConcurrent - this.running.size;
+    const toExecute = ready.slice(0, availableSlots);
+
+    if (toExecute.length === 0) {
+      return false;
+    }
+
+    // Marca como running
+    toExecute.forEach(task => {
+      this.tasks[task].status = 'running';
+      this.running.add(task);
+    });
+
+    // Executa em paralelo
+    const promises = toExecute.map(task => this.executeStep2Task(task));
+    await Promise.allSettled(promises);
+
+    return true;
+  }
+
+  /**
+   * Executa apenas o step2 para uma task específica
+   */
+  async executeStep2Task(taskName) {
+    try {
+      // Update status to running
+      this.stateManager.updateTaskStatus(taskName, 'running');
+
+      const taskPath = path.join(state.claudiomiroFolder, taskName);
+      const todoPath = path.join(taskPath, 'TODO.md');
+
+      // Verifica se já tem TODO.md
+      if (fs.existsSync(todoPath)) {
+        this.stateManager.updateTaskStatus(taskName, 'completed');
+        this.tasks[taskName].status = 'completed';
+        this.running.delete(taskName);
+        return;
+      }
+
+      // Step 2: Planejamento (PROMPT.md → TODO.md)
+      if (!this.shouldRunStep(2)) {
+        this.stateManager.updateTaskStatus(taskName, 'completed');
+        this.tasks[taskName].status = 'completed';
+        this.running.delete(taskName);
+        return;
+      }
+
+      this.stateManager.updateTaskStep(taskName, 'Step 2 - Research and planning');
+      await step2(taskName);
+
+      this.stateManager.updateTaskStatus(taskName, 'completed');
+      this.tasks[taskName].status = 'completed';
+      this.running.delete(taskName);
+      logger.success(`✅ ${taskName} step 2 completed successfully`);
+    } catch (error) {
+      this.stateManager.updateTaskStatus(taskName, 'failed');
+      this.tasks[taskName].status = 'failed';
+      this.running.delete(taskName);
+      logger.error(`❌ ${taskName} failed: ${error.message}`);
+      throw error; // Propaga o erro
+    }
+  }
 }
 
 module.exports = { DAGExecutor };

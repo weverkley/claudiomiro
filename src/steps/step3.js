@@ -10,6 +10,8 @@ const step3 = (task) => {
       fs.rmSync(folder('CODE_REVIEW.md'));
     }
 
+    // Insert into prompt.md or task.md the generated md files from other tasks.
+
     return executeClaude(`PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 
       RULES:
