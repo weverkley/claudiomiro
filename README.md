@@ -188,38 +188,57 @@ claudiomiro /path/to/project --prompt="Add GraphQL API" --push=false --maxConcur
 
 ### Example Prompts
 
-**Eliminating Duplication:**
+**Integrating frontend and backend:**
 ```bash
-claudiomiro --prompt="These files are nearly identical:
-/src/modules/bills-to-pay-form
-/src/modules/bills-to-receive-form
-Unify them into shared components to eliminate duplication."
+I want you to review every component inside
+/project/frontend/src/app/modules/authenticated-user/pages/financial/bill
+and make sure it calls the correct backend route:
+   • /project/backend/src/http/routes/v1/auth/financial/bills-to-pay.ts
+   • /project/backend/src/http/routes/v1/auth/financial/bills-to-receive.ts
+
+In development, the URLs will look like this:
+   • http://localhost:v1/auth/bills-to-pay/xxx
+   • http://localhost:v1/auth/bills-to-receive/xxx
+
+You must create any missing routes required by the frontend,
+but all of them must stay within the /v1/auth/bills-to-pay or /v1/auth/bills-to-receive domain
+and follow the RESTful pattern (GET, POST, PUT, DELETE).
+
+You must implement controllers, routes, services, models, and anything else necessary.
+
+You must also create unit and integration tests for all functionalities, both frontend and backend.
+Tests must always use mocked data — never real data or real database connections.
+
+Finally, create one task for each frontend file that makes a backend request.
+Every single frontend functionality must be supported by the backend.
 ```
 
-**Feature Implementation:**
+**Creating tons of useful tests:**
 ```bash
-claudiomiro  --mode=hard --prompt="Create a user onboarding system with:
-- Multi-step form (profile, company, preferences)
-- Email verification
-- Progress saving
-- Mobile responsive
-- Full test coverage"
+- Delete all existing tests in /project/frontend/src/app/modules/authenticated-user/pages/financial/bill (recursively).
+- I want you to create a task for each component that exists in /project/src/app/modules/authenticated-user/pages/financial/bill (recursively):
+    - Translate the view into Brazilian Portuguese (the code must remain in English).
+    - Map out each functionality that this component performs.
+    - List all possible test cases.
+    - Create these tests.
+        - If something isn’t working, you must fix both the frontend and the backend 
+          (/project/backend/src/http/routes/v1/auth/financial/bills-to-pay.ts /project/backend/src/http/routes/v1/auth/financial/bills-to-receive.ts)
 ```
 
 **Large Refactoring:**
 ```bash
-claudiomiro --mode=hard --prompt="Migrate from REST to GraphQL:
+Migrate from REST to GraphQL:
 - Convert all API endpoints
 - Update all frontend calls
 - Maintain backward compatibility during transition
-- Add comprehensive tests"
+- Add comprehensive tests
 ```
 
 **Bug Investigation:**
 ```bash
-claudiomiro --prompt="Users report intermittent data corruption.
+Users report intermittent data corruption.
 Investigate root cause in /services/FinancialService.js
-and fix with proper tests to prevent regression."
+and fix with proper tests to prevent regression.
 ```
 
 ## Contributing
