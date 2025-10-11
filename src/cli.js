@@ -211,6 +211,11 @@ const chooseAction = async (i) => {
         const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
         await executor.run();
 
+        if(fs.existsSync(path.join(state.claudiomiroFolder, 'done.txt'))){
+            logger.info(`✅ Claudiomiro has been successfully executed. Check out: ${state.folder}`);
+            process.exit(0);
+        }
+
         // Após DAG executor, criar PR final
         if (shouldRunStep(5) && tasks.every(isTaskApproved)) {
             logger.newline();

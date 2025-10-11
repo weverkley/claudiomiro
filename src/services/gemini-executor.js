@@ -8,15 +8,50 @@ const { processGeminiMessage } = require('./gemini-logger');
 const { ParallelStateManager } = require('./parallel-state-manager');
 
 const overwriteBlock = (lines) => {
-    // Move o cursor para cima N linhas e limpa cada uma
+    // Move cursor up N lines and clear each one
     process.stdout.write(`\x1b[${lines}A`);
     for (let i = 0; i < lines; i++) {
-      process.stdout.write('\x1b[2K'); // limpa linha
-      process.stdout.write('\x1b[1B'); // desce uma linha
+      process.stdout.write('\x1b[2K'); // clear line
+      process.stdout.write('\x1b[1B'); // move down one line
     }
-    // Volta para o topo do bloco
+    // Return to top of block
     process.stdout.write(`\x1b[${lines}A`);
   }
+
+const createLoader = () => {
+    const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    let interval;
+    let isLoading = false;
+
+    const start = (message = 'loading...') => {
+        if (isLoading) return;
+        isLoading = true;
+        let i = 0;
+
+        // Write initial message
+        process.stdout.write(`\n💎 Gemini is processing ${message}`);
+
+        interval = setInterval(() => {
+            // Move cursor to beginning of line and clear
+            process.stdout.write('\r\x1b[K');
+            // Write animated frame
+            process.stdout.write(`${frames[i]} 💎 Gemini is processing ${message}`);
+            i = (i + 1) % frames.length;
+        }, 100);
+    };
+
+    const stop = () => {
+        if (!isLoading) return;
+        isLoading = false;
+        if (interval) {
+            clearInterval(interval);
+        }
+        // Clear loader line
+        process.stdout.write('\r\x1b[K');
+    };
+
+    return { start, stop };
+};
 
 // Helper function for temp file cleanup
 const cleanupTempFile = (tmpFile) => {
@@ -35,6 +70,10 @@ const runGemini = (text, taskName = null) => {
         // ParallelStateManager integration
         let stateManager = null;
         let suppressStreamingLogs = false;
+
+        // Create loader instance
+        const loader = createLoader();
+        let loaderStarted = false;
 
         if (taskName) {
             try {
@@ -71,6 +110,10 @@ const runGemini = (text, taskName = null) => {
         logger.command(`gemini ...`);
         logger.separator();
         logger.newline();
+
+        // Start loader
+        loader.start();
+        loaderStarted = true;
 
         const gemini = spawn('sh', ['-c', command], {
             cwd: state.folder,
@@ -112,7 +155,14 @@ const runGemini = (text, taskName = null) => {
             buffer = lines.pop() || '';
 
             const log = (text) => {
-                // Sobrescreve o bloco anterior se existir
+                // Stop loader on first response
+                if (loaderStarted) {
+                    loader.stop();
+                    loaderStarted = false;
+                    console.log(); // Add blank line after stopping loader
+                }
+
+                // Overwrite previous block if it exists
                 if (!suppressStreamingLogs && overwriteBlockLines > 0){
                     overwriteBlock(overwriteBlockLines);
                 }
@@ -125,15 +175,15 @@ const runGemini = (text, taskName = null) => {
                     return;
                 }
 
-                // Imprime cabeçalho
+                // Print header
                 console.log(`💎 Gemini:`);
                 lineCount++;
 
-                // Processa e imprime o texto linha por linha
+                // Process and print text line by line
                 const lines = text.split("\n");
                 for(const line of lines){
                     if(line.length > max){
-                        // Quebra linha longa em múltiplas linhas
+                        // Break long line into multiple lines
                         for(let i = 0; i < line.length; i += max){
                             console.log(line.substring(i, i + max));
                             lineCount++;
@@ -144,7 +194,7 @@ const runGemini = (text, taskName = null) => {
                     }
                 }
 
-                // Atualiza contador para próximo overwrite
+                // Update counter for next overwrite
                 overwriteBlockLines = lineCount;
             }
 
@@ -178,8 +228,15 @@ const runGemini = (text, taskName = null) => {
             logStream.write('[STDERR] ' + output);
         });
 
-        // Quando o processo terminar
+        // When process finishes
         gemini.on('close', (code) => {
+            // Stop loader if still active
+            if (loaderStarted) {
+                loader.stop();
+                loaderStarted = false;
+                console.log();
+            }
+
             // Clean up temporary file
             cleanupTempFile(tmpFile);
 
@@ -202,8 +259,15 @@ const runGemini = (text, taskName = null) => {
             }
         });
 
-        // Tratamento de erro
+        // Error handling
         gemini.on('error', (error) => {
+            // Stop loader if still active
+            if (loaderStarted) {
+                loader.stop();
+                loaderStarted = false;
+                console.log();
+            }
+
             // Clean up temporary file on error
             cleanupTempFile(tmpFile);
 

@@ -64,6 +64,7 @@ const step5 = async (tasks, shouldPush = true) => {
     while(i < limit){
         try{
             await gitCommit(resume, shouldPush)
+            fs.writeFileSync(path.join(state.claudiomiroFolder, 'done.txt'), '1');
             logger.info(`✅ Claudiomiro has been successfully executed. Check out: ${state.folder}`);
             process.exit(0);
         }catch(e){
