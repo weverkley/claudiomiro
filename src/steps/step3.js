@@ -3,12 +3,43 @@ const path = require('path');
 const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
 
+const listFolders = (dir) => {
+  return fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isDirectory());
+}
+
 const step3 = (task) => {
     const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
     if(fs.existsSync(folder('CODE_REVIEW.md'))){
       fs.rmSync(folder('CODE_REVIEW.md'));
     }
+
+    const contextFiles = [];
+
+    const folders = listFolders(state.claudiomiroFolder).filter(f => f.includes('TASK'));
+
+    for(const f of folders){
+      const taskPath = path.join(state.claudiomiroFolder, f);
+      const taskFiles = fs.readdirSync(taskPath).filter(file => !['CODE_REVIEW.md', 'PROMPT.md', 'TASK.md', 'TODO.md'].includes(file) && file.endsWith('.md'));
+
+      for(const file of taskFiles){
+         const add = path.join(taskPath, file);
+         if(!contextFiles.includes(add)){
+             contextFiles.push(add);
+         }
+      }
+    }
+
+    if(contextFiles.length > 0 && fs.existsSync(folder('TODO.md'))){
+      let todo = fs.readFileSync(folder('TODO.md'), 'utf8');
+
+      if(!todo.includes('## PREVIOUS TASKS CONTEXT FILES AND RESEARCH:')){
+         todo += `\n\n## PREVIOUS TASKS CONTEXT FILES AND RESEARCH: ${contextFiles.map(f => `\n- ${f}`).join('')}\n\n`;
+      }
+
+      fs.writeFileSync(folder('TODO.md'), todo, 'utf8');
+    }
+
 
     // Insert into prompt.md or task.md the generated md files from other tasks.
 
