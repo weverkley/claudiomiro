@@ -52,11 +52,39 @@ const runClaude = (text, taskName = null) => {
 
         let overwriteBlockLines = 0;
 
+        // Timeout to detect stuck process (10 minutes)
+        let inactivityTimer = null;
+        const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+        // Function to reset the inactivity timer
+        const resetInactivityTimer = () => {
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+            }
+
+            inactivityTimer = setTimeout(() => {
+                console.log('\n⚠️ Claude has been inactive for 10 minutes, terminating process...');
+                logStream.write(`\n\n[${new Date().toISOString()}] Claude timeout after 10 minutes of inactivity - killing process\n`);
+
+                // Kill the Claude process
+                claude.kill('SIGKILL');
+
+                // Force the Promise to reject with timeout error
+                reject(new Error('Claude stuck - timeout after 10 minutes of inactivity'));
+            }, INACTIVITY_TIMEOUT);
+        };
+
+        // Start the inactivity timer when the process begins
+        resetInactivityTimer();
+
         // Captura stdout e processa JSON streaming
         claude.stdout.on('data', (data) => {
             const output = data.toString();
             // Adiciona ao buffer
             buffer += output;
+
+            // Reset the inactivity timer when data is received
+            resetInactivityTimer();
 
             // Processa linhas completas
             const lines = buffer.split('\n');
@@ -125,6 +153,12 @@ const runClaude = (text, taskName = null) => {
 
         // Quando o processo terminar
         claude.on('close', (code) => {
+            // Clear the inactivity timer
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = null;
+            }
+
             // Clean up temporary file
             try {
                 if (fs.existsSync(tmpFile)) {
@@ -155,6 +189,12 @@ const runClaude = (text, taskName = null) => {
 
         // Tratamento de erro
         claude.on('error', (error) => {
+            // Clear the inactivity timer
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = null;
+            }
+
             // Clean up temporary file on error
             try {
                 if (fs.existsSync(tmpFile)) {

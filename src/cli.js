@@ -50,10 +50,7 @@ const chooseAction = async (i) => {
     const limitArg = process.argv.find(arg => arg.startsWith('--limit='));
     const maxAttemptsPerTask = limitArg ? parseInt(limitArg.split('=')[1], 10) : 20;
 
-    // Verifica se --mode foi passado (auto ou hard)
-    const modeArg = process.argv.find(arg => arg.startsWith('--mode='));
-    const mode = modeArg ? modeArg.split('=')[1] : 'auto'; // default: auto
-
+  
     // Verifica se --codex ou --claude foi passado
     const codexFlag = process.argv.includes('--codex');
     const claudeFlag = process.argv.includes('--claude');
@@ -68,6 +65,10 @@ const chooseAction = async (i) => {
     }
 
     if(deepSeekFlag){
+        executorType = 'deep-seek'
+    }
+
+    if(glmFlag){
         executorType = 'glm'
     }
 
@@ -104,7 +105,6 @@ const chooseAction = async (i) => {
         !arg.startsWith('--step=') &&
         arg !== '--no-limit' &&
         !arg.startsWith('--limit=') &&
-        !arg.startsWith('--mode') &&
         arg !== '--codex' &&
         arg !== '--claude' &&
         arg !== '--deep-seek' &&
@@ -143,7 +143,7 @@ const chooseAction = async (i) => {
             logger.info('Step 0 skipped (not in --steps list)');
             return { done: true };
         }
-        return { step: step0(sameBranch, promptText, mode) };
+        return { step: step0(sameBranch, promptText) };
     }
 
     const tasks = fs
@@ -160,7 +160,7 @@ const chooseAction = async (i) => {
             return { done: true };
         }
         
-        return { step: step0(sameBranch, promptText, mode) };
+        return { step: step0(sameBranch, promptText) };
     }
 
     // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
@@ -228,7 +228,7 @@ const chooseAction = async (i) => {
 
         logger.newline();
         logger.startSpinner('Analyzing task dependencies...');
-        return { step: step1(mode) };
+        return { step: step1() };
     }
 }
 
@@ -336,7 +336,7 @@ const init = async () => {
     logger.banner();
 
     // Inicializa o state.folder antes de usá-lo
-    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit' && !arg.startsWith('--limit=') && !arg.startsWith('--mode'));
+    const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit' && !arg.startsWith('--limit='));
     const folderArg = args[0] || process.cwd();
     state.setFolder(folderArg);
 

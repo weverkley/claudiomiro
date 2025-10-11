@@ -21,7 +21,7 @@ class State {
     }
 
     setExecutorType(type) {
-        const allowed = ['claude', 'codex', 'deep-seek', 'gemini'];
+        const allowed = ['claude', 'codex', 'deep-seek', 'glm', 'gemini'];
         if (!allowed.includes(type)) {
             throw new Error(`Invalid executor type: ${type}`);
         }

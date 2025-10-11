@@ -57,11 +57,39 @@ const runDeepSeek = (text, taskName = null) => {
 
         let overwriteBlockLines = 0;
 
+        // Timeout to detect stuck process (10 minutes)
+        let inactivityTimer = null;
+        const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+        // Function to reset the inactivity timer
+        const resetInactivityTimer = () => {
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+            }
+
+            inactivityTimer = setTimeout(() => {
+                console.log('\n⚠️ DeepSeek has been inactive for 10 minutes, terminating process...');
+                logStream.write(`\n\n[${new Date().toISOString()}] DeepSeek timeout after 10 minutes of inactivity - killing process\n`);
+
+                // Kill the DeepSeek process
+                deepSeek.kill('SIGKILL');
+
+                // Force the Promise to reject with timeout error
+                reject(new Error('DeepSeek stuck - timeout after 10 minutes of inactivity'));
+            }, INACTIVITY_TIMEOUT);
+        };
+
+        // Start the inactivity timer when the process begins
+        resetInactivityTimer();
+
         // Captura stdout e processa JSON streaming
         deepSeek.stdout.on('data', (data) => {
             const output = data.toString();
             // Adiciona ao buffer
             buffer += output;
+
+            // Reset the inactivity timer when data is received
+            resetInactivityTimer();
 
             // Processa linhas completas
             const lines = buffer.split('\n');
@@ -130,6 +158,12 @@ const runDeepSeek = (text, taskName = null) => {
 
         // Quando o processo terminar
         deepSeek.on('close', (code) => {
+            // Clear the inactivity timer
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = null;
+            }
+
             // Clean up temporary file
             try {
                 if (fs.existsSync(tmpFile)) {
@@ -160,6 +194,12 @@ const runDeepSeek = (text, taskName = null) => {
 
         // Tratamento de erro
         deepSeek.on('error', (error) => {
+            // Clear the inactivity timer
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = null;
+            }
+
             // Clean up temporary file on error
             try {
                 if (fs.existsSync(tmpFile)) {

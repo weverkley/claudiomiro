@@ -117,7 +117,7 @@ const processResultMessage = (json) => {
  * @param {string} line - JSON line to process
  * @returns {string|null} - Formatted text or null if no content
  */
-const processDeepSeekMessage = (line) => {
+const processGlmMessage = (line) => {
     try {
         const json = JSON.parse(line);
 
@@ -140,4 +140,4 @@ const processDeepSeekMessage = (line) => {
     }
 };
 
-module.exports = { processDeepSeekMessage };
+module.exports = { processGlmMessage };
