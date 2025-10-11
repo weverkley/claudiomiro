@@ -58,6 +58,7 @@ const chooseAction = async (i) => {
     const codexFlag = process.argv.includes('--codex');
     const claudeFlag = process.argv.includes('--claude');
     const deepSeekFlag = process.argv.includes('--deep-seek');
+    const glmFlag = process.argv.includes('--glm');
     const gemini = process.argv.includes('--gemini');
 
     let executorType = 'claude';
@@ -67,7 +68,7 @@ const chooseAction = async (i) => {
     }
 
     if(deepSeekFlag){
-        executorType = 'deep-seek'
+        executorType = 'glm'
     }
 
     if(gemini){
@@ -107,6 +108,7 @@ const chooseAction = async (i) => {
         arg !== '--codex' &&
         arg !== '--claude' &&
         arg !== '--deep-seek' &&
+        arg !== '--glm' &&
         arg !== '--gemini'
     );
     const folderArg = args[0] || process.cwd();
