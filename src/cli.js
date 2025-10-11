@@ -144,18 +144,6 @@ const chooseAction = async (i) => {
         return { step: step0(sameBranch, promptText, mode) };
     }
 
-    // STEP 0: Criar todas as tasks (TASK.md + PROMPT.md)
-    if(
-        !fs.existsSync(path.join(state.claudiomiroFolder, 'TASK0')) && 
-        !fs.existsSync(path.join(state.claudiomiroFolder, 'TASK1'))
-    ){
-        if (!shouldRunStep(0)) {
-            logger.info('Step 0 skipped (not in --steps list)');
-            return { done: true };
-        }
-        return { step: step0(sameBranch, promptText, mode) };
-    }
-
     const tasks = fs
     .readdirSync(state.claudiomiroFolder)
     .filter(name => {
@@ -165,8 +153,12 @@ const chooseAction = async (i) => {
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
     if (tasks.length === 0) {
-        logger.error('No tasks found in claudiomiro folder');
-        process.exit(1);
+        if (!shouldRunStep(0)) {
+            logger.info('Step 0 skipped (not in --steps list)');
+            return { done: true };
+        }
+        
+        return { step: step0(sameBranch, promptText, mode) };
     }
 
     // ATIVAR DAG EXECUTOR: Se já temos @dependencies definidas, usar execução paralela
