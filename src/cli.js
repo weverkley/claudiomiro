@@ -134,6 +134,17 @@ const chooseAction = async (i) => {
     }
 
     if(shouldStartFresh && i === 0){
+        if(fs.existsSync(state.claudiomiroFolder)){
+            if(!fs.existsSync(path.join(state.claudiomiroFolder, 'done.txt'))){
+                // last execution not finished, user need to confirm
+                const confirm = await logger.confirm(`It seems the last execution in ${state.claudiomiroFolder} was not finished. Starting fresh will delete this folder and all its contents. Do you want to continue?`);
+                if(!confirm){
+                    logger.info('Operation cancelled by user.');
+                    process.exit(0);
+                }
+             }
+        }
+
         startFresh();
     }
 

@@ -3,6 +3,8 @@ const ora = require('ora');
 const logSymbols = require('log-symbols');
 const boxen = require('boxen');
 const gradient = require('gradient-string');
+const readline = require('readline');
+const packageJson = require('./package.json');
 
 class Logger {
     constructor() {
@@ -34,10 +36,11 @@ class Logger {
 
     // Banner inicial
     banner() {
+        const version = packageJson.version;
         const title = gradient.pastel.multiline([
             '╔═══════════════════════════════════════╗',
             '║                                       ║',
-            '║           CLAUDIOMIRO v1.3            ║',
+            `║          CLAUDIOMIRO v${version}           ║`,
             '║     AI-Powered Development Agent      ║',
             '║                                       ║',
             '╚═══════════════════════════════════════╝'
@@ -230,6 +233,24 @@ class Logger {
     newline() {
         this.withOutput(() => {
             console.log();
+        });
+    }
+
+    // Confirmação do usuário
+    async confirm(message) {
+        return new Promise((resolve) => {
+            const rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout
+            });
+
+            this.withOutput(() => {
+                rl.question(`${chalk.yellow('?')} ${message} ${chalk.gray('(y/N)')} `, (answer) => {
+                    rl.close();
+                    const normalized = answer.toLowerCase().trim();
+                    resolve(normalized === 'y' || normalized === 'yes');
+                });
+            });
         });
     }
 }
