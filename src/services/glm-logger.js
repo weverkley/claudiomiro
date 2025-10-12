@@ -46,7 +46,7 @@ const formatToolDescription = (toolName, input) => {
 };
 
 /**
- * Processes assistant messages (DeepSeek)
+ * Processes assistant messages (Glm)
  */
 const processAssistantMessage = (json) => {
     if (!json.message || !json.message.content) return null;
@@ -54,7 +54,7 @@ const processAssistantMessage = (json) => {
     let output = '';
 
     for (const msg of json.message.content) {
-        // DeepSeek's text
+        // Glm's text
         if (msg.type === 'text' && msg.text) {
             output += msg.text;
         }
@@ -79,7 +79,7 @@ const processAssistantMessage = (json) => {
  */
 const processUserMessage = () => {
     // For now, we don't show tool results to avoid clutter
-    // DeepSeek already shows what's important in its text
+    // Glm already shows what's important in its text
     return null;
 };
 
@@ -88,7 +88,7 @@ const processUserMessage = () => {
  */
 const processSystemMessage = (json) => {
     if (json.subtype === 'init') {
-        return '🚀 Starting DeepSeek...';
+        return '🚀 Starting Glm...';
     }
     return null;
 };
@@ -113,7 +113,7 @@ const processResultMessage = (json) => {
 };
 
 /**
- * Processes DeepSeek JSON and returns formatted text for display
+ * Processes Glm JSON and returns formatted text for display
  * @param {string} line - JSON line to process
  * @returns {string|null} - Formatted text or null if no content
  */

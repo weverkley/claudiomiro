@@ -84,7 +84,13 @@ Always include a **final numeric task** to verify:
 
 ---
 
-IMPORTANT: YOU MUST CREATE THE TASKS FILES AND INSIDE: {{claudiomiroFolder}}
+ 🚨 CRITICAL: All task files MUST be created inside the {{claudiomiroFolder}} directory, NEVER in the project root.
+   - Create folders like: {{claudiomiroFolder}}/TASK1/, {{claudiomiroFolder}}/TASK2/, etc.
+   - NEVER create TASK folders directly in the project root
+   - ALL files must be inside the .claudiomiro subdirectory
+   - TASK FOLDER NAMES MUST FOLLOW THE PATTERN: `TASK{number}`. E.g TASK1, TASK2, TASK3, ...
+
+IMPORTANT: YOU MUST CREATE THE TASKS FILES:
 
 ## ⚙️ Output Requirements
 
@@ -208,6 +214,8 @@ Final Ω
 
 ✅ Decompose only when it increases clarity, autonomy, or verifiability.
 ✅ Keep simple things simple, and hard things distributed but coherent.
+
+🚨 CRITICAL: TASK FOLDER NAMES MUST FOLLOW THE PATTERN: `TASK{number}`. E.g TASK1, TASK2, TASK3, ...
 
  ---
 

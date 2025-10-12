@@ -39,7 +39,7 @@ const runGlm = (text, taskName = null) => {
         logger.separator();
         logger.newline();
 
-        const deepSeek = spawn('sh', ['-c', command], {
+        const glm = spawn('sh', ['-c', command], {
             cwd: state.folder,
             stdio: ['ignore', 'pipe', 'pipe']
         });
@@ -72,7 +72,7 @@ const runGlm = (text, taskName = null) => {
                 logStream.write(`\n\n[${new Date().toISOString()}] Glm timeout after 10 minutes of inactivity - killing process\n`);
 
                 // Kill the Glm process
-                deepSeek.kill('SIGKILL');
+                glm.kill('SIGKILL');
 
                 // Force the Promise to reject with timeout error
                 reject(new Error('Glm stuck - timeout after 10 minutes of inactivity'));
@@ -83,7 +83,7 @@ const runGlm = (text, taskName = null) => {
         resetInactivityTimer();
 
         // Captura stdout e processa JSON streaming
-        deepSeek.stdout.on('data', (data) => {
+        glm.stdout.on('data', (data) => {
             const output = data.toString();
             // Adiciona ao buffer
             buffer += output;
@@ -150,14 +150,14 @@ const runGlm = (text, taskName = null) => {
         });
 
         // Captura stderr
-        deepSeek.stderr.on('data', (data) => {
+        glm.stderr.on('data', (data) => {
             const output = data.toString();
             // process.stderr.write(output);
             logStream.write('[STDERR] ' + output);
         });
 
         // Quando o processo terminar
-        deepSeek.on('close', (code) => {
+        glm.on('close', (code) => {
             // Clear the inactivity timer
             if (inactivityTimer) {
                 clearTimeout(inactivityTimer);
@@ -193,7 +193,7 @@ const runGlm = (text, taskName = null) => {
         });
 
         // Tratamento de erro
-        deepSeek.on('error', (error) => {
+        glm.on('error', (error) => {
             // Clear the inactivity timer
             if (inactivityTimer) {
                 clearTimeout(inactivityTimer);
