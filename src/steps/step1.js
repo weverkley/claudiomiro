@@ -134,8 +134,9 @@ Goal: For all tasks (${tasks.join(', ')}), read their TASK.md and PREPEND a sing
 Rules:
 - Default: @dependencies []
 - Add a dep ONLY if:
-  1) This task needs another task’s output/API/file to run, OR
-  2) Both tasks create/modify the SAME file (creation/modify conflict)
+    1) Another prior task is going to edit a file that this task reads/edits (file conflict), OR
+    2) This task needs another task’s output/API/file to run, OR
+    3) Both tasks create/modify the SAME file (creation/modify conflict)
 - Use ONLY direct deps (no transitive: if C→B→A, write C:[B], B:[A])
 - Prefer parallelism; if unsure, leave it empty
 
@@ -167,6 +168,9 @@ Procedure:
 - What could go wrong with this dependency analysis?
 - Could a change in file order, naming, or module structure invalidate my reasoning?
 - Am I optimizing for true independence or just for convenience?
+
+
+ 🚨 CRITICAL: All task files MUST be created inside the {{claudiomiroFolder}} directory, NEVER in the project root.
 `;
 
 module.exports = { step1 };
