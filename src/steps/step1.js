@@ -150,6 +150,8 @@ Procedure:
 1) From the task descriptions and file impacts, infer minimal TRUE deps among the listed tasks.
 2) Update each TASK.md so that "@dependencies [..]" is the FIRST LINE.
 
+🚨 CRITICAL: The task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TASK{number}"
+
 ---
 
 **CRITICAL REQUIREMENTS:**

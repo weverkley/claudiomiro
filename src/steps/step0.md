@@ -106,9 +106,9 @@ Explain clearly what must be done and why. Focus on reasoning and context.
 Low / Medium / High
 
 ## Dependencies
-Depends on: [Tasks]
-Blocks: [Tasks]
-Parallel with: [Tasks]
+Depends on: [Tasks]  // Task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TASK{number}"
+Blocks: [Tasks] // Task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TASK{number}"
+Parallel with: [Tasks] // Task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TASK{number}"
 
 ## Steps
 1. [Detailed steps if needed]
