@@ -92,7 +92,7 @@ const step2_1 = (task) => {
         - Example:  
           \`npm test ./<changed-folder>\`  
           \`npm test -- --testPathPattern="example"\`
-          \`eslint ./<changed-folder>\`  
+          \`eslint --fix ./<changed-folder>\`  
           \`tsc --noEmit ./<changed-folder>/index.ts\`
         - Do **not** run full-project commands like \`npm test\`, \`npm run lint\`, or \`tsc --noEmit\`.  
           Those will execute in a separate global verification stage.

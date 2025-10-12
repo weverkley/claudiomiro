@@ -75,8 +75,10 @@ class DAGExecutor {
       this.running.add(task);
     });
 
-    // Executa em paralelo
+    // Executa em paralelo com Promise.allSettled para permitir controle individual
     const promises = toExecute.map(task => this.executeTask(task));
+
+    // Aguarda cada promise individualmente e verifica se novas tarefas podem começar
     await Promise.allSettled(promises);
 
     return true;
@@ -218,19 +220,57 @@ class DAGExecutor {
     const uiRenderer = new ParallelUIRenderer(terminalRenderer);
     uiRenderer.start(this.getStateManager(), { calculateProgress });
 
+    // Mantém controle das tasks em execução com promises individuais
+    const runningPromises = new Map();
+
     while (true) {
       buildTaskGraph(); // Rebuild task graph to capture any changes in dependencies
-      const hasMore = await this.executeWave();
 
-      if (!hasMore && this.running.size === 0) {
-        // Não há mais tasks prontas e nenhuma está rodando
-        break;
+      // Verifica se há slots disponíveis e tasks prontas
+      const ready = this.getReadyTasks();
+      const availableSlots = this.maxConcurrent - this.running.size;
+
+      // Inicia novas tasks se houver slots disponíveis
+      if (ready.length > 0 && availableSlots > 0) {
+        const toExecute = ready.slice(0, availableSlots);
+
+        for (const taskName of toExecute) {
+          this.tasks[taskName].status = 'running';
+          this.running.add(taskName);
+
+          // Cria a promise da task e armazena no mapa
+          const taskPromise = this.executeTask(taskName)
+            .finally(() => {
+              // Remove do running set quando completar
+              this.running.delete(taskName);
+              runningPromises.delete(taskName);
+            });
+
+          runningPromises.set(taskName, taskPromise);
+        }
       }
 
-      if (!hasMore && this.running.size > 0) {
-        // Aguarda tasks em execução completarem
+      // Verifica se todas as tasks foram completadas
+      const allTasksCompleted = Object.values(this.tasks).every(task =>
+        task.status === 'completed' || task.status === 'failed'
+      );
+
+      if (allTasksCompleted && this.running.size === 0) {
+        break; // Todas as tasks foram processadas
+      }
+
+      // Se ainda há tasks rodando, aguarda um pouco antes de verificar novamente
+      if (this.running.size > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Reduzido para resposta mais rápida
+      } else if (ready.length === 0) {
+        // Não há tasks prontas e nenhuma rodando - possivelmente dependências não satisfeitas
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
+    }
+
+    // Garante que todas as promises pendentes foram resolvidas
+    if (runningPromises.size > 0) {
+      await Promise.allSettled(Array.from(runningPromises.values()));
     }
 
     // Stop UI renderer

@@ -71,6 +71,7 @@ RULES:
 - CRITICAL: Update ${folder('TODO.md')} in real time as you're doing things.
 - Multi-repo tasks are allowed.
 - Only mark BLOCKED if you cannot do the item no matter how.
+- Always prefer auto fixes (e.g., eslint --fix).
 
 TESTS:
 - Run only affected tests/linters/typechecks.
