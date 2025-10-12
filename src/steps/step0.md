@@ -110,11 +110,16 @@ Depends on: [Tasks]  // Task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TASK{
 Blocks: [Tasks] // Task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TASK{number}"
 Parallel with: [Tasks] // Task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TASK{number}"
 
-## Steps
+## Detailed Steps
 1. [Detailed steps if needed]
 
 ## Acceptance Criteria
 - [ ] Clear, testable result #1
+- [ ] ...
+
+## Code Review Checklist
+- [ ] Clear naming, no dead code.
+- [ ] Errors handled consistently.
 - [ ] ...
 
 ## Reasoning Trace
@@ -133,6 +138,9 @@ Refined AI prompt for execution.
 Low / Medium / High
 
 ## RELATED FILES / SOURCES
+[...]
+
+## CONTEXT FILES / SOURCES
 [...]
 
 ## EXTRA DOCUMENTATION
