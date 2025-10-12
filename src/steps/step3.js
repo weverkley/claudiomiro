@@ -44,17 +44,7 @@ const step3 = async (task) => {
     // Insert into prompt.md or task.md the generated md files from other tasks.
 
     try {
-      return await executeClaude(`PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
-
-      RULES:
-      - Never run git add/commit/push.
-      - ${folder('TODO.md')} must exist and start with "Fully implemented: YES" or "NO".
-      - Multi-repo tasks are allowed.
-      - Only mark BLOCKED if external/manual dependency.
-      - IMPORTANT: If Claude execution fails, do NOT mark as "Fully implemented: YES"
-
----
-
+      return await executeClaude(`
 OBJECTIVE:
 Execute all actionable items in ${folder('TODO.md')} in parallel when possible.
 Stop only when all items are [X] or BLOCKED/FAILED and the first line is "Fully implemented: YES".
@@ -74,6 +64,13 @@ LOOP:
       - NEVER run full-project.
    - If all pass → set "Fully implemented: YES".
    - Else → revert to "NO" and reopen failed items.
+
+RULES:
+- Don't run git add/commit/push.
+- First line of ${folder('TODO.md')} MUST be "Fully implemented: YES" or "NO".
+- CRITICAL: Update ${folder('TODO.md')} in real time as you're doing things.
+- Multi-repo tasks are allowed.
+- Only mark BLOCKED if you cannot do the item no matter how.
 
 TESTS:
 - Run only affected tests/linters/typechecks.

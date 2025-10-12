@@ -77,27 +77,50 @@ const step4 = (task) => {
       ## Decision
 
       If everything looks **functionally correct**:
-      - Confirm first line of \`${folder('TODO.md')}\` is: \`Fully implemented: YES\`
-      - Add in the second line of \`${folder('TODO.md')}\`: "Code review passed"
-      - Create a small \`${folder('CODE_REVIEW.md')}\` file:
-        \`\`\`markdown
-        ## Status
-        ✅ APPROVED
+        - Confirm first line of \`${folder('TODO.md')}\` is: \`Fully implemented: YES\`
+        - Add in the second line of \`${folder('TODO.md')}\`: "Code review passed"
+        - Create a small \`${folder('CODE_REVIEW.md')}\` file:
+          \`\`\`markdown
+          ## Status
+          ✅ APPROVED
 
-        ## Checks
-        - ✅ Requirements match scope
-        - ✅ No critical bugs detected
-        - ✅ Tests cover acceptance criteria
-        \`\`\`
+          ## Checks
+          - ✅ Requirements match scope
+          - ✅ No critical bugs detected
+          - ✅ Tests cover acceptance criteria
+          \`\`\`
 
       If **problems found**:
-      - Update \`${folder('TODO.md')}\` ADDING a complete implementation plan the specific fixes needed
-      - Set first line of \`${folder('TODO.md')}\` to: \`Fully implemented: NO\`
-      - Add in the second line of \`${folder('TODO.md')}\`: "Why code review failed: " and explain shortly.
+        - Set first line of \`${folder('TODO.md')}\` to: \`Fully implemented: NO\`
+        - The second line of \`${folder('TODO.md')}\` should be: "Why code review failed: " and explain shortly.
+        - Update \`${folder('TODO.md')}\` as follows:
+            1. **Keep all existing checklist items as-is.**  
+              - Do **not** uncheck or remove previously completed items.  
+              - The goal is to preserve historical progress and continuity.
 
-      **Be pragmatic**: If it works and meets requirements, approve it quickly.
+            2. **Add new actionable items** to the checklist under the **"Implementation Plan"** section.  
+              - Each new item should describe exactly what must be corrected or improved.
+              - Use concise and directive language (e.g. “Fix null-check on BillingService before database save”).
 
-      Focus only on blockers and bugs, not style preferences.
+            3. **Append or create a new section** titled:
+              \`\`\`markdown
+              ## Code Review Attempts
+              \`\`\`
+              - Log the current review date and briefly summarize issues found.
+              - Include clear, actionable guidance for each issue:
+              \`\`\`
+                - Issue: Missing validation for 'userId' in POST request
+                  Fix: Add Joi schema check before model.create()
+                - Issue: Race condition in cache refresh
+                  Fix: Move redis.set() call inside transaction block
+              \`\`\`
+              - Keep a chronological list of past review attempts for full traceability.
+
+            4. Ensure the resulting \`TODO.md\` remains **self-explanatory** — a new developer should be able to read it and immediately understand:
+              - What failed
+              - Why it failed
+              - What must be done next
+              - Who or what performed each review
     `, task);
 }
 

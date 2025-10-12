@@ -205,7 +205,7 @@ class DAGExecutor {
   /**
    * Executa todas as tasks respeitando dependências
    */
-  async run() {
+  async run(buildTaskGraph) {
     const coreCount = Math.max(1, os.cpus().length);
     const defaultMax = Math.min(5, coreCount * 2);
     const isCustom = this.maxConcurrent !== defaultMax;
@@ -219,6 +219,7 @@ class DAGExecutor {
     uiRenderer.start(this.getStateManager(), { calculateProgress });
 
     while (true) {
+      buildTaskGraph(); // Rebuild task graph to capture any changes in dependencies
       const hasMore = await this.executeWave();
 
       if (!hasMore && this.running.size === 0) {
