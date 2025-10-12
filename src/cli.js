@@ -349,10 +349,14 @@ const buildTaskGraph = () => {
         const uniqueDeps = Array.from(new Set(deps)).filter(d => d !== task);
 
         // Adiciona todas as subtasks das dependências
-        const allDepsWithSubtasks = [...uniqueDeps];
+        const allDepsWithSubtasks = [];
         for (const dep of uniqueDeps) {
             const subtasks = findSubtasks(dep, tasks);
             allDepsWithSubtasks.push(...subtasks);
+
+            if(fs.existsSync(path.join(state.claudiomiroFolder, dep))){
+                allDepsWithSubtasks.push(dep);
+            }
         }
 
         // Remove duplicatas e previne auto-dependencia novamente
