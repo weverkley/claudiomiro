@@ -45,37 +45,26 @@ const step1 = async (mode = 'auto') => {
         return;
     }
 
-    // Lê o conteúdo de cada task
-    const taskContents = {};
-    for (const taskName of tasks) {
-        const taskMd = path.join(state.claudiomiroFolder, taskName, 'TASK.md');
-        const promptMd = path.join(state.claudiomiroFolder, taskName, 'PROMPT.md');
+    const tasksMd = [];
+    const promptMds = [];
 
-        taskContents[taskName] = {
-            task: fs.existsSync(taskMd) ? fs.readFileSync(taskMd, 'utf-8') : '',
-            prompt: fs.existsSync(promptMd) ? fs.readFileSync(promptMd, 'utf-8') : ''
-        };
+    for (const task of tasks) {
+        const taskMd = path.join(state.claudiomiroFolder, task, 'TASK.md');
+        const promptMd = path.join(state.claudiomiroFolder, task, 'PROMPT.md');
+
+        if (!fs.existsSync(taskMd)) {
+            throw new Error(`TASK.md not found for task ${task}`);
+        }
+        
+        if (!fs.existsSync(promptMd)) {
+            throw new Error(`PROMPT.md not found for task ${task}`);
+        }
+
+        tasksMd.push(taskMd);
+        promptMds.push(promptMd);
     }
 
-    // Monta o prompt para análise
-    const tasksDescription = tasks
-        .map(taskName => {
-            return `### ${taskName}
-**TASK.md:**
-\`\`\`
-${taskContents[taskName].task}
-\`\`\`
-
-**PROMPT.md:**
-\`\`\`
-${taskContents[taskName].prompt}
-\`\`\`
-`;
-        })
-        .join('\n\n');
-
-    // Escolhe o prompt baseado no mode
-    const prompt = getHardModePrompt(tasksDescription, tasks);
+    const prompt = getHardModePrompt(tasksMd, promptMds, tasks);
 
     try{
         await executeClaude(prompt);
@@ -119,17 +108,19 @@ ${taskContents[taskName].prompt}
     }
 }
 
-const getHardModePrompt = (tasksDescription, tasks) => `
+const getHardModePrompt = (tasksMd, promptMds, tasks) => `
 ## Context to Analyze
 
-${tasksDescription}
+TASK.md: "${tasksMd.join('", "')}"
+PROMPT.md: "${promptMds.join('", "')}"
 
 ---
 
-Your mission: **Maximize parallel execution by identifying ONLY true dependencies WHILE providing rigorous analysis and justification**.
+Your mission: 
+**Maximize parallel execution by identifying ONLY true dependencies WHILE providing rigorous analysis and justification**.
 
-Goal: For all tasks (${tasks.join(', ')}), read their TASK.md and PREPEND a single first line:
-@dependencies [LIST]
+Open each of the files: TASK.md and for each of them PREPEND a single first line:
+\`@dependencies [LIST]\`
 
 Rules:
 - Default: @dependencies []

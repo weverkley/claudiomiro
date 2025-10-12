@@ -250,7 +250,7 @@ class DAGExecutor {
    */
   async runStep2() {
     const coreCount = Math.max(1, os.cpus().length);
-    const defaultMax = Math.min(5, coreCount * 2);
+    const defaultMax = Math.max(1, coreCount * 3);
     const isCustom = this.maxConcurrent !== defaultMax;
 
     logger.info(`Starting step 2 (planning) with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);

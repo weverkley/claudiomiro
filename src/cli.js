@@ -187,12 +187,23 @@ const chooseAction = async (i) => {
             return { done: true };
         }
 
-        if (!taskGraph) {
-            logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
-            process.exit(1);
+        // if (!taskGraph) {
+        //     logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
+        //     process.exit(1);
+        // }
+
+        let graph = {};
+
+        for(const task of tasks){
+            graph[task] = {
+                deps: [],
+                status: isTaskApproved(task) ? 'completed' : 'pending',
+            };
         }
 
-        const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
+        console.log('graph', graph);
+
+        const executor = new DAGExecutor(graph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
         await executor.runStep2();
     }
 
