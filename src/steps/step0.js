@@ -5,7 +5,6 @@ const logger = require('../../logger');
 const { executeClaude } = require('../services/claude-executor');
 const { getMultilineInput } = require('../services/prompt-reader');
 const { startFresh } = require('../services/file-manager');
-const { step1 } = require('./step1');
 
 const step0 = async (sameBranch = false, promptText = null, mode = 'auto') => {
     const task = promptText || await getMultilineInput();
@@ -44,8 +43,6 @@ const step0 = async (sameBranch = false, promptText = null, mode = 'auto') => {
             throw new Error('Error creating tasks')
         }
     }
-
-    await step1();
 }
 
 module.exports = { step0 };

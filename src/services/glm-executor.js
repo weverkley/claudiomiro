@@ -59,7 +59,7 @@ const runGlm = (text, taskName = null) => {
 
         // Timeout to detect stuck process (10 minutes)
         let inactivityTimer = null;
-        const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+        const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 10 minutes in milliseconds
 
         // Function to reset the inactivity timer
         const resetInactivityTimer = () => {

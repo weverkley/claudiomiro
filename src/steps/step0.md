@@ -96,7 +96,7 @@ IMPORTANT: YOU MUST CREATE THE TASKS FILES:
 
 ### A) `{{claudiomiroFolder}}/TASKX/TASK.md`
 ```markdown
-
+@dependencies [Tasks]  // Task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TASK{number}"
 # Task: [Concise title]
 
 ## Summary
@@ -120,6 +120,9 @@ Parallel with: [Tasks] // Task name MUST BE COMPLETE AND FOLLOW THE PATTERN "TAS
 ## Reasoning Trace
 Explain design logic and trade-offs.
 ```
+
+ 🚨 CRITICAL: First line of must be @dependencies [...]
+
 
 ### B) `{{claudiomiroFolder}}/TASKX/PROMPT.md`
 ```markdown
@@ -215,7 +218,7 @@ Final Ω
 ✅ Decompose only when it increases clarity, autonomy, or verifiability.
 ✅ Keep simple things simple, and hard things distributed but coherent.
 
-🚨 CRITICAL: TASK FOLDER NAMES MUST FOLLOW THE PATTERN: `TASK{number}`. E.g TASK1, TASK2, TASK3, ...
+🚨 CRITICAL: TASK FOLDER NAMES MUST FOLLOW THE PATTERN: `TASK{number}`. E.g TASK0, TASK2, TASK3, ...
 
  ---
 

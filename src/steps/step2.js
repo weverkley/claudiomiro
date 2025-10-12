@@ -145,6 +145,8 @@ If you choose **NOT** to split:
     - ${path.join(state.claudiomiroFolder, task)}.3
     (Create only as many as are logically necessary. Do not create empty subtasks.)
 
+  - You MUST update all TASK.md files inside ${path.join(state.claudiomiroFolder)} with the new dependencies and numbering. 
+
 ### Required structure for EACH subtask
   You MUST create for each subtask:
   - TASK.md   → objective, scope, and acceptance criteria
@@ -157,6 +159,11 @@ Example:
     ├─ PROMPT.md
     └─ TODO.md
 
+CRITICAL: First line of EACH TASK.md MUST be the updated dependencies list:
+\`@dependencies [LIST]\`
+
+CRITICAL: If you split a task: You MUST update all TASK.md files inside ${path.join(state.claudiomiroFolder)} with the new dependencies and numbering. 
+
 ### Dependency & coherence rules
 - Each subtask must be independently executable and testable.
 - Avoid artificial fragmentation (don’t split trivial steps).
@@ -166,26 +173,7 @@ Example:
 - Keep naming, numbering, and dependencies consistent and minimal.
     `, task);
 
-    if(
-      fs.existsSync(`${path.join(state.claudiomiroFolder, task)}.0`) ||
-      fs.existsSync(`${path.join(state.claudiomiroFolder, task)}.1`)
-    ){
-      if(fs.existsSync(`${path.join(state.claudiomiroFolder, task)}`)){
-        fs.rmSync(`${path.join(state.claudiomiroFolder, task)}`);
-      }
-
-      const taskFiles = findTaskFiles(state.claudiomiroFolder);
-
-      for (const taskFile of taskFiles) {
-        const content = fs.readFileSync(taskFile, 'utf8');
-        const lines = content.split('\n');
-        const filteredLines = lines.filter(line => !line.trim().startsWith('@dependencies'));
-        fs.writeFileSync(taskFile, filteredLines.join('\n'), 'utf8');
-      }
-
-    }else{
-      fs.writeFileSync(folder('split.txt'), '1');
-    }
+    fs.writeFileSync(folder('split.txt'), '1');
 
     return execution;
 }

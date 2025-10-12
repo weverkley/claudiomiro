@@ -28,6 +28,16 @@ const isTaskApproved = (taskName) => {
     return hasApprovedCodeReview(codeReviewPath);
 };
 
+// Função para encontrar todas as subtasks de uma task principal
+function findSubtasks(mainTask, allTasks) {
+    return allTasks.filter(task => {
+        // Verifica se a task atual é uma subtask da mainTask
+        // Ex: TASK2.1 é subtask de TASK2, TASK2.1.1 é subtask de TASK2.1
+        return task.startsWith(mainTask + '.') &&
+               task.slice(mainTask.length + 1).match(/^\d+(\.\d+)*$/);
+    });
+}
+
 const chooseAction = async (i) => {
     // Verifica se --prompt foi passado e extrai o valor
     const promptArg = process.argv.find(arg => arg.startsWith('--prompt='));
@@ -187,23 +197,12 @@ const chooseAction = async (i) => {
             return { done: true };
         }
 
-        // if (!taskGraph) {
-        //     logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
-        //     process.exit(1);
-        // }
-
-        let graph = {};
-
-        for(const task of tasks){
-            graph[task] = {
-                deps: [],
-                status: isTaskApproved(task) ? 'completed' : 'pending',
-            };
+        if (!taskGraph) {
+            logger.error('Cannot proceed: no dependency graph. Run step 1 first.');
+            process.exit(1);
         }
 
-        console.log('graph', graph);
-
-        const executor = new DAGExecutor(graph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
+        const executor = new DAGExecutor(taskGraph, allowedSteps, maxConcurrent, noLimit, maxAttemptsPerTask);
         await executor.runStep2();
     }
 
@@ -348,9 +347,19 @@ const buildTaskGraph = () => {
         
         // Optional: dedupe and prevent self-dependency
         const uniqueDeps = Array.from(new Set(deps)).filter(d => d !== task);
-        
+
+        // Adiciona todas as subtasks das dependências
+        const allDepsWithSubtasks = [...uniqueDeps];
+        for (const dep of uniqueDeps) {
+            const subtasks = findSubtasks(dep, tasks);
+            allDepsWithSubtasks.push(...subtasks);
+        }
+
+        // Remove duplicatas e previne auto-dependencia novamente
+        const finalDeps = Array.from(new Set(allDepsWithSubtasks)).filter(d => d !== task);
+
         graph[task] = {
-          deps: uniqueDeps,
+          deps: finalDeps,
           status: isTaskApproved(task) ? 'completed' : 'pending',
         };
     }
