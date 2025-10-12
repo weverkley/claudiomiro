@@ -36,8 +36,7 @@ const step2_1 = (task) => {
     6) Write ${folder('TODO.md')} using the agreed structure:
     - Use **Context (read-only)** vs **Touched (will modify/create)** sections per item.
     - Include Interfaces/Contracts, Tests, Migrations/Data, Observability, Security & Permissions, Performance, Commands, Risks & Mitigations.
-    7) Use the codebase knowledge source **<rename “context7” to the actual provider>** if additional patterns are needed (coding style, error handling, tracing).
-    8) Any gap or ambiguity → add a **Follow-ups** section at the end (do not silently change scope).
+    7) Any gap or ambiguity → add a **Follow-ups** section at the end (do not silently change scope).
 
     **IMPORTANT: quality over quantity.** Prefer 3–6 well-defined items over many tiny steps.
 
@@ -48,7 +47,7 @@ const step2_1 = (task) => {
     Rules:
     - First line of ${folder('TODO.md')} MUST be: \`Fully implemented: NO\`
     - Only add actions an AI agent can perform deterministically and idempotently.
-    - Do NOT run any git commands.
+    - Don't run git add/commit/push.
     - Cross-repository work is allowed; different repositories are NOT blockers.
     - If the repository supports tests, you MUST create them (unit/integration/e2e as appropriate).
     - If tests are not supported, specify **hypothetical test cases** and expected assertions.
@@ -89,13 +88,17 @@ const step2_1 = (task) => {
     [...]
 
     ## Verification (global)
-    - [ ] All automated tests pass (unit/integration/e2e)
-    - [ ] Code builds cleanly (local + CI)
-    - [ ] Manual QA script executed and green (steps + expected results)
+    - [ ] All RELATED automated tests pass (unit/integration/e2e) 
+        - Example:  
+          \`npm test ./<changed-folder>\`  
+          \`npm test -- --testPathPattern="example"\`
+          \`eslint ./<changed-folder>\`  
+          \`tsc --noEmit ./<changed-folder>/index.ts\`
+        - Do **not** run full-project commands like \`npm test\`, \`npm run lint\`, or \`tsc --noEmit\`.  
+          Those will execute in a separate global verification stage.
     - [ ] Feature meets **Acceptance Criteria**
-    - [ ] Dashboards/alerts configured and healthy
-    - [ ] Rollout/rollback path validated (flag/canary)
-    - [ ] Documentation updated (README/ADR/changelog)
+    - [ ] Frontend/back-end contract verified (if applicable)
+    - [...]
 
     ## Acceptance Criteria
     - [ ] [Measurable criterion #1]

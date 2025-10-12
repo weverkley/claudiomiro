@@ -59,19 +59,13 @@ const step4 = (task) => {
 
       ## 🧪 Targeted Testing Policy
 
-      Run **only tests and checks related to the files that were modified by this task.**
+      Run automated **tests and checks.**
       
-      - Example:  
-        \`npm test ./<changed-folder>\`  
-        \`npm test -- --testPathPattern="example"\`
-        \`eslint ./<changed-folder>\`  
-        \`tsc --noEmit ./<changed-folder>/index.ts\`
+      - Example:   
+        - \`npm test\`
+        - \`npm run lint\`
+        - \`npx tsc --noEmit\`.  
       
-      - Do **not** run full-project commands like \`npm test\`, \`npm run lint\`, or \`tsc --noEmit\`.  
-        Those will execute in a separate global verification stage.
-      
-      - If no local test command exists for the modified files, note it as a **QA gap**, but do not block approval unless functionality cannot be verified.
-        
       ---
 
       ## Decision
