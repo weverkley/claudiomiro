@@ -7,7 +7,7 @@ const listFolders = (dir) => {
   return fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isDirectory());
 }
 
-const step3 = (task) => {
+const step3 = async (task) => {
     const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
     if(fs.existsSync(folder('CODE_REVIEW.md'))){
@@ -43,18 +43,20 @@ const step3 = (task) => {
 
     // Insert into prompt.md or task.md the generated md files from other tasks.
 
-    return executeClaude(`PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
+    try {
+      return await executeClaude(`PHASE: EXECUTION LOOP (DEPENDENCY + SAFETY)
 
       RULES:
       - Never run git add/commit/push.
       - ${folder('TODO.md')} must exist and start with "Fully implemented: YES" or "NO".
       - Multi-repo tasks are allowed.
       - Only mark BLOCKED if external/manual dependency.
-      
+      - IMPORTANT: If Claude execution fails, do NOT mark as "Fully implemented: YES"
+
 ---
 
 OBJECTIVE:
-Execute all actionable items in ${folder('TODO.md')} in parallel when possible.  
+Execute all actionable items in ${folder('TODO.md')} in parallel when possible.
 Stop only when all items are [X] or BLOCKED/FAILED and the first line is "Fully implemented: YES".
 
 ---
@@ -68,7 +70,7 @@ LOOP:
    c. If success → mark [X].
    d. If fail → add "FAILED: <reason>".
 4. After all processed:
-   - Run targeted tests ONLY on modified paths (unit, lint, type) 
+   - Run targeted tests ONLY on modified paths (unit, lint, type)
       - NEVER run full-project.
    - If all pass → set "Fully implemented: YES".
    - Else → revert to "NO" and reopen failed items.
@@ -81,6 +83,7 @@ TESTS:
 FAILURES:
 - On test failure → add "FAILED: test <module>" and retry loop.
 - On logic/build failure → revert file and log "ROLLBACK: <reason>".
+- On Claude execution timeout or failure → ensure TODO.md remains with "Fully implemented: NO"
 
 STOP-DIFF:
 - Do not rename TODO items or unrelated files.
@@ -92,6 +95,23 @@ STATE:
 MCP:
 - Use MCPs only for analysis/testing, never for file modification.
     `, task);
+    } catch (error) {
+      // If executeClaude fails, ensure TODO.md is marked as not fully implemented
+      if (fs.existsSync(folder('TODO.md'))) {
+        let todo = fs.readFileSync(folder('TODO.md'), 'utf8');
+        const lines = todo.split('\n');
+
+        // Update the first line to be "Fully implemented: NO" if it exists
+        if (lines.length > 0) {
+          lines[0] = 'Fully implemented: NO';
+          todo = lines.join('\n');
+          fs.writeFileSync(folder('TODO.md'), todo, 'utf8');
+        }
+      }
+
+      // Re-throw the error so the dag-executor can handle it
+      throw error;
+    }
 }
 
 module.exports = { step3 };

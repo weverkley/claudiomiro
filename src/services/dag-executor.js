@@ -16,9 +16,10 @@ class DAGExecutor {
     this.allowedSteps = allowedSteps; // null = todos os steps, ou array de números
     this.noLimit = noLimit; // Se true, remove limite de ciclos por tarefa
     this.maxAttemptsPerTask = maxAttemptsPerTask; // Limite customizável de ciclos por tarefa (padrão: 20)
-    // 3 por core ou valor customizado via --maxConcurrent
-    const defaultMax = Math.max(1, (os.cpus().length || 1) * 3);
-    this.maxConcurrent = maxConcurrent || Math.max(1, defaultMax);
+  // Calculate default max concurrent (cores × 2, capped at 5)
+    const coreCount = Math.max(1, os.cpus().length);
+    const defaultMax = Math.min(5, coreCount * 2);
+    this.maxConcurrent = maxConcurrent || defaultMax;
     this.running = new Set(); // Tasks atualmente em execução
 
     // Initialize ParallelStateManager
@@ -135,14 +136,25 @@ class DAGExecutor {
       // Loop até implementação completa
       let maxAttempts = this.noLimit ? Infinity : this.maxAttemptsPerTask; // Limite de segurança (customizável via --limit, infinito com --no-limit)
       let attempts = 0;
+      let lastStep3Error = null;
 
       while (attempts < maxAttempts) {
         attempts++;
 
         // Step 3: Implementação
         if (!fs.existsSync(todoPath) || !isFullyImplemented(todoPath)) {
-          this.stateManager.updateTaskStep(taskName, `Step 3 - Implementing tasks (attempt ${attempts})`);
-          await step3(taskName);
+          try {
+            this.stateManager.updateTaskStep(taskName, `Step 3 - Implementing tasks (attempt ${attempts})`);
+            await step3(taskName);
+            lastStep3Error = null; // Clear any previous error on success
+          } catch (error) {
+            // If step3 fails, we should continue the loop to retry
+            lastStep3Error = error;
+            logger.warning(`${taskName} Step 3 failed (attempt ${attempts}): ${error.message}`);
+            // Add a small delay before retry to avoid rapid failures
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
           continue; // Volta para verificar se está implementado
         }
 
@@ -171,7 +183,10 @@ class DAGExecutor {
 
       if (attempts >= maxAttempts) {
         this.stateManager.updateTaskStatus(taskName, 'failed');
-        throw new Error(`Maximum attempts (${maxAttempts}) reached for ${taskName}`);
+        const errorMessage = lastStep3Error
+          ? `Maximum attempts (${maxAttempts}) reached for ${taskName}. Last error: ${lastStep3Error.message}`
+          : `Maximum attempts (${maxAttempts}) reached for ${taskName}`;
+        throw new Error(errorMessage);
       }
 
       this.stateManager.updateTaskStatus(taskName, 'completed');
@@ -250,7 +265,7 @@ class DAGExecutor {
    */
   async runStep2() {
     const coreCount = Math.max(1, os.cpus().length);
-    const defaultMax = Math.max(1, coreCount * 3);
+    const defaultMax = Math.min(5, coreCount * 2);
     const isCustom = this.maxConcurrent !== defaultMax;
 
     logger.info(`Starting step 2 (planning) with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);

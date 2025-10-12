@@ -20,6 +20,10 @@ describe('step3', () => {
     // Setup fs mocks
     fs.existsSync = jest.fn().mockReturnValue(false);
     fs.rmSync = jest.fn();
+    fs.readdirSync = jest.fn().mockReturnValue([]);
+    fs.statSync = jest.fn().mockReturnValue({ isDirectory: () => true });
+    fs.readFileSync = jest.fn().mockReturnValue('Fully implemented: NO\n- [ ] Some task');
+    fs.writeFileSync = jest.fn();
 
     // Setup executeClaude mock
     executeClaude.mockResolvedValue(undefined);
@@ -126,12 +130,12 @@ describe('step3', () => {
       expect(fs.rmSync).toHaveBeenCalledWith('/test/.claudiomiro/TASK10/CODE_REVIEW.md');
     });
 
-    it('should throw error when fs.existsSync fails', () => {
+    it('should throw error when fs.existsSync fails', async () => {
       fs.existsSync.mockImplementation(() => {
         throw new Error('File system error');
       });
 
-      expect(() => step3('TASK1')).toThrow('File system error');
+      await expect(step3('TASK1')).rejects.toThrow('File system error');
       expect(executeClaude).not.toHaveBeenCalled();
     });
   });
@@ -179,13 +183,13 @@ describe('step3', () => {
       await expect(step3('TASK1')).rejects.toThrow('Claude execution failed');
     });
 
-    it('should throw error when fs.rmSync fails', () => {
+    it('should throw error when fs.rmSync fails', async () => {
       fs.existsSync.mockReturnValue(true);
       fs.rmSync.mockImplementation(() => {
         throw new Error('Permission denied');
       });
 
-      expect(() => step3('TASK1')).toThrow('Permission denied');
+      await expect(step3('TASK1')).rejects.toThrow('Permission denied');
       expect(executeClaude).not.toHaveBeenCalled();
     });
 
@@ -203,10 +207,33 @@ describe('step3', () => {
       expect(result).toBe('success');
     });
 
-    it('should throw error when state.claudiomiroFolder is undefined', () => {
+    it('should set TODO.md to "Fully implemented: NO" when executeClaude fails', async () => {
+      const testError = new Error('Claude execution failed');
+      executeClaude.mockRejectedValue(testError);
+
+      // Mock TODO.md exists and has some content
+      fs.existsSync.mockImplementation((path) => {
+        if (path.includes('TODO.md')) return true;
+        return false; // For CODE_REVIEW.md
+      });
+
+      fs.readFileSync.mockReturnValue('Fully implemented: YES\n- [ ] Some task');
+      fs.writeFileSync.mockImplementation(() => {});
+
+      await expect(step3('TASK1')).rejects.toThrow('Claude execution failed');
+
+      // Verify that TODO.md was updated to "Fully implemented: NO"
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        expect.stringContaining('TODO.md'),
+        expect.stringContaining('Fully implemented: NO'),
+        'utf8'
+      );
+    });
+
+    it('should throw error when state.claudiomiroFolder is undefined', async () => {
       state.claudiomiroFolder = undefined;
 
-      expect(() => step3('TASK1')).toThrow('path');
+      await expect(step3('TASK1')).rejects.toThrow('path');
     });
   });
 

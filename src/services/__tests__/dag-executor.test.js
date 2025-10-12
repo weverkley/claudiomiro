@@ -554,7 +554,7 @@ describe('DAGExecutor', () => {
 
     it('should mark task as failed and remove from running on error', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks);
+      const executor = new DAGExecutor(tasks, null, null, false, 2); // Use maxAttempts=2 for faster test
       executor.running.add('TASK1');
 
       fs.existsSync.mockImplementation((filepath) => {
@@ -1021,7 +1021,7 @@ describe('DAGExecutor', () => {
 
     it('should update state to failed when task fails', async () => {
       const tasks = { TASK1: { deps: [], status: 'pending' } };
-      const executor = new DAGExecutor(tasks);
+      const executor = new DAGExecutor(tasks, null, null, false, 2); // Use maxAttempts=2 for faster test
       executor.running.add('TASK1');
 
       fs.existsSync.mockImplementation((filepath) => {
