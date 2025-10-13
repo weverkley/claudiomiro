@@ -18,7 +18,7 @@ class DAGExecutor {
     this.maxAttemptsPerTask = maxAttemptsPerTask; // Limite customizável de ciclos por tarefa (padrão: 20)
   // Calculate default max concurrent (cores × 2, capped at 5)
     const coreCount = Math.max(1, os.cpus().length);
-    const defaultMax = Math.min(5, coreCount * 2);
+    const defaultMax = Math.max(1, coreCount * 3);
     this.maxConcurrent = maxConcurrent || defaultMax;
     this.running = new Set(); // Tasks atualmente em execução
 
@@ -218,7 +218,7 @@ class DAGExecutor {
    */
   async run(buildTaskGraph) {
     const coreCount = Math.max(1, os.cpus().length);
-    const defaultMax = Math.min(5, coreCount * 2);
+    const defaultMax = Math.max(1, coreCount * 3);
     const isCustom = this.maxConcurrent !== defaultMax;
 
     logger.info(`Starting DAG executor with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
@@ -315,7 +315,7 @@ class DAGExecutor {
    */
   async runStep2() {
     const coreCount = Math.max(1, os.cpus().length);
-    const defaultMax = Math.min(5, coreCount * 2);
+    const defaultMax = Math.max(1, coreCount * 3);
     const isCustom = this.maxConcurrent !== defaultMax;
 
     logger.info(`Starting step 2 (planning) with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
