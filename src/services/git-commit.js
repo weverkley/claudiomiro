@@ -1,3 +1,10 @@
+const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const logger = require('../../logger');
+const state = require('../config/state');
+const { executeClaude } = require('./claude-executor');
+
 const gitCommit = (text, shouldPush) => {
     return new Promise((resolve, reject) => {
         const escapedText = text.replace(/"/g, '\\"');
