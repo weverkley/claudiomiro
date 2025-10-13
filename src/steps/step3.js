@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
+const { first } = require('lodash');
 
 const listFolders = (dir) => {
   return fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isDirectory());
@@ -39,6 +40,24 @@ const step3 = async (task) => {
 
       fs.writeFileSync(folder('TODO.md'), todo, 'utf8');
     }
+
+    let info = {
+      firstRun: new Date().toISOString(),
+      lastRun: new Date().toISOString(),
+      attempts: 0,
+      lastError: null
+    };
+
+
+    if(fs.existsSync(folder('info.json'))){
+      info = JSON.parse(fs.readFileSync(folder('info.json'), 'utf8'));
+    }
+
+    info.attempts += 1;
+    info.lastError = null;
+    info.lastRun = new Date().toISOString();
+
+    fs.writeFileSync(folder('info.json'), JSON.stringify(info), 'utf8');
 
 
     // Insert into prompt.md or task.md the generated md files from other tasks.
@@ -94,6 +113,10 @@ MCP:
 - Use MCPs only for analysis/testing, never for file modification.
     `, task);
     } catch (error) {
+      
+      info.lastError = JSON.stringify(error);
+      fs.writeFileSync(folder('info.json'), JSON.stringify(info), 'utf8');
+
       // If executeClaude fails, ensure TODO.md is marked as not fully implemented
       if (fs.existsSync(folder('TODO.md'))) {
         let todo = fs.readFileSync(folder('TODO.md'), 'utf8');

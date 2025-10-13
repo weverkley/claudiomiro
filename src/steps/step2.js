@@ -24,91 +24,128 @@ const findTaskFiles = (dir) => {
 const step2_1 = (task) => {
   const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
-  return executeClaude(`
-    ## Your Task
+  return executeClaude(`## Your Task (Strict Execution Plan)
 
-    1) Read ${folder('PROMPT.md')} and ${folder('TASK.md')}.
-    2) Read previous TODO.md files under ${state.claudiomiroFolder} **only for directly related modules** to ensure consistency and avoid duplication.
-    - Do NOT reimplement prior work, change their scope, or alter their acceptance criteria.
-    3) Map how this task integrates with adjacent tasks (previous and next): inputs, outputs, contracts, and sequencing.
-    4) Identify implementation steps and locate all relevant code artifacts (files, functions, types, schemas). Capture dependencies, references, and side effects required for a complete delivery.
-    5) Group work by **feature unit** (implementation + tests together). Do not split “create function” and “test function” into separate items.
-    6) Write ${folder('TODO.md')} using the agreed structure:
-    - Use **Context (read-only)** vs **Touched (will modify/create)** sections per item.
-    - Include Interfaces/Contracts, Tests, Migrations/Data, Observability, Security & Permissions, Performance, Commands, Risks & Mitigations.
-    7) Any gap or ambiguity → add a **Follow-ups** section at the end (do not silently change scope).
+1. Read \`${folder('PROMPT.md')}\` and \`${folder('TASK.md')}\` completely.  
+2. Read only the **directly related** TODO.md files inside \`${state.claudiomiroFolder}\` to ensure consistency.  
+   - Do **not** duplicate, extend, or alter their scope or acceptance criteria.  
+3. Map integration points:
+   - Previous and next tasks → define input/output, contract, and sequencing.  
+4. Identify all files, functions, types, schemas, and dependencies required.  
+   - Capture all side effects and references for full implementation.  
+5. Group work by **feature unit**: implementation + tests together (never split them).  
+6. Write \`${folder('TODO.md')}\` following the strict structure below.  
+7. If any ambiguity remains, list it under **Follow-ups** (do not change scope silently).  
 
-    **IMPORTANT: quality over quantity.** Prefer 3–6 well-defined items over many tiny steps.
+**IMPORTANT: quality over quantity.** Prefer 3–6 well-defined items over many tiny steps. Each item must represent a self-contained deliverable (feature + test). 
 
-    ## Testing Guideline
+---
 
-    **Focus:** Prove correctness of implemented behavior with the minimum effective set of tests.
+### Rules
+- First line of \`${folder('TODO.md')}\` = \`Fully implemented: NO\`
+- All actions deterministic, idempotent, and local.
+- Never run \`git add/commit/push\`.
+- Fix seeds/timezones → no flaky tests.
 
-    Rules:
-    - First line of ${folder('TODO.md')} MUST be: \`Fully implemented: NO\`
-    - Only add actions an AI agent can perform deterministically and idempotently.
-    - Don't run git add/commit/push.
-    - Cross-repository work is allowed; different repositories are NOT blockers.
-    - If the repository supports tests, you MUST create them (unit/integration/e2e as appropriate).
-    - If tests are not supported, specify **hypothetical test cases** and expected assertions.
-    - Prefer fast, deterministic tests with clear arrange/act/assert and seed data where needed.
-    ---
+## Testing Guideline (Diff-Driven and Minimal)
 
-    ## TODO.md Structure
+**Purpose:** Confirm your code works — using the fewest tests that fully prove correctness.  
+**Never:** chase global coverage or test untouched code.
 
-    \`\`\`
-    Fully implemented: NO
+### Scope
+- Test only modified code and directly affected interfaces.
+- Build a **Diff Test Plan**:
+  - List changed files/symbols.
+  - For each: 1 happy path + 1–2 edge cases + 1 predictable failure (if relevant).
+- Skip untouched code unless a contract changed or a reproducible bug exists.
+- Testing speed or benchmarks: only if explicitly required.
+- Mock all external boundaries (network, DB, FS, UUID, clock, env).
 
-    ## Implementation Plan
+### Types
+- **Unit tests:** default.
+- **Integration tests:** only if modules must interact for correctness.
+- **E2E tests:** only if explicitly required.
+- **Any other type of test:** only if explicitly required.
+- **No framework:** describe hypothetical test cases (title + arrange/act/assert + expected result).
 
-    - [ ] **Item X — [Consolidated action]**
-    - **Context (read-only):** [files/dirs/docs to read]
-    - **Touched (will modify/create):** [files/modules]
-    - **Interfaces / Contracts:** [APIs/events/schemas/types]
-    - **Tests:** [type + key scenarios/edge cases]
-    - **Migrations / Data:** [DDL/backfill/ordering]
-    - **Observability:** [logs/metrics/traces/alerts]
-    - **Security & Permissions:** [authN/Z, PII, rate limits]
-    - **Performance:** [targets/limits/complexity]
-    - **Commands:** [local/CI commands to run]
-    - **Risks & Mitigations:** [risk → mitigation]
+### Coverage
+- Target 100% coverage for changed lines only.
+- If impossible (e.g., defensive I/O branch), explain in \`${folder('TODO.md')}\`.
 
-    - [ ] **Item X — [Consolidated action]**
-    - **Context (read-only):** [files/dirs/docs to read]
-    - **Touched (will modify/create):** [files/modules]
-    - **Interfaces / Contracts:** [APIs/events/schemas/types]
-    - **Tests:** [type + key scenarios/edge cases]
-    - **Migrations / Data:** [DDL/backfill/ordering]
-    - **Observability:** [logs/metrics/traces/alerts]
-    - **Security & Permissions:** [authN/Z, PII, rate limits]
-    - **Performance:** [targets/limits/complexity]
-    - **Commands:** [local/CI commands to run]
-    - **Risks & Mitigations:** [risk → mitigation]
+### Execution
+- Run tests only for affected paths or tags.
+- Use clear **arrange / act / assert** pattern.
+- Respect project test runner:
+  - JS/TS example: \`vitest run --changed\` or \`npm test -- -t "<name>"\`
 
-    [...]
+### Stop Rules
+- Stop testing when:
+  - All Diff Test Plan items pass twice consistently.
+  - Per-diff coverage = 100%.
+  - No unrelated failures remain.
+- Log unrelated failures as *Known Out-of-Scope* in \`${folder('TODO.md')}\`.
 
-    ## Verification (global)
-    - [ ] All RELATED automated tests pass (unit/integration/e2e) 
-        - Example:  
-          \`npm test ./<changed-folder>\`  
-          \`npm test -- --testPathPattern="example"\`
-          \`eslint --fix ./<changed-folder>\`  
-          \`tsc --noEmit ./<changed-folder>/index.ts\`
-        - Do **not** run full-project commands like \`npm test\`, \`npm run lint\`, or \`tsc --noEmit\`.  
-          Those will execute in a separate global verification stage.
-    - [ ] Feature meets **Acceptance Criteria**
-    - [ ] Frontend/back-end contract verified (if applicable)
-    - [...]
+### Definition of Done
+- [ ] Diff Test Plan exists in \`${folder('TODO.md')}\`  
+- [ ] All new/affected tests pass twice locally  
+- [ ] Per-diff coverage = 100% (or justified gap noted)  
+- [ ] Only boundary mocks used, no I/O or sleeps  
+- [ ] Within runtime budget  
+- [ ] Short summary (3–5 lines) of what was tested and why  
 
-    ## Acceptance Criteria
-    - [ ] [Measurable criterion #1]
-    - [ ] [Measurable criterion #2]
-    - [ ] [Measurable criterion #3]
+Then set first line to \`Fully implemented: YES\`.
 
-    ## Impact Analysis
-    - **Directly impacted:** [files/modules/functions]
-    - **Indirectly impacted:** [consumers/contracts/jobs/caches/infra]
-    \`\`\`
+**Mantra:** *Prove changed behavior with the minimum sufficient evidence — nothing more.*
+
+---
+
+## TODO.md Structure
+
+\`\`\`
+Fully implemented: NO
+
+## Implementation Plan
+
+- [ ] **Item X — [Consolidated action]**
+- **Context (read-only):** [files/dirs/docs to read]
+- **Touched (will modify/create):** [files/modules]
+- **Interfaces / Contracts:** [APIs/events/schemas/types]
+- **Tests:** [type + key scenarios/edge cases]
+- **Migrations / Data:** [DDL/backfill/ordering]
+- **Observability:** [logs/metrics/traces/alerts]
+- **Security & Permissions:** [authN/Z, PII, rate limits]
+- **Performance:** [targets/limits/complexity]
+- **Commands:** [local/CI commands to run]
+- **Risks & Mitigations:** [risk → mitigation]
+
+[...]
+
+## Verification (global)
+- [ ] Run local tests for changed code only
+      Examples:
+        npm test ./<changed-folder>
+        npm test -- --testPathPattern="example"
+        eslint --fix ./<changed-folder>
+        tsc --noEmit ./<changed-folder>/index.ts
+      -	CRITICAL: Do not run full-project checks here.
+- [ ] Feature meets **Acceptance Criteria**
+- [ ] Frontend/back-end use the same routes, types, and schemas (if applicable).
+- [...]
+
+## Acceptance Criteria
+- [ ] [Measurable criterion #1]
+- [ ] [Measurable criterion #2]
+- [ ] [Measurable criterion #3]
+
+## Impact Analysis
+- **Directly impacted:** [files/modules/functions]
+- **Indirectly impacted:** [consumers/contracts/jobs/caches/infra]
+
+## Follow-ups
+- [Ambiguities or missing info, if any]
+
+Important: cross-repo work allowed.
+\`\`\`
 
     `, task);
 }
