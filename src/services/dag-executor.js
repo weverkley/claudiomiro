@@ -180,7 +180,9 @@ class DAGExecutor {
         // Step 4: Code review final
         if (!hasApprovedCodeReview(codeReviewPath)) {
           this.stateManager.updateTaskStep(taskName, 'Step 4 - Code review');
-          await step4(taskName);
+
+          const shouldPush = !process.argv.some(arg => arg === '--push=false');
+          await step4(taskName, shouldPush);
 
           // Se ainda não foi aprovado, continua o loop
           if (!isTaskApproved()) {
