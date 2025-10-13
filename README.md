@@ -100,6 +100,7 @@ No manual intervention. No "continue" prompts. Just complete, production-ready c
 - 🎯 **Dual Planning Modes**: Choose between auto (speed) or hard (maximum criticality + deep reasoning)
 - 🧠 **Deep Analysis**: Understands your codebase patterns and architecture
 - 👨‍💻 **Automated Code Review**: Senior-level review validates quality before testing
+- 🔧 **Command Fixing**: Automatically retries and fixes failing commands using AI
 - 🧪 **Quality Enforced**: Never skips tests, always validates
 - 📊 **Full Transparency**: Live logs show every decision and action
 - 🎯 **Production Ready**: Code is tested, reviewed, documented, and ready to merge
@@ -188,6 +189,9 @@ claudiomiro --step=0       # Only create task decomposition
 
 # Combine options
 claudiomiro /path/to/project --prompt="Add GraphQL API" --push=false --maxConcurrent=8 --mode=hard
+
+# Fix command execution (automatically retry and fix failing commands)
+claudiomiro --glm --fix-command="npm test"
 ```
 
 ### Example Prompts

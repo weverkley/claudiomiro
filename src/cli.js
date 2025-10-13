@@ -7,6 +7,7 @@ const { step1, step5 } = require('./steps');
 const { step0 } = require('./steps/step0');
 const { DAGExecutor } = require('./services/dag-executor');
 const { isFullyImplemented, hasApprovedCodeReview } = require('./utils/validation');
+const { fixCommand } = require('./services/fix-command');
 
 const isTaskApproved = (taskName) => {
     if (!state.claudiomiroFolder) {
@@ -60,7 +61,10 @@ const chooseAction = async (i) => {
     const limitArg = process.argv.find(arg => arg.startsWith('--limit='));
     const maxAttemptsPerTask = limitArg ? parseInt(limitArg.split('=')[1], 10) : 20;
 
-  
+    // Verifica se --fix-command foi passado
+    const fixCommandArg = process.argv.find(arg => arg.startsWith('--fix-command='));
+    const fixCommandText = fixCommandArg ? fixCommandArg.split('=').slice(1).join('=').replace(/^["']|["']$/g, '') : null;
+
     // Verifica se --codex ou --claude foi passado
     const codexFlag = process.argv.includes('--codex');
     const claudeFlag = process.argv.includes('--claude');
@@ -115,6 +119,7 @@ const chooseAction = async (i) => {
         !arg.startsWith('--step=') &&
         arg !== '--no-limit' &&
         !arg.startsWith('--limit=') &&
+        !arg.startsWith('--fix-command=') &&
         arg !== '--codex' &&
         arg !== '--claude' &&
         arg !== '--deep-seek' &&
@@ -136,6 +141,12 @@ const chooseAction = async (i) => {
 
     logger.info(`Executor selected: ${executorType}`);
     logger.newline();
+
+    if(fixCommandArg){
+        logger.info(`Fixing command: ${fixCommandText} (max attempts per task: ${noLimit ? 'no limit' : maxAttemptsPerTask})`);
+        await fixCommand(fixCommandText, noLimit ? Infinity : maxAttemptsPerTask);
+        process.exit(1);
+    }
 
     // Mostra quais steps serão executados se --steps foi especificado
     if (allowedSteps && i === 0) {
