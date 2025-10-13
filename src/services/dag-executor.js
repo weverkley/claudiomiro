@@ -125,6 +125,15 @@ class DAGExecutor {
         }
         this.stateManager.updateTaskStep(taskName, 'Step 2 - Research and planning');
         await step2(taskName);
+
+        // Check if task was split (original folder no longer exists)
+        if (!fs.existsSync(taskPath)) {
+          this.stateManager.updateTaskStatus(taskName, 'completed');
+          this.tasks[taskName].status = 'completed';
+          this.running.delete(taskName);
+          logger.info(`✅ ${taskName} was split into subtasks`);
+          return;
+        }
       }
 
       // Se step 2 foi executado e não devemos executar step 3, para aqui
@@ -418,6 +427,15 @@ class DAGExecutor {
 
       this.stateManager.updateTaskStep(taskName, 'Step 2 - Research and planning');
       await step2(taskName);
+
+      // Check if task was split (original folder no longer exists)
+      if (!fs.existsSync(taskPath)) {
+        this.stateManager.updateTaskStatus(taskName, 'completed');
+        this.tasks[taskName].status = 'completed';
+        this.running.delete(taskName);
+        logger.info(`✅ ${taskName} was split into subtasks`);
+        return;
+      }
 
       this.stateManager.updateTaskStatus(taskName, 'completed');
       this.tasks[taskName].status = 'completed';
