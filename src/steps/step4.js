@@ -139,12 +139,12 @@ const step4 = async (task, shouldPush = true) => {
               - Who or what performed each review
     `, task);
 
-    if(fs.existsSync(folder('CODE_REVIEW.md'))){
-      await commitOrFix(
-        fs.readFileSync(folder('CODE_REVIEW.md'), 'utf-8'), 
-        shouldPush
-      );
-    }
+    // if(fs.existsSync(folder('CODE_REVIEW.md'))){
+    //   await commitOrFix(
+    //     fs.readFileSync(folder('CODE_REVIEW.md'), 'utf-8'), 
+    //     shouldPush
+    //   );
+    // }
 
     return execution;
 }

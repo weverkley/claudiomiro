@@ -53,13 +53,14 @@ const commitOrFix = async (text, shouldPush) => {
             fs.writeFileSync(path.join(state.claudiomiroFolder, 'done.txt'), '1');
             return true;
         }catch(e){
+            logger.error(`Git commit attempt ${i + 1} failed: ${e.message}`);
             await executeClaude(`fix error ${e.message}`);
         }
 
         i++;
     }
 
-    throw new Error(`Maximum attempts (${maxAttempts}) reached for git`);
+    throw new Error(`Maximum attempts (${maxAttemptsPerTask}) reached for git`);
 }
 
 
