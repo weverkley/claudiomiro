@@ -8,7 +8,9 @@ const { executeClaude } = require('./claude-executor');
 const gitCommit = (text, shouldPush) => {
     return new Promise((resolve, reject) => {
         const escapedText = text.replace(/"/g, '\\"');
-        const gitProcess = spawn('sh', ['-c', `git add . && git commit -m "${escapedText}" ${shouldPush ? ` && git push` : ''}`], {
+        const commitText = escapedText.length > 150 ? escapedText.substring(0, 147) + '...' : escapedText;
+        
+        const gitProcess = spawn('sh', ['-c', `git add . && git commit -m "${commitText}" ${shouldPush ? ` && git push` : ''}`], {
             cwd: process.cwd()
         });
 
