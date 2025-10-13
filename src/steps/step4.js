@@ -2,8 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
+const { exec } = require('child_process');
+const { commitOrFix } = require('../services/git-commit');
 
-const step4 = (task) => {
+const step4 = async (task, shouldPush = true) => {
     const folder = (file) => path.join(state.claudiomiroFolder, task, file);
 
     if(fs.existsSync(folder('CODE_REVIEW.md'))){
@@ -14,7 +16,7 @@ const step4 = (task) => {
       fs.rmSync(folder('GITHUB_PR.md'));
     }
 
-    return executeClaude(`
+    const execution = await executeClaude(`
       You are a **functional code reviewer** — your job is to think like a developer verifying whether the code truly works as intended.
 
       Review:
@@ -116,6 +118,15 @@ const step4 = (task) => {
               - What must be done next
               - Who or what performed each review
     `, task);
+
+    if(fs.existsSync(folder('CODE_REVIEW.md'))){
+      await commitOrFix(
+        fs.readFileSync(folder('CODE_REVIEW.md'), 'utf-8'), 
+        shouldPush
+      );
+    }
+
+    return execution;
 }
 
 module.exports = { step4 };
