@@ -44,7 +44,17 @@ const step4 = async (task, shouldPush = true) => {
       - **Side effects:** Could this break other parts of the system (e.g. shared state, wrong imports, bad mutations)?
       - **Testing adequacy:** Do the tests or validations actually prove the code works (not just exist)?
 
-      ### 🧭 Frontend ↔ Backend Route Consistency
+      ## 🧭 Scope & File Integrity Validation
+
+      The agent must not introduce scope drift or unnecessary modifications. Validate carefully:
+      -	Touched files vs. defined scope: Every edited or created file must appear in the relevant sections of ${folder('TODO.md')} or be logically implied by the requested changes.
+        → Flag any file whose modification is not explicitly or implicitly justified by the prompt.
+      -	Function-level intent: Each modified function, method, or class must directly serve the requested goal. If a change adjusts unrelated logic, styles, or structure, it should be marked as unauthorized alteration.
+      -	Comment and metadata noise: Verify no meaningless renamings, formatting-only changes, or injected comments that don’t support comprehension or functionality.
+      -	Dependency correctness: Check that imports, exports, and cross-references were not altered in ways that break established contracts or modify unrelated modules.
+      -	Regression audit: Ensure no previously stable functionality was accidentally removed, redefined, or left in an inconsistent state.
+        
+      ## 🧭 Frontend ↔ Backend Route Consistency
       If the system has both front-end and back-end implementations:
       - **Endpoint alignment:** Verify that every API route used in the front-end corresponds exactly to a defined backend route (no typos, casing mismatches, or outdated paths).
       - **Payload symmetry:** Ensure request and response structures match expectations — identical field names, data types, and status codes.
@@ -80,10 +90,20 @@ const step4 = async (task, shouldPush = true) => {
           ## Status
           ✅ APPROVED
 
-          ## Checks
+          Why: 
           - ✅ Requirements match scope
           - ✅ No critical bugs detected
           - ✅ Tests cover acceptance criteria
+          - ...
+
+          ## Deep Functional Analysis
+          [...]
+
+          ## Scope & File Integrity Validation
+          [...]
+
+          ## Frontend ↔ Backend Route Consistency
+          [...]
           \`\`\`
 
       If **problems found**:
