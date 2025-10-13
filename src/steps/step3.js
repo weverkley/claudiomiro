@@ -15,7 +15,9 @@ const step3 = async (task) => {
       fs.rmSync(folder('CODE_REVIEW.md'));
     }
 
-    const contextFiles = [];
+    const contextFiles = [
+      path.join(state.claudiomiroFolder, 'AI_PROMPT.md')
+    ];
 
     const folders = listFolders(state.claudiomiroFolder).filter(f => f.includes('TASK'));
 
