@@ -16,20 +16,35 @@ const step0 = async (sameBranch = false, promptText = null, mode = 'auto') => {
         process.exit(0);
     }
 
-    logger.newline();
-    logger.startSpinner('Initializing task...');
-
     startFresh(true);
     fs.writeFileSync(folder('INITIAL_PROMPT.md'), task);
 
     const branchStep = sameBranch
         ? ''
-        : '0 - Create a git branch for this task\n\n';
+        : '## FIRST STEP: \n\nCreate a git branch for this task\n\n';
 
-    const md = fs.readFileSync(path.join(__dirname, 'step0.md'), 'utf-8');
-    const prompt = md.replace('{{TASK}}', task).replaceAll(`{{claudiomiroFolder}}`, `${state.claudiomiroFolder}`);
+    const replace = (text) => {
+        return text.replace('{{TASK}}', task).replaceAll(`{{claudiomiroFolder}}`, `${state.claudiomiroFolder}`);
+    }
 
-    await executeClaude(branchStep + prompt);
+    logger.newline();
+    logger.startSpinner('Improving prompt...');
+
+    const prompt1 = fs.readFileSync(path.join(__dirname, 'step0.1.md'), 'utf-8');
+    await executeClaude(replace(branchStep + prompt1));
+
+    logger.stopSpinner();
+    logger.success('Prompt improved successfully');
+
+    if(!fs.existsSync(folder('AI_PROMPT.md'))){
+        throw new Error('Error creating AI_PROMPT.md file')
+    }
+
+    logger.newline();
+    logger.startSpinner('Creating tasks...');
+
+    const prompt2 = fs.readFileSync(path.join(__dirname, 'step0.2.md'), 'utf-8');
+    await executeClaude(replace(prompt2));
 
     logger.stopSpinner();
     logger.success('Tasks created successfully');
