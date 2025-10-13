@@ -170,6 +170,7 @@ Low / Medium / High
 Parallel with: [Tasks]
 
 ## CONSTRAINTS
+- IMPORTANT: Do not perform any git commit or git push.
 - Prefer CLI or script-based actions over manual edits
 - Automate everything possible (installation, configuration, generation)
 - Manual edits only when automation is impossible — must be justified
