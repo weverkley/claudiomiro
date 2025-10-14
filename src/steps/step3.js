@@ -55,7 +55,7 @@ const step3 = async (task) => {
       let info = {
         firstRun: new Date().toISOString(),
         lastRun: new Date().toISOString(),
-        attempts: 0,
+        attempts: 1,
         lastError: null
       };
       fs.writeFileSync(folder('info.json'), JSON.stringify(info), 'utf8');

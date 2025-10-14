@@ -59,6 +59,21 @@ Detail how the agent should think, plan, and execute:
 - What can run in parallel vs sequentially
 - Expected artifacts (code, tests, configs, migrations, docs, etc.)
 
+### 4.1 Testing Guidance
+- **Unit tests:** are the default, but should **only** be created for functions or methods with **non-trivial logic** (conditions, loops, calculations, or data transformations).  
+  - If the code is simple glue code (re-exports, configuration, or mappings), **do not test it**.  
+  - If the user **explicitly states not to create them**, the agent **must not create them**, even unit tests.
+- **Integration tests:** create **only** when the task **explicitly requires validating interactions** between modules or components (e.g., controller → service → database).  
+  - Otherwise, **do not simulate integration**.  
+  - Use mocked data, never real data or real databases.  
+  - If the user **explicitly states not to create them**, the agent **must not create them**.
+- **E2E tests:** **only** if the user clearly requests them. Never assume they are needed.
+- **Any other test type (mocking, snapshot, UI, performance, etc.):** **only** if explicitly required by the user.
+- **Summary rule:**  
+  > The agent must **minimize unnecessary testing**. When in doubt, **create a test**, better to have than doesn't.  
+  > Prioritize *efficiency and relevance* over total coverage.
+  > Avoid junk testing, they make us slower.
+
 ### 5. 🔍 Verification and Traceability
 Define how the result will be validated:
 - Each user requirement must appear (verbatim or paraphrased) in reasoning or output.
