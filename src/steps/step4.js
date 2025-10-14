@@ -282,8 +282,8 @@ const step4 = async (task, shouldPush = true) => {
       }
     }else{
       const json = JSON.parse(fs.readFileSync(folder('info.json'), 'utf8'));
-      if(json.attempts % 9 === 0){
-        // each 9 times we go to step4_1 to rewrite the todo from scratch
+      if(json.attempts % 3 === 0){
+        // each 4 times we go to step4_1 to rewrite the todo from scratch
         await step4_1(task);
       }
     }
