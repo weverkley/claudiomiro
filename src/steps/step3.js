@@ -43,23 +43,23 @@ const step3 = async (task) => {
       fs.writeFileSync(folder('TODO.md'), todo, 'utf8');
     }
 
-    let info = {
-      firstRun: new Date().toISOString(),
-      lastRun: new Date().toISOString(),
-      attempts: 0,
-      lastError: null
-    };
-
 
     if(fs.existsSync(folder('info.json'))){
-      info = JSON.parse(fs.readFileSync(folder('info.json'), 'utf8'));
+      let info = JSON.parse(fs.readFileSync(folder('info.json'), 'utf8'));
+      info.attempts += 1;
+      info.lastError = null;
+      info.lastRun = new Date().toISOString();
+
+      fs.writeFileSync(folder('info.json'), JSON.stringify(info), 'utf8');
+    }else{
+      let info = {
+        firstRun: new Date().toISOString(),
+        lastRun: new Date().toISOString(),
+        attempts: 0,
+        lastError: null
+      };
+      fs.writeFileSync(folder('info.json'), JSON.stringify(info), 'utf8');
     }
-
-    info.attempts += 1;
-    info.lastError = null;
-    info.lastRun = new Date().toISOString();
-
-    fs.writeFileSync(folder('info.json'), JSON.stringify(info), 'utf8');
 
 
     // Insert into prompt.md or task.md the generated md files from other tasks.
@@ -116,6 +116,7 @@ MCP:
     `, task);
     } catch (error) {
       
+      let info = JSON.parse(fs.readFileSync(folder('info.json'), 'utf8'));
       info.lastError = JSON.stringify(error);
       fs.writeFileSync(folder('info.json'), JSON.stringify(info), 'utf8');
 
