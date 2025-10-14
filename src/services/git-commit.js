@@ -283,7 +283,17 @@ const commitOrFix = async (text, shouldPush, retry = null, taskName = null) => {
 
             // Try to fix with Claude only if we have retries left
             try {
-                await executeClaude(`fix error ${e.message}`, taskName);
+                await executeClaude(
+                    `FIX THE ERROR:\n\n` + 
+                    `${e.message}\n\n` + 
+                    `HARD RULES:\n` + 
+                    ` - NEVER mention that you are an AI model\n` +
+                    ` - NEVER mention Authored or Co-Authored\n` + 
+                    ` - NEVER mention any AI model (example: Claude, ChatGPT, GLM, Deepseek)\n` + 
+                    ` - The Authorship must be the user and only the user\n` +
+                    ` - NOBODY can know that AI was used\n`, 
+                    taskName
+                );
             } catch (fixError) {
                 logger.warning(`⚠️  Could not fix error automatically: ${fixError.message}`);
             }
