@@ -4,6 +4,7 @@ const state = require('../config/state');
 const { executeClaude } = require('../services/claude-executor');
 const { exec } = require('child_process');
 const { commitOrFix } = require('../services/git-commit');
+const { isFullyImplemented } = require('../utils/validation');
 
 const step4 = async (task, shouldPush = true) => {
     const folder = (file) => path.join(state.claudiomiroFolder, task, file);
