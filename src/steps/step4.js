@@ -243,9 +243,20 @@ const step4 = async (task, shouldPush = true) => {
               - Do **not** uncheck or remove previously completed items.  
               - The goal is to preserve historical progress and continuity.
 
-            2. **Add new actionable items** to the checklist under the **"Implementation Plan"** section.  
-              - Each new item should describe exactly what must be corrected or improved.
-              - Use concise and directive language (e.g. “Fix null-check on BillingService before database save”).
+            2. **Add what needs to be done** to pass into code review in the **"Implementation Plan"** section.  
+              Follow this format:
+                - [ ] **Item X — [Consolidated action]**
+                - **What to do:** [detailed instructions of what to implement and how]
+                - **Context (read-only):** [files/dirs/docs to read]
+                - **Touched (will modify/create):** [files/modules]
+                - **Interfaces / Contracts:** [APIs/events/schemas/types]
+                - **Tests:** [type + key scenarios/edge cases]
+                - **Migrations / Data:** [DDL/backfill/ordering]
+                - **Observability:** [logs/metrics/traces/alerts]
+                - **Security & Permissions:** [authN/Z, PII, rate limits]
+                - **Performance:** [targets/limits/complexity]
+                - **Commands:** [local/CI commands to run]
+                - **Risks & Mitigations:** [risk → mitigation]
 
             3. **Append or create a new section** titled:
               \`\`\`markdown
