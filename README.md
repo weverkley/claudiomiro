@@ -4,7 +4,7 @@
 
 With an army of AI agents, turn days of complex development into a fully automated process — without sacrificing production-grade code quality.
 
-![Claudiomiro Terminal](https://github.com/samuelfaj/claudiomiro/blob/main/claudiomiro-terminal.png?raw=true)
+![Claudiomiro Terminal](https://github.com/samuelfaj/claudiomiro/blob/main/claudiomiro_terminal.png?raw=true)
 
 **Works With:**
 - ✅ `claudiomiro --claude`
