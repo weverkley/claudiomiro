@@ -1,6 +1,6 @@
 {
   "name": "claudiomiro",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "main": "index.js",
   "bin": {
     "claudiomiro": "./index.js"
@@ -24,6 +24,7 @@
     "boxen": "^5.1.2",
     "chalk": "^4.1.2",
     "gradient-string": "^2.0.2",
+    "lodash": "^4.17.21",
     "log-symbols": "^4.1.0",
     "ora": "^5.4.1",
     "prompts": "^2.4.2"
