@@ -48,6 +48,36 @@ const gitCommit = (text, shouldPush, taskName = null) => {
         });
 
         gitProcess.on('close', (code) => {
+            // Casos onde não há nada para commit - deve resolver (não é erro)
+            if(
+                stderr.includes('nothing to commit') ||
+                stderr.includes('no changes added to commit') ||
+                stdout.includes('nothing to commit') ||
+                stdout.includes('no changes added to commit') ||
+                stderr.includes('working tree clean') ||
+                stdout.includes('working tree clean')
+            ) {
+                return resolve();
+            }
+
+            // Erros de hooks do git - deve rejeitar
+            if(
+                stderr.includes('pre-commit hook') ||
+                stderr.includes('commit-msg hook') ||
+                stderr.includes('pre-push hook') ||
+                stderr.includes('hook declined') ||
+                stderr.includes('hook rejected') ||
+                stdout.includes('pre-commit hook') ||
+                stdout.includes('commit-msg hook') ||
+                stdout.includes('pre-push hook') ||
+                stdout.includes('hook declined') ||
+                stdout.includes('hook rejected')
+            ) {
+                const errorMessage = `Git hook failed\nStdout: ${stdout}\nStderr: ${stderr}`;
+                return reject(new Error(errorMessage));
+            }
+
+            // Outros erros - deve rejeitar
             if (code !== 0) {
                 const errorMessage = `Git command failed with code ${code}\nStdout: ${stdout}\nStderr: ${stderr}`;
                 reject(new Error(errorMessage));
