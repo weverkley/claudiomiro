@@ -8,6 +8,7 @@ const { step0 } = require('./steps/step0');
 const { DAGExecutor } = require('./services/dag-executor');
 const { isFullyImplemented, hasApprovedCodeReview } = require('./utils/validation');
 const { fixCommand } = require('./services/fix-command');
+const { checkForUpdatesAsync } = require('./auto-update');
 
 const isTaskApproved = (taskName) => {
     if (!state.claudiomiroFolder) {
@@ -385,6 +386,9 @@ const buildTaskGraph = () => {
 
 const init = async () => {
     logger.banner();
+
+    // Verifica atualizações de forma assíncrona (não bloqueia a execução)
+    checkForUpdatesAsync('claudiomiro');
 
     // Inicializa o state.folder antes de usá-lo
     const args = process.argv.slice(2).filter(arg => arg !== '--fresh' && !arg.startsWith('--push') && arg !== '--same-branch' && !arg.startsWith('--prompt') && !arg.startsWith('--maxConcurrent') && arg !== '--no-limit' && !arg.startsWith('--limit='));
