@@ -140,12 +140,17 @@ const step4 = async (task, shouldPush = true) => {
     `, task);
 
     if(fs.existsSync(folder('CODE_REVIEW.md'))){
-      await commitOrFix(
-        fs.readFileSync(folder('CODE_REVIEW.md'), 'utf-8'),
-        shouldPush,
-        1,
-        task
-      );
+      try {
+        await commitOrFix(
+          fs.readFileSync(folder('CODE_REVIEW.md'), 'utf-8'),
+          shouldPush,
+          3,
+          task
+        );
+      } catch (error) {
+        // Log but don't block execution
+        console.warn('⚠️  Commit failed in step4, continuing anyway:', error.message);
+      }
     }
 
     return execution;

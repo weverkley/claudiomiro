@@ -162,7 +162,7 @@ const step2_2 = async (task) => {
   }
 
 
-   const execution = await executeClaude(`Carefully analyze the task located at: ${path.join(state.claudiomiroFolder, task)}   
+   const execution = await executeClaude(`Carefully analyze the task located at: ${path.join(state.claudiomiroFolder, task)}
 1. Evaluate complexity and parallelism
 	•	If this task can be divided into independent and asynchronous subtasks, perform this division in a logical and cohesive manner.
 	•	Each subtask should represent a clear functional unit, with a well-defined beginning and end.
@@ -185,7 +185,7 @@ If you choose **NOT** to split:
     - ${path.join(state.claudiomiroFolder, task)}.3
     (Create only as many as are logically necessary. Do not create empty subtasks.)
 
-  - You MUST update all TASK.md files inside ${path.join(state.claudiomiroFolder)} with the new dependencies and numbering. 
+  - You MUST update all TASK.md files inside ${path.join(state.claudiomiroFolder)} with the new dependencies and numbering.
 
 ### Required structure for EACH subtask
   You MUST create for each subtask:
@@ -202,18 +202,21 @@ Example:
 CRITICAL: First line of EACH TASK.md MUST be the updated dependencies list:
 \`@dependencies [LIST]\`
 
-CRITICAL: If you split a task: You MUST update all TASK.md files inside ${path.join(state.claudiomiroFolder)} with the new dependencies and numbering. 
+CRITICAL: If you split a task: You MUST update all TASK.md files inside ${path.join(state.claudiomiroFolder)} with the new dependencies and numbering.
 
 ### Dependency & coherence rules
 - Each subtask must be independently executable and testable.
-- Avoid artificial fragmentation (don’t split trivial steps).
+- Avoid artificial fragmentation (don't split trivial steps).
 
 ## 4) Quality bar
 - Split only if it **reduces cycle time** or **reduces cognitive load** without harming cohesion.
 - Keep naming, numbering, and dependencies consistent and minimal.
     `, task);
 
-    fs.writeFileSync(folder('split.txt'), '1');
+    // Only write split.txt if the original folder still exists (task was not split)
+    if(fs.existsSync(folder('TASK.md'))){
+      fs.writeFileSync(folder('split.txt'), '1');
+    }
 
     return execution;
 }

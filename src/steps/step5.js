@@ -23,7 +23,13 @@ const step5 = async (tasks, shouldPush = true) => {
 
     const resume = fs.readFileSync(path.join(state.claudiomiroFolder, 'resume.txt'), 'utf-8');
 
-    await commitOrFix(resume, shouldPush, 5);
+    try {
+        await commitOrFix(resume, shouldPush, 5);
+    } catch (error) {
+        // Log but don't block execution
+        logger.warn('⚠️  Commit failed in step5, continuing anyway:', error.message);
+    }
+
     logger.info(`✅ Claudiomiro has been successfully executed. Check out: ${state.folder}`);
     process.exit(0);
 }
