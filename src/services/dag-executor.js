@@ -94,8 +94,18 @@ class DAGExecutor {
       this.stateManager.updateTaskStatus(taskName, 'running');
 
       const taskPath = path.join(state.claudiomiroFolder, taskName);
-      const todoPath = path.join(taskPath, 'TODO.md');
       const codeReviewPath = path.join(taskPath, 'CODE_REVIEW.md');
+      const todoPath = path.join(taskPath, 'TODO.md');
+      const todoOldPath = path.join(taskPath, 'TODO.old.md');
+
+      if(
+        fs.existsSync(codeReviewPath) && 
+        !fs.existsSync(todoPath) && 
+        fs.existsSync(todoOldPath)
+      ) {
+        fs.cpSync(todoOldPath, todoPath);
+        fs.rmSync(todoOldPath, { force: true });
+      }
 
       const isTaskApproved = () => {
         if (!fs.existsSync(todoPath)) {
