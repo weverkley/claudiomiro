@@ -23,7 +23,7 @@ const step3 = async (task) => {
 
     for(const f of folders){
       const taskPath = path.join(state.claudiomiroFolder, f);
-      const taskFiles = fs.readdirSync(taskPath).filter(file => !['CODE_REVIEW.md', 'PROMPT.md', 'TASK.md', 'TODO.md'].includes(file) && file.endsWith('.md'));
+      const taskFiles = fs.readdirSync(taskPath).filter(file => !['CODE_REVIEW.md', 'PROMPT.md', 'TASK.md', 'TODO.md'].includes(file) && !file.includes('TODO.old.') && file.endsWith('.md'));
 
       for(const file of taskFiles){
          const add = path.join(taskPath, file);
