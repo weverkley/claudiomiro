@@ -107,6 +107,7 @@ Fully implemented: NO
 ## Implementation Plan
 
 - [ ] **Item X — [Consolidated action]**
+- **What to do:** [detailed instructions of what to implement and how]
 - **Context (read-only):** [files/dirs/docs to read]
 - **Touched (will modify/create):** [files/modules]
 - **Interfaces / Contracts:** [APIs/events/schemas/types]
