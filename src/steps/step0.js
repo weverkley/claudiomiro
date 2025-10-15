@@ -30,6 +30,11 @@ const step0 = async (sameBranch = false, promptText = null, mode = 'auto') => {
     logger.newline();
     logger.startSpinner('Improving prompt...');
 
+    await executeClaude(
+        `If the repository uses Husky, lint-staged, or any other Git hooks, verify that they are properly configured and functioning.` + 
+        `If no such hooks exist, take no action.`
+    );
+
     const prompt1 = fs.readFileSync(path.join(__dirname, 'step0.1.md'), 'utf-8');
     await executeClaude(replace(branchStep + prompt1));
 
