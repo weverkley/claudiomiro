@@ -292,10 +292,12 @@ const step4 = async (task, shouldPush = true) => {
         console.warn('⚠️  Commit failed in step4, continuing anyway:', error.message);
       }
     }else{
-      const json = JSON.parse(fs.readFileSync(folder('info.json'), 'utf8'));
-      if(json.attempts % 3 === 0){
-        // each 4 times we go to step4_1 to rewrite the todo from scratch
-        await step4_1(task);
+      if(fs.existsSync(folder('info.json'))){
+        const json = JSON.parse(fs.readFileSync(folder('info.json'), 'utf8'));
+        if(json.attempts % 3 === 0){
+          // each 4 times we go to step4_1 to rewrite the todo from scratch
+          await step4_1(task);
+        }
       }
     }
 
