@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const state = require('../config/state');
-const { executeClaude } = require('../services/claude-executor');
+const { execute } = require('../services/main-executor');
 const logger = require('../../logger');
 const { gitCommit, commitOrFix } = require('../services/git-commit');
 const { gitStatus } = require('../services/git-status');
@@ -14,7 +14,7 @@ const step5 = async (tasks, shouldPush = true) => {
         PRS.push(folder('CODE_REVIEW.md'));
     }
     
-    await executeClaude(`Read "${PRS.join('" , "')}" and generate a 3 phrase resume of what was done and save in ${path.join(state.claudiomiroFolder, 'resume.txt')}`);
+    await execute(`Read "${PRS.join('" , "')}" and generate a 3 phrase resume of what was done and save in ${path.join(state.claudiomiroFolder, 'resume.txt')}`);
 
 
     if(!fs.existsSync(path.join(state.claudiomiroFolder, 'resume.txt'))){
@@ -33,7 +33,7 @@ const step5 = async (tasks, shouldPush = true) => {
     const gitStatusResult = await gitStatus();
 
     if (gitStatusResult.includes('nothing to commit')) {
-        await executeClaude(
+        await execute(
             `if you have GitLab mcp or Github mcp or Bitbucket mcp or any other git mcp that is able to create a pull request, use it to create.\n\n` + 
             `HARD RULES:\n` + 
             ` - NEVER mention that you are an AI model\n` +

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const state = require('../config/state');
-const { executeClaude } = require('../services/claude-executor');
+const { execute } = require('../services/main-executor');
 const { first } = require('lodash');
 
 const listFolders = (dir) => {
@@ -65,7 +65,7 @@ const step3 = async (task) => {
     // Insert into prompt.md or task.md the generated md files from other tasks.
 
     try {
-      return await executeClaude(`
+      return await execute(`
 OBJECTIVE:
 Execute all actionable items in ${folder('TODO.md')} in parallel when possible.
 Stop only when all items are [X] or BLOCKED/FAILED and the first line is "Fully implemented: YES".

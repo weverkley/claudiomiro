@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const state = require('../config/state');
-const { executeClaude } = require('../services/claude-executor');
+const { execute } = require('../services/main-executor');
 
 const findTaskFiles = (dir) => {
   const results = [];
@@ -26,7 +26,7 @@ const step2_1 = (task) => {
 
   const TODOtemplate = fs.readFileSync(path.join(__dirname, 'templates', 'TODO.md'), 'utf-8');
 
-  return executeClaude(`## Your Task (Strict Execution Plan)
+  return execute(`## Your Task (Strict Execution Plan)
 
 1. Read \`${folder('PROMPT.md')}\` and \`${folder('TASK.md')}\` completely.  
 2. Read only the **directly related** TODO.md files inside \`${state.claudiomiroFolder}\` to ensure consistency.  
@@ -122,7 +122,7 @@ const step2_2 = async (task) => {
   }
 
 
-   const execution = await executeClaude(`Carefully analyze the task located at: ${path.join(state.claudiomiroFolder, task)}
+   const execution = await execute(`Carefully analyze the task located at: ${path.join(state.claudiomiroFolder, task)}
 1. Evaluate complexity and parallelism
 	•	If this task can be divided into independent and asynchronous subtasks, perform this division in a logical and cohesive manner.
 	•	Each subtask should represent a clear functional unit, with a well-defined beginning and end.

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const state = require('../config/state');
-const { executeClaude } = require('../services/claude-executor');
+const { execute } = require('../services/main-executor');
 const { exec } = require('child_process');
 const { commitOrFix } = require('../services/git-commit');
 const { isFullyImplemented } = require('../utils/validation');
@@ -20,7 +20,7 @@ const step4_1 = async (task) => {
   fs.cpSync(folder('TODO.md'), folder(`TODO.old.${(new Date()).getTime()}.md`));
   fs.rmSync(folder('TODO.md'), { force: true });
   
-  const execution = await executeClaude(`You are reviewing the task defined in ${folder('PROMPT.md')} and ${folder('TASK.md')}. 
+  const execution = await execute(`You are reviewing the task defined in ${folder('PROMPT.md')} and ${folder('TASK.md')}. 
 Our current plan lives in ${folder('TODO.old.md')}, which may or may not be complete. 
 Your job is to **inspect reality first**, decide the true state, and produce the **single best plan to unlock code review**.
 
@@ -145,7 +145,7 @@ const step4 = async (task, shouldPush = true) => {
       fs.rmSync(folder('GITHUB_PR.md'));
     }
 
-    const execution = await executeClaude(`
+    const execution = await execute(`
       You are a **functional code reviewer** — your job is to think like a developer verifying whether the code truly works as intended.
 
       Review:

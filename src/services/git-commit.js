@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('../../logger');
 const state = require('../config/state');
-const { executeClaude } = require('./claude-executor');
+const { execute } = require('./main-executor');
 const { ParallelStateManager } = require('./parallel-state-manager');
 
 const gitCommit = (text, shouldPush, taskName = null) => {
@@ -283,7 +283,7 @@ const commitOrFix = async (text, shouldPush, retry = null, taskName = null) => {
 
             // Try to fix with Claude only if we have retries left
             try {
-                await executeClaude(
+                await execute(
                     `FIX THE ERROR:\n\n` + 
                     `${e.message}\n\n` + 
                     `HARD RULES:\n` + 

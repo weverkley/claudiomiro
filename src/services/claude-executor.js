@@ -18,7 +18,7 @@ const overwriteBlock = (lines) => {
     process.stdout.write(`\x1b[${lines}A`);
   }
 
-const runClaude = (text, taskName = null) => {
+const executeClaude = (text, taskName = null) => {
     return new Promise((resolve, reject) => {
         const stateManager = taskName ? ParallelStateManager.getInstance() : null;
         const suppressStreamingLogs = Boolean(taskName) && stateManager && typeof stateManager.isUIRendererActive === 'function' && stateManager.isUIRendererActive();
@@ -210,30 +210,6 @@ const runClaude = (text, taskName = null) => {
             reject(error);
         });
     });
-};
-
-const executeClaude = (text, taskName = null) => {
-    if (state.executorType === 'codex') {
-        const { executeCodex } = require('./codex-executor');
-        return executeCodex(text, taskName);
-    }
-
-    if (state.executorType === 'deep-seek') {
-        const { executeDeepSeek } = require('./deep-seek-executor');
-        return executeDeepSeek(text, taskName);
-    }
-
-    if (state.executorType === 'gemini') {
-        const { executeGemini } = require('./gemini-executor');
-        return executeGemini(text, taskName);
-    }
-
-    if (state.executorType === 'glm') {
-        const { executeGlm } = require('./glm-executor');
-        return executeGlm(text, taskName);
-    }
-
-    return runClaude(text, taskName);
 };
 
 module.exports = { executeClaude };

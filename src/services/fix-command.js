@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('../../logger');
 const state = require('../config/state');
-const { executeClaude } = require("./claude-executor");
+const { execute } = require("./main-executor");
 const { log } = require('console');
 
 const executeCommand = async (command) => {
@@ -148,7 +148,7 @@ const fixCommand = async (command, maxAttempts) => {
 
         try {
             logger.info(`fix command "${command}"`);
-            await executeClaude(`fix command "${command}"`);
+            await execute(`fix command "${command}"`);
         } catch (error) {
             console.log(`Attempt ${i} failed: ${error.message}`);
         }
