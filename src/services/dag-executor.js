@@ -10,15 +10,15 @@ const ParallelUIRenderer = require('./parallel-ui-renderer');
 const TerminalRenderer = require('../utils/terminal-renderer');
 const { calculateProgress } = require('../utils/progress-calculator');
 
+const CORE_COUNT = Math.max(1, os.cpus().length);
+
 class DAGExecutor {
   constructor(tasks, allowedSteps = null, maxConcurrent = null, noLimit = false, maxAttemptsPerTask = 20) {
     this.tasks = tasks; // { TASK1: {deps: [], status: 'pending'}, ... }
     this.allowedSteps = allowedSteps; // null = todos os steps, ou array de números
     this.noLimit = noLimit; // Se true, remove limite de ciclos por tarefa
     this.maxAttemptsPerTask = maxAttemptsPerTask; // Limite customizável de ciclos por tarefa (padrão: 20)
-  // Calculate default max concurrent (cores × 2, capped at 5)
-    const coreCount = Math.max(1, os.cpus().length);
-    const defaultMax = Math.max(1, coreCount * 3);
+    const defaultMax = Math.max(1, CORE_COUNT);
     this.maxConcurrent = maxConcurrent || defaultMax;
     this.running = new Set(); // Tasks atualmente em execução
 
@@ -229,8 +229,8 @@ class DAGExecutor {
    * Executa todas as tasks respeitando dependências
    */
   async run(buildTaskGraph) {
-    const coreCount = Math.max(1, os.cpus().length);
-    const defaultMax = Math.max(1, coreCount * 3);
+    const coreCount = CORE_COUNT;
+    const defaultMax = CORE_COUNT;
     const isCustom = this.maxConcurrent !== defaultMax;
 
     logger.info(`Starting DAG executor with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
@@ -326,8 +326,8 @@ class DAGExecutor {
    * Executa apenas o step2 (planejamento) para todas as tasks em paralelo
    */
   async runStep2() {
-    const coreCount = Math.max(1, os.cpus().length);
-    const defaultMax = Math.max(1, coreCount * 3);
+    const coreCount = CORE_COUNT;
+    const defaultMax = CORE_COUNT;
     const isCustom = this.maxConcurrent !== defaultMax;
 
     logger.info(`Starting step 2 (planning) with max ${this.maxConcurrent} concurrent tasks${isCustom ? ' (custom)' : ` (${coreCount} cores × 2, capped at 5)`}`);
